@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/headerText"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textStyle="bold"
+    android:textSize="@dimen/body_dimen_lg"
+    android:layout_marginLeft="@dimen/more_space_border_dimen_lg"
+    android:layout_marginStart="@dimen/more_space_border_dimen_lg"
+    android:paddingTop="@dimen/more_space_border_dimen_lg"
+    android:paddingLeft="@dimen/more_space_border_dimen_lg"
+    android:paddingStart="@dimen/more_space_border_dimen_lg"
+    android:paddingRight="@dimen/more_space_border_dimen_lg"
+    android:paddingEnd="@dimen/more_space_border_dimen_lg"/>

@@ -1,0 +1,552 @@
+{ "general":{
+  "year":{
+    "year":"2017"
+  }
+},
+
+  "contacts":{
+      "Greg and Dorinda Beeley":{
+        "address": "4770 Caviou Pl\nColorado Springs, CO 80918",
+        "phone": "(404) 775-2857",
+        "important": 1
+      },
+      "Dorinda Beeley": {
+        "address": null,
+        "phone": "(469) 371-4156",
+        "important": 0
+      },
+      "LightSys (and Chapel Hills Church)": {
+        "address": "2025 Parliament D\nColorado Springs, CO 80920",
+        "phone": "(404) 530-9797",
+        "important": 1
+      },
+      "Dave and Melissa Richie": {
+        "address": "640 Junegrass Ct\nColorado Springs, CO 80920",
+        "phone": "(310) 483-9783",
+        "important": 0
+      },
+      "Angela Clementi": {
+        "address": "8727 Massey Circle\nColorado Springs, CO 80920",
+        "phone": "(719) 354-9259",
+        "important": 0
+      },
+      "Kari and Chuck Krager": {
+        "address": "6155 Moorfield Ave\nColorado Springs, CO 80919",
+        "phone": "(719) 287-4796",
+        "important": 0
+      },
+      "Evelyn Wall": {
+        "address": "5360 Silver Dr\nColorado Springs, CO 80918",
+        "phone": "(719) 659-0815",
+        "important": 0
+      },
+      "Eddie and Marie Chavez": {
+        "address": "4026 Loring Cir N\nColorado Springs, CO 80909",
+        "phone": "(719) 351-7949",
+        "important": 0
+      },
+      "Dave and Barb Waldner": {
+        "address": "6230 Maroon Mesa Dr\nColorado Springs, CO 80918",
+        "phone": "(719) 388-9444",
+        "important": 0
+      },
+      "Del Taco": {
+        "address": "8020 N. ACADEMY BLVD\nCOLORADO SPRINGS, CO 80920",
+        "phone": "(719) 599-0155",
+        "important": 0
+      },
+      "Phil and Melinda Struska": {
+        "address": "14680 Rosholt Loop\nColorado Springs, CO 80921",
+        "phone": "(719) 232-4059",
+        "important": 0
+      },
+      "Garden of the Gods": {
+        "address": "370 Garden ln\nColorado Springs, CO",
+        "phone": null,
+        "important": 0
+      },
+      "Chick-fil-a": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(719) 531-7320",
+        "important": 0
+      }
+    },
+"schedule":{
+  "Sunday":[
+    {
+      "start_time": 1045,
+      "length": 90,
+      "description":"Church service at Chapel Hills Church (for those who are already in town)",
+      "location": "LightSys (and Chapel Hills Church)",
+      "category": 1
+    },
+    {
+      "start_time": 1215,
+      "length": 75,
+      "description":"Lunch at Del Taco (for those who are already in town)",
+      "location": "Del Taco",
+      "category": 4
+    },
+    {
+      "start_time": 1730,
+      "length": 90,
+      "description":"Evening dinner and fellowship with host families (those whose host families aren't available, contact the Beeleys). Dinner time subject to change based on host family needs.",
+      "location": null,
+      "category": 4
+    }
+  ],
+  "Monday":[
+    {
+      "start_time": 800,
+      "length": 15,
+      "description":"Depart from host homes",
+      "location": null,
+      "category": 2
+    },
+    {
+      "start_time": 815,
+      "length": 15,
+      "description":"Arrive at Lightsys office",
+      "location": "LightSys (and Chapel Hills Church)",
+      "category": 2
+    },
+    {
+      "start_time": 830,
+      "length": 45,
+      "description":"Morning worship, devotions, and prayer groups",
+      "location": null,
+      "category": 1
+    },
+    {
+      "start_time": 915,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1215,
+      "length": 45,
+      "description":"Lunch at Lightsys office",
+      "location": null,
+      "category": 4
+    },
+    {
+      "start_time": 1300,
+      "length": 300,
+      "description":"Code",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1800,
+      "length": 30,
+      "description":"Depart Lightsys Office",
+      "location": null,
+      "category": 2
+    },
+    {
+      "start_time": 1830,
+      "length": 30,
+      "description":"Dinner at Beeley's Home",
+      "location": "Greg and Dorinda Beeley",
+      "category": 4
+    },
+    {
+      "start_time": 1900,
+      "length": 120,
+      "description":"Worship night at Beeley's Home",
+      "location": null,
+      "category": 1
+    }
+  ],
+  "Tuesday": [
+    {
+      "start_time": 800,
+      "length": 15,
+      "description":"Depart from host homes",
+      "location": null,
+      "category": 2
+    },
+    {
+      "start_time": 815,
+      "length": 15,
+      "description":"Arrive at Lightsys office",
+      "location": "LightSys (and Chapel Hills Church)",
+      "category": 2
+    },
+    {
+      "start_time": 830,
+      "length": 45,
+      "description":"Morning worship, devotions, and prayer groups",
+      "location": null,
+      "category": 1
+    },
+    {
+      "start_time": 915,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1215,
+      "length": 45,
+      "description":"Lunch at Lightsys office",
+      "location": null,
+      "category": 4
+    },
+    {
+      "start_time": 1300,
+      "length": 300,
+      "description":"Code",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1800,
+      "length": 30,
+      "description":"Depart Lightsys Office",
+      "location": null,
+      "category": 2
+    },
+    {
+      "start_time": 1830,
+      "length": 60,
+      "description":"Dinner at the Struska's Home",
+      "location": "Phil and Melinda Struska",
+      "category": 4
+    },
+    {
+      "start_time": 1930,
+      "length": 150,
+      "description":"Free time to use indoor pool, play games, hang out, etc",
+      "location": null,
+      "category": 0
+    }
+  ],
+  "Wednesday":[
+    {
+      "start_time": 800,
+      "length": 915,
+      "description":"Free Day - No meals or structure provided\nday subject to change based on weather",
+      "location": null,
+      "category": 0
+    }
+  ],
+  "Thursday": [
+    {
+      "start_time": 800,
+      "length": 15,
+      "description":"Depart from host homes",
+      "location": null,
+      "category": 2
+    },
+    {
+      "start_time": 815,
+      "length": 15,
+      "description":"Arrive at Lightsys office",
+      "location": "LightSys (and Chapel Hills Church)",
+      "category": 2
+    },
+    {
+      "start_time": 830,
+      "length": 45,
+      "description":"Morning worship, devotions, and prayer groups",
+      "location": null,
+      "category": 1
+    },
+    {
+      "start_time": 915,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1215,
+      "length": 15,
+      "description":"Get Lunch at CFA",
+      "location": "Chick-fil-a",
+      "category": 4
+    },
+    {
+      "start_time": 1300,
+      "length": 120,
+      "description":"Hike or code",
+      "location": null,
+      "category": 0
+    },
+    {
+      "start_time": 1230,
+      "length": 30,
+      "description":"Picnic at Garden of the Gods",
+      "location": "Garden of the Gods",
+      "category": 4
+    },
+    {
+      "start_time": 1500,
+      "length": 270,
+      "description":"Code",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1930,
+      "length": 30,
+      "description":"BBQ Dinner at Lightsys Office",
+      "location": null,
+      "category": 4
+    },
+    {
+      "start_time": 2000,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 2300,
+      "length": 15,
+      "description":"Depart Lightsys Office",
+      "location": null,
+      "category": 2
+    }
+  ],
+  "Friday": [
+    {
+      "start_time": 800,
+      "length": 15,
+      "description":"Depart from host homes",
+      "location": null,
+      "category": 2
+    },
+    {
+      "start_time": 815,
+      "length": 15,
+      "description":"Arrive at Lightsys office",
+      "location": "LightSys (and Chapel Hills Church)",
+      "category": 2
+    },
+    {
+      "start_time": 830,
+      "length": 45,
+      "description":"Morning worship, devotions, and prayer groups",
+      "location": null,
+      "category": 1
+    },
+    {
+      "start_time": 915,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1215,
+      "length": 45,
+      "description":"Lunch at Lightsys office",
+      "location": null,
+      "category": 4
+    },
+    {
+      "start_time": 1300,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1600 ,
+      "length": 60,
+      "description":"Closing announcments, write thank yous, and fill out survey",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1700,
+      "length": 60,
+      "description":"Pizza dinner at Lightsys Office",
+      "location": null,
+      "category": 4
+    },
+    {
+      "start_time": 1800,
+      "length": 60,
+      "description":"Project Presentations",
+      "location": null,
+      "category": 3
+    },
+    {
+      "start_time": 1900,
+      "length": 30,
+      "description":"Depart Lightsys Office",
+      "location": null,
+      "category": 2
+    }
+    ]
+  },
+  "hq_information":{
+      "Wifi":{
+        "description": "Network: LightSys\nPassword: hark-bees-green-song"
+      },
+      "Network user \"don't do\" list": {
+        "description": "i. Do not download files in violation of copyright\nii. Do not access pornography or “near”-pornography\niii. Do not engage in any form of internet gambling\niv. Do not engage in any hacking/cracking activities, unless specifically authorized by LightSys\nv. Do not engage in political activism – as a 501(c)(3) charity, we are not permitted to allow the use of our internet service (or other resources) for political activism\nvi. Do not use BitTorrent. It can make the internet unusable for other team members\nvii. Any personal use should be modest enough in nature to not disrupt the internet's availability for others\nPlease note that during Code-a-Thon, we'll be providing anonymized network traffic information to the groups working on the communications security projects. They will not be provided with the contents of the network traffic, with information identifying you, or with any actual URLs or web site names. By using the network, you agree to help our the security project teams in this way"
+      },
+      "Printers and Copiers":{
+        "description": "LightSys has an HP OfficeJet Pro 8600 (not Plus or Premium) color inkjet scanner/copier/printer. You can find it at IP 10.5.0.2, and in office #3. When setting it up for printing, use “direct TCP port” or “HP JetDirect” printing (port 9100)."
+      },
+      "Building Access": {
+        "description": "i. If you open a door or window, please be sure to shut and lock it securely before you leave. We incur a fee for any false alarms in the burglar alarm system\nii. Ask permission before entering private offices that are not assigned to you"
+      },
+      "A reminder...": {
+        "description": "We are blessed to be able to co-locate out of this office with Chapel Hills Church. Please do your part to help protect the good relationship we have with Chapel Hills Church by taking good care of the office and furniture, keeping the office neat and in presentable condition, and respecting our policies"
+      }
+    },
+    "emergency_contact":{
+        "In case of medical emergency": {
+          "description": "Please call 911 from your phone\nthen call the Beeleys"
+        },
+        "If someone needs to urgently contact you": {
+          "description": "Have them call you directly\ncall Lightsys during business hours\nor call the Beeleys"
+        },
+        "Important addresses and phone numbers":{
+          "description": "get important addresses"
+        }
+      },
+    "housing":{
+      "Greg and Dorinda Beeley": {
+        "driver": "Stephen McGregor",
+        "students": "Joshua Meier\nPreston Modesto\nNick Weg\nStephen McGregor"
+      },
+      "Dave and Melissa Richia": {
+        "driver": "Hannah Brown",
+        "students": "Alicia Clark\nHannah Brown\nMahents Ravelomanantsoa"
+      },
+      "Angela Clementi": {
+        "driver": "Taylor Buscher",
+        "students": "Azrael Brown\nBrian Howell\nTaylor Buscher\nDK Kim"
+      },
+      "Kari and Chuck Krager": {
+        "driver": "Kyle Carter",
+        "students": "Kyle Carter\nJames McGregor\nHazen Johnson\nTaylor Davy"
+      },
+      "Evelyn Wall": {
+        "driver": "Jason Ross",
+        "students": "Breven Hettinger\nBrian Scott"
+      },
+      "Eddie and Marie Chavez": {
+        "driver": "Jason Ross",
+        "students": "Tron Smullen\nMikey Guynn\nJason Ross"
+      },
+      "Dave and Barb Waldner": {
+        "driver": "Micah Richards",
+        "students": "Judson Hayes\nDaniel Stephenson\nMicah Ricahrds\nShimon Rigdon"
+      }
+    },
+    "prayer_partners": [
+      {"students": "Alicia Clark\nHannah Brown\nMahents R"},
+      {"students": "Nick Weg\nBreven Hettinger\nJoshua Meier"},
+      {"students": "Stephen McGregor\nTron Smullen\nAzrael Brown"},
+      {"students": "Kyle Carter\nBrian Scott\nMicah Richards"},
+      {"students": "James McGregor\nPreston Modesto\nDaniel Stephenson"},
+      {"students": "Taylor Davy\nJudson Hayes\nDK Kim"},
+      {"students": "John Guynn\nShimon Rigdon\nTaylor Buscher"},
+      {"students": "Hazen Johnson\nBrian Howell\nJason Ross"}
+    ],
+    "free_day":{
+      "Header": {
+        "title": "Things to do near Colorado Springs",
+        "body":[
+          {"option": null, "website": null}
+        ]
+      },
+      "Free": {
+        "title": "Free Recreation & Tourism",
+        "body": [
+          {"option": "Garden of the Gods", "website": null},
+          {"option": "Red Rock Canyon Open Space", "website": null},
+          {"option": "America the Beautiful Park (Colorado Springs and Pikes Peak are what inspired the hymn \"American the Beautiful\")", "website": null},
+          {"option": "Paint Mines Interpretive Park", "website": null},
+          {"option": "Focus on the Family Visitor Center & Whit's End (Adventures in Odyssey)", "website": null},
+          {"option": "U.S. Air Force Meseum at Peterson Air Force Base (requires advance reservations and security check)", "website": null},
+          {"option": "U.S. Air Force Academy Visitor Center & Chapel", "website": null},
+          {"option": "Palmer Park and Grandview Overlook", "website": null},
+          {"option": "The ANA Money Meseum (free only on 3rd Saturdays)", "website": null},
+          {"option": "Hiking and scenic drives", "website": "http://www.cospringstrails.com/index.html"},
+          {"option": "offroad drives", "website": "http://rampartrange.org/"},
+          {"option": "Manitou Incline (Free: park at Old Man's Trail and ride the shuttle, $10: park at trailhead)", "website": null}
+        ]
+      },
+      "Fees": {
+        "title": "Recreation & Tourism with Fees",
+        "body": [
+          {"option": "Pikes Peak Highway and Pikes Peak Cog Railway to the top of Pikes Peak (seasonal and weather permitting)", "website": null},
+          {"option": "Cave of the Winds", "website": null},
+          {"option": "Manitou Cliff Dwellings", "website": null},
+          {"option": "Royal Gorge Bridge-60+ miles away (free to observe from the rim, but $$ to walk on the bridge) \nNote: Passes include some ride. In the past they have also had a non-published \"Bridge Only\" pass that is cheaper, but only valid in the early morning when the rides aren't yet open", "website": null},
+          {"option": "U.S. Olympic Training Center tour ($5 per person)", "website": null},
+          {"option": "Seven Falls", "website": null},
+          {"option": "Cheyenne Mountain Zoo", "website": null},
+          {"option": "Glen Eyrie Castle tours (requires reservation; $9/person).", "website": null},
+          {"option": "Outdoor recreation: snow skiing and tubing (winter), rock climbing, camping, white water rafting (summer), ice castle (some winters)", "website": null},
+          {"option": "Outdoor Laser Tag (Battlefield Colorado)", "website": null},
+          {"option": "Escape Rooms: The Greatest Escape Games, Mystery-Quests.com Escape Rooms, Planet Deadline Escape Rooms, etc.", "website": null}
+        ]
+      }
+    },
+    "notifications": {
+      "message_1": {
+        "title": "Everybody needs to do something now!",
+        "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+        "date": "Monday 8:00",
+        "refresh": false
+      },
+      "message_2": {
+        "title": "Look, another note!",
+        "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+        "date": "Monday 8:00",
+        "refresh": false
+      },
+      "message_3": {
+        "title": "aljasldjf!",
+        "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+        "date": "Monday 8:00",
+        "refresh": false
+      },
+      "message_4": {
+        "title": "blue!",
+        "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+        "date": "Monday 8:00",
+        "refresh": false
+      },
+      "message_5": {
+        "title": "green!",
+        "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+        "date": "Monday 8:00",
+        "refresh": false
+      },
+      "message_6": {
+        "title": "turquise",
+        "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+        "date": "Monday 8:00",
+        "refresh": false
+      },
+      "message_7": {
+        "title": "purple",
+        "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+        "date": "Monday 8:00",
+        "refresh": false
+      }
+    },
+    "navigation_titles": {
+      "notifications": "Notifications",
+      "contact": "Contacts",
+      "schedule": "Schedule",
+      "housing": "Housing",
+      "prayer": "Prayer Partners",
+      "free_day": "Free Day Ideas",
+      "hq_info": "HQ Info",
+      "refresh": "bubbles"
+    }
+}

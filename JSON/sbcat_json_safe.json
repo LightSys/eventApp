@@ -1,0 +1,528 @@
+{ "general":{
+  "year":{
+    "year":"2017"
+  }
+},
+
+  "contacts":{
+      "Greg and Dorinda A":{
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(000) 000-0000",
+        "important": 1
+      },
+      "Dorinda A": {
+        "address": null,
+        "phone": "(000) 000-0000",
+        "important": 0
+      },
+      "Church": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(000) 000-0000",
+        "important": 1
+      },
+      "Dave and Melissa A": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(000) 000-0000",
+        "important": 0
+      },
+      "Angela A": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(000) 000-0000",
+        "important": 0
+      },
+      "Kari and Chuck A": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(000) 000-0000",
+        "important": 0
+      },
+      "Evelyn A": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(000) 000-0000",
+        "important": 0
+      },
+      "Eddie and Marie A": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(000) 000-0000",
+        "important": 0
+      },
+      "Dave and Barb A": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(000) 000-0000",
+        "important": 0
+      },
+      "Del Taco": {
+        "address": "8020 N. ACADEMY BLVD\nCOLORADO SPRINGS, CO 80920",
+        "phone": "(719) 599-0155",
+        "important": 0
+      },
+      "Phil and Melinda A": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(000) 000-0000",
+        "important": 0
+      },
+      "Garden of the Gods": {
+        "address": "370 Garden ln\nColorado Springs, CO",
+        "phone": null,
+        "important": 0
+      },
+      "Chick-fil-a": {
+        "address": "575 W Garden of the Gods Rd\nColorado Springs, CO",
+        "phone": "(719) 531-7320",
+        "important": 0
+      }
+    },
+"schedule":{
+  "Sunday":[
+    {
+      "start_time": 1045,
+      "length": 90,
+      "description":"Church service (for those who are already in town)",
+      "location": "Church",
+      "category": "schedule_worship"
+    },
+    {
+      "start_time": 1215,
+      "length": 75,
+      "description":"Lunch at Del Taco (for those who are already in town)",
+      "location": "Del Taco",
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 1730,
+      "length": 90,
+      "description":"Evening dinner and fellowship with host families (those whose host families aren't available, contact the As). Dinner time subject to change based on host family needs.",
+      "location": null,
+      "category": "schedule_food"
+    }
+  ],
+  "Monday":[
+    {
+      "start_time": 800,
+      "length": 15,
+      "description":"Depart from host homes",
+      "location": null,
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 815,
+      "length": 15,
+      "description":"Arrive at Company office",
+      "location": "Church",
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 830,
+      "length": 45,
+      "description":"Morning worship, devotions, and prayer groups",
+      "location": null,
+      "category": "schedule_worship"
+    },
+    {
+      "start_time": 915,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1215,
+      "length": 45,
+      "description":"Lunch at Company office",
+      "location": null,
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 1300,
+      "length": 300,
+      "description":"Code",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1800,
+      "length": 30,
+      "description":"Depart Company Office",
+      "location": null,
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 1830,
+      "length": 30,
+      "description":"Dinner at A's Home",
+      "location": "Greg and Dorinda A",
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 1900,
+      "length": 120,
+      "description":"Worship night at A's Home",
+      "location": null,
+      "category": "schedule_worship"
+    }
+  ],
+  "Tuesday": [
+    {
+      "start_time": 800,
+      "length": 15,
+      "description":"Depart from host homes",
+      "location": null,
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 815,
+      "length": 15,
+      "description":"Arrive at Company office",
+      "location": "Church",
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 830,
+      "length": 45,
+      "description":"Morning worship, devotions, and prayer groups",
+      "location": null,
+      "category": "schedule_worship"
+    },
+    {
+      "start_time": 915,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1215,
+      "length": 45,
+      "description":"Lunch at Company office",
+      "location": null,
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 1300,
+      "length": 300,
+      "description":"Code",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1800,
+      "length": 30,
+      "description":"Depart Company Office",
+      "location": null,
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 1830,
+      "length": 60,
+      "description":"Dinner at the A's Home",
+      "location": "Phil and Melinda A",
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 1930,
+      "length": 150,
+      "description":"Free time to use indoor pool, play games, hang out, etc",
+      "location": null,
+      "category": "schedule_free"
+    }
+  ],
+  "Wednesday":[
+    {
+      "start_time": 800,
+      "length": 915,
+      "description":"Free Day - No meals or structure provided\nday subject to change based on weather",
+      "location": null,
+      "category": "schedule_free"
+    }
+  ],
+  "Thursday": [
+    {
+      "start_time": 800,
+      "length": 15,
+      "description":"Depart from host homes",
+      "location": null,
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 815,
+      "length": 15,
+      "description":"Arrive at Company office",
+      "location": "Church",
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 830,
+      "length": 45,
+      "description":"Morning worship, devotions, and prayer groups",
+      "location": null,
+      "category": "schedule_worship"
+    },
+    {
+      "start_time": 915,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1215,
+      "length": 15,
+      "description":"Get Lunch at CFA",
+      "location": "Chick-fil-a",
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 1300,
+      "length": 120,
+      "description":"Hike or code",
+      "location": null,
+      "category": "schedule_free"
+    },
+    {
+      "start_time": 1230,
+      "length": 30,
+      "description":"Picnic at Garden of the Gods",
+      "location": "Garden of the Gods",
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 1500,
+      "length": 270,
+      "description":"Code",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1930,
+      "length": 30,
+      "description":"BBQ Dinner at Company Office",
+      "location": null,
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 2000,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 2300,
+      "length": 15,
+      "description":"Depart Company Office",
+      "location": null,
+      "category": "schedule_travel"
+    }
+  ],
+  "Friday": [
+    {
+      "start_time": 800,
+      "length": 15,
+      "description":"Depart from host homes",
+      "location": null,
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 815,
+      "length": 15,
+      "description":"Arrive at Company office",
+      "location": "Church",
+      "category": "schedule_travel"
+    },
+    {
+      "start_time": 830,
+      "length": 45,
+      "description":"Morning worship, devotions, and prayer groups",
+      "location": null,
+      "category": "schedule_worship"
+    },
+    {
+      "start_time": 915,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1215,
+      "length": 45,
+      "description":"Lunch at Company office",
+      "location": null,
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 1300,
+      "length": 180,
+      "description":"Code",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1600 ,
+      "length": 60,
+      "description":"Closing announcments, write thank yous, and fill out survey",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1700,
+      "length": 60,
+      "description":"Pizza dinner at Company Office",
+      "location": null,
+      "category": "schedule_food"
+    },
+    {
+      "start_time": 1800,
+      "length": 60,
+      "description":"Project Presentations",
+      "location": null,
+      "category": "schedule_work"
+    },
+    {
+      "start_time": 1900,
+      "length": 30,
+      "description":"Depart Company Office",
+      "location": null,
+      "category": "schedule_travel"
+    }
+    ]
+  },
+  "hq_information":{
+      "Wifi":{
+        "description": "Network: Company\nPassword: company-password"
+      },
+      "Network user \"don't do\" list": {
+        "description": "i. Do not download files in violation of copyright\nii. Do not access pornography or “near”-pornography\niii. Do not engage in any form of internet gambling\niv. Do not engage in any hacking/cracking activities, unless specifically authorized by Company\nv. Do not engage in political activism – as a 501(c)(3) charity, we are not permitted to allow the use of our internet service (or other resources) for political activism\nvi. Do not use BitTorrent. It can make the internet unusable for other team members\nvii. Any personal use should be modest enough in nature to not disrupt the internet's availability for others\nPlease note that during Code-a-Thon, we'll be providing anonymized network traffic information to the groups working on the communications security projects. They will not be provided with the contents of the network traffic, with information identifying you, or with any actual URLs or web site names. By using the network, you agree to help our the security project teams in this way"
+      },
+      "Printers and Copiers":{
+        "description": "Company has an HP OfficeJet Pro 8600 (not Plus or Premium) color inkjet scanner/copier/printer. You can find it at IP 00.0.0.0, and in office #3. When setting it up for printing, use “direct TCP port” or “HP JetDirect” printing (port 9100)."
+      },
+      "Building Access": {
+        "description": "i. If you open a door or window, please be sure to shut and lock it securely before you leave. We incur a fee for any false alarms in the burglar alarm system\nii. Ask permission before entering private offices that are not assigned to you"
+      },
+      "A reminder...": {
+        "description": "We are blessed to be able to co-locate out of this office with Church. Please do your part to help protect the good relationship we have with Church by taking good care of the office and furniture, keeping the office neat and in presentable condition, and respecting our policies"
+      }
+    },
+    "emergency_contact":{
+        "In case of medical emergency": {
+          "description": "Please call 911 from your phone\nthen call the As"
+        },
+        "If someone needs to urgently contact you": {
+          "description": "Have them call you directly\ncall Company during business hours\nor call the As"
+        },
+        "Important addresses and phone numbers":{
+          "description": "get important addresses"
+        }
+      },
+    "housing":{
+      "Greg and Dorinda A": {
+        "driver": "Stephen M",
+        "students": "Joshua M\nPreston M\nNick W\nStephenkasdhfaksd;fasdkjfl;kajsdkl;j M"
+      },
+      "Dave and Melissa A": {
+        "driver": "Hannah B",
+        "students": "Alicia C\nHannah B\nMahents R"
+      },
+      "Angela A": {
+        "driver": "Taylor B",
+        "students": "Azrael B\nBrian H\nTaylor B\nDK K"
+      },
+      "Kari and Chuck A": {
+        "driver": "Kyle C",
+        "students": "Kyle C\nJames M\nHazen J\nTaylor D"
+      },
+      "Evelyn A": {
+        "driver": "Jason R",
+        "students": "Breven H\nBrian Sc"
+      },
+      "Eddie and Marie A": {
+        "driver": "Jason R",
+        "students": "Tron S\nMikey G\nJason R"
+      },
+      "Dave and Barb A": {
+        "driver": "Micah R",
+        "students": "Judson H\nDaniel S\nMicah R\nShimon R"
+      }
+    },
+    "prayer_partners": [
+      {"students": "Alicia C\nHannah B\nMahents Ravelomanasdfadsfasdantsoaasdfasdfasdfa"},
+      {"students": "Nick W\nBreven H\nJoshua M"},
+      {"students": "Stephen M\nTron S\nAzrael B"},
+      {"students": "Kyle C\nBrian S\nMicah R"},
+      {"students": "James M\nPreston M\nDaniel S"},
+      {"students": "Taylor D\nJudson H\nDK K"},
+      {"students": "John G\nShimon R\nTaylor B"},
+      {"students": "Hazen J\nBrian H\nJason R"}
+    ],
+    "free_day":{
+      "Free Recreation & Tourism": {
+        "description": "~ Garden of the Gods\n~ Red Rock Canyon Open Space\n~ America the Beautiful Park (Colorado Springs and Pikes Peak are what inspired the hymn \"American the Beautiful\")\n~ Paint Mines Interpretive Park\n~ Focus on the Family Visitor Center & Whit's End (Adventures in Odyssey)\n~ U.S. Air Force Meseum at Peterson Air Force Base (requires advance reservations and security check)\n~ U.S. Air Force Academy Visitor Center & Chapel\n~ Palmer Park and Grandview Overlook\n~ The ANA Money Meseum (free only on 3rd Saturdays)\n~ Hiking and scenic drives\n~ offroad drives\n~ Manitou Incline (Free: park at Old Man's Trail and ride the shuttle, $10: park at trailhead)"
+      },
+      "Recreation & Tourism with Fees": {
+        "description": "~ Pikes Peak Highway and Pikes Peak Cog Railway to the top of Pikes Peak (seasonal and weather permitting)\n~ Cave of the Winds\n~ Manitou Cliff Dwellings\n Royal Gorge Bridge-60+ miles away (free to observe from the rim, but $$ to walk on the bridge) Passes include some rides. In the past they have also had a non-published \"Bridge Only\" pass that is cheaper, but only valid in the early morning when the rides aren't yet open\n~ U.S. Olympic Training Center tour ($5 per person)\n~ Seven Falls\n~ heyenne Mountain Zoo\n~ Glen Eyrie Castle tours (requires reservation; $9/person).\n~ Outdoor recreation: snow skiing and tubing (winter), rock climbing, camping, white water rafting (summer), ice castle (some winters)\n~ Outdoor Laser Tag (Battlefield Colorado)\n~ Escape Rooms: The Greatest Escape Games, Mystery-Quests.com Escape Rooms, Planet Deadline Escape Rooms, etc."
+      }
+    },
+
+    "notifications": {
+      "1": {
+        "title": "Everybody needs to do something now!",
+        "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+        "date": "06/01/2017 10:28:00",
+        "refresh": false
+      },
+      "2": {
+        "title": "Everybody needs to do something now!",
+        "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+        "date": "06/01/2017 10:28:00",
+        "refresh": true
+      }
+    },
+    "navigation_titles": {
+      "Notifications": {
+        "icon": "ic_notifications"
+      },
+      "Contacts": {
+        "icon": "ic_contact"
+      },
+      "Schedule": {
+        "icon": "ic_schedule"
+      },
+      "Housing": {
+        "icon": "ic_house"
+      },
+      "Prayer Partners": {
+        "icon": "ic_group"
+      },
+      "Free Day Ideas": {
+        "icon": "ic_mountains"
+      },
+      "HQ Info": {
+        "icon": "ic_info"
+      },
+      "Refresh": {
+        "icon": "ic_refresh"
+      },
+      "Rescan": {
+        "icon": "ic_camera"
+      }
+    },
+    "theme": [
+      {"themeDark":"#304166"},
+      {"themeMedium": "#364871"},
+      {"themeColor": "#4E69B8"},
+      {"schedule_travel":"#FFBFB7"},
+      {"schedule_worship":"#F3C8FF"},
+      {"schedule_food":"#F3FFB5"},
+      {"schedule_work":"#B5F7EF"},
+      {"schedule_free":"#A5F59C"},
+      {"schedule_blank":"#d6d4d4"}
+    ],
+    "_comments": {
+      "date_format": "mm/dd/yyyy hh:mm:ss",
+      "notifications": "names must be digits and unique",
+      "titles": [
+        {"WelcomeView":"House Icon"},
+        {"FreeDayView":"mountain Icon ETC!"}
+      ]
+    }
+}

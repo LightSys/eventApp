@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+    <item
+        android:id="@+id/refresh_now"
+        android:orderInCategory="100"
+        android:title="now"/>
+    <item
+        android:id="@+id/refresh_1"
+        android:orderInCategory="100"
+        android:title="never"/>
+    <item
+        android:id="@+id/refresh_2"
+        android:orderInCategory="100"
+        android:title="every 15 minutes"/>
+    <item
+        android:id="@+id/refresh_3"
+        android:orderInCategory="100"
+        android:title="every 30 minutes"/>
+    <item
+        android:id="@+id/refresh_4"
+        android:orderInCategory="100"
+        android:title="every hour"/>
+
+</menu>

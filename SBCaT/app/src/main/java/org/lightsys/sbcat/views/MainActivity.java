@@ -25,13 +25,21 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import org.lightsys.sbcat.R;
 import org.lightsys.sbcat.data.Info;
@@ -41,6 +49,7 @@ import org.lightsys.sbcat.tools.LocalDB;
 import org.lightsys.sbcat.tools.qr.myTest;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static android.content.ContentValues.TAG;
 
@@ -60,6 +69,7 @@ public class MainActivity extends AppCompatActivity
     private LocalDB db;
     private AlertDialog alert;
     private Toolbar toolbar;
+    private ListView refreshList;
 
     //stuff to automatically refresh the current fragment
     private final android.os.Handler refreshHandler = new android.os.Handler();
@@ -74,6 +84,11 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
+        /*set up refresh menu*/
+        refreshList = (ListView) findViewById(R.id.refresh_list);
+        String [] refreshCategories = getResources().getStringArray(R.array.refresh_options);
+        refreshList.setAdapter(new ArrayAdapter<>(this, R.layout.refresh_item, refreshCategories));
 
         /*set up auto updater*/
         Intent updateIntent = new Intent(getBaseContext(), AutoUpdater.class);
@@ -210,9 +225,42 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_refresh) {
+        switch (id){
+            case R.id.action_refresh:
+                if (refreshList.getVisibility()==View.VISIBLE){
+                    refreshList.setVisibility(View.GONE);
+                }else{
+                    refreshList.setVisibility(View.VISIBLE);
+                    refreshList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                            switch(i){
+                                case 0:
+                                    Toast.makeText(context, "NOW", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case 1:
+                                    //adapterView.setBackgroundColor(ContextCompat.getColor(context, R.color.white));
+                                    adapterView.findViewById(R.id.refresh_list).setBackgroundColor(ContextCompat.getColor(context, R.color.white));
+                                    //view.setBackgroundColor(Color.parseColor(db.getThemeColor("themeColor")));
+                                    break;
+                                case 2:
+                                    view.setBackgroundColor(Color.parseColor(db.getThemeColor("themeColor")));
+                                    break;
+                                case 3:
+                                    view.setBackgroundColor(Color.parseColor(db.getThemeColor("themeColor")));
+                                    break;
+                                case 4:
+                                    view.setBackgroundColor(Color.parseColor(db.getThemeColor("themeColor")));
+                                    break;
+                            }
+                        }
+                    });
+                }
 
-            return true;
+                break;
+            case R.id.action_rescan:
+                gatherData(null);
+                break;
         }
 
         return super.onOptionsItemSelected(item);

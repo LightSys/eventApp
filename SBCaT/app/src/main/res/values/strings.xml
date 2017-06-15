@@ -3,8 +3,16 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <!--<string name="action_settings">Settings</string>-->
+
+    <!--Refresh Resources-->
     <string name="action_settings">Refresh Period</string>
+    <string-array name="refresh_options">
+        <item>Now</item>
+        <item>Never</item>
+        <item>15 minutes</item>
+        <item>30 minutes</item>
+        <item>1 Hour</item>
+    </string-array>
 
     <!--Navigation Resources-->
     <string name="nav_contacts">Contacts</string>

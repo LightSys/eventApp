@@ -3,11 +3,28 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light">
         <!-- Customize your theme here. -->
-        <!--<item name="colorPrimary">@color/themeColor</item>
-        <item name="colorPrimaryDark">@color/themeDark</item>-->
         <item name="colorAccent">@color/customGray</item>
+        <item name="popupMenuStyle">@style/popupTheme</item>
+        <item name="android:textAppearanceLargePopupMenu">@style/myPopupMenuTextAppearanceLarge</item>
+        <item name="android:textAppearanceSmallPopupMenu">@style/myPopupMenuTextAppearanceSmall</item>
     </style>
 
+    <style name="myPopupMenuTextAppearanceSmall" parent="@style/TextAppearance.AppCompat.Light.Widget.PopupMenu.Small">
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
+    <style name="myPopupMenuTextAppearanceLarge" parent="@style/TextAppearance.AppCompat.Light.Widget.PopupMenu.Large">
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
+    <style name="popupTheme" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="overlapAnchor">false</item>
+        <item name="android:dropDownVerticalOffset">5.0dp</item>
+        <item name="android:popupBackground">@color/darkGray</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="MyActionBarTheme" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
@@ -38,10 +55,6 @@
     <style name="listview_no_divider" parent="@android:style/Widget.ListView">
         <item name="android:divider">@null</item>
         <item name="android:dividerHeight">0dip</item>
-    </style>
-
-    <style name="MyActionButtonOverflow" parent="android:style/Widget.Holo.Light.ActionButton.Overflow">
-            <item name="android:src">@drawable/ic_refresh</item>
     </style>
 
 </resources>

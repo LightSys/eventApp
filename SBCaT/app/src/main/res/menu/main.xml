@@ -7,22 +7,17 @@
             android:orderInCategory="100"
             android:icon="@drawable/ic_refresh"
             android:title="refresh"
-            app:showAsAction="ifRoom"/>
+            app:showAsAction="always">
+        </item>
     </group>
 
     <group>
-    <item
-        android:id="@+id/action_never"
-        android:orderInCategory="100"
-        android:title="rescan"
-        android:icon="@drawable/ic_camera"
-        app:showAsAction="ifRoom"/>
-        <menu>
-            <item
-                android:id="@+id/action_refresh_1"
-                android:orderInCategory="100"
-                android:title="refresh"/>
-        </menu>
+        <item
+            android:id="@+id/action_rescan"
+            android:orderInCategory="100"
+            android:title="rescan"
+            android:icon="@drawable/ic_camera"
+            app:showAsAction="ifRoom"/>
     </group>
 
 </menu>

@@ -59,8 +59,8 @@ public class AutoUpdater extends Service {
                 db.close();
 
                 Calendar currentDate = Calendar.getInstance();
-                updateMillis = ONE_MINUTE;
-                //updateMillis = NEVER;
+                //updateMillis = ONE_MINUTE;
+                updateMillis = NEVER;
 
                 //difference between the previous time and the current time
                 long elapsedTime = currentDate.getTimeInMillis() - prevDate.getTimeInMillis();

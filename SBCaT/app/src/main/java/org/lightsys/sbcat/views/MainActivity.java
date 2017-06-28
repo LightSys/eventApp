@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -17,7 +16,6 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -25,37 +23,34 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.lightsys.sbcat.R;
 import org.lightsys.sbcat.data.Info;
 import org.lightsys.sbcat.tools.AutoUpdater;
 import org.lightsys.sbcat.tools.DataConnection;
 import org.lightsys.sbcat.tools.LocalDB;
+import org.lightsys.sbcat.tools.NavigationAdapter;
+import org.lightsys.sbcat.tools.RefreshAdapter;
 import org.lightsys.sbcat.tools.qr.myTest;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 import static android.content.ContentValues.TAG;
 
 
-public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity {
     static private final String QR_DATA_EXTRA = "qr_data";
     static private final int QR_RESULT = 1;
     private static final String RELOAD_PAGE = "reload_page";
@@ -70,6 +65,13 @@ public class MainActivity extends AppCompatActivity
     private AlertDialog alert;
     private Toolbar toolbar;
     private ListView refreshList;
+    private View previousNavView;
+    private String [] refreshCategories;
+    private LinearLayout navigationView;
+    private ListView navigationList;
+    private DrawerLayout drawer;
+    private int color;
+    private int refreshItem = -1;
 
     //stuff to automatically refresh the current fragment
     private final android.os.Handler refreshHandler = new android.os.Handler();
@@ -84,11 +86,9 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
-        /*set up refresh menu*/
-        refreshList = (ListView) findViewById(R.id.refresh_list);
-        String [] refreshCategories = getResources().getStringArray(R.array.refresh_options);
-        refreshList.setAdapter(new ArrayAdapter<>(this, R.layout.refresh_item, refreshCategories));
+        db = new LocalDB(this);
+        context = this;
+        activity = this;
 
         /*set up auto updater*/
         Intent updateIntent = new Intent(getBaseContext(), AutoUpdater.class);
@@ -99,11 +99,8 @@ public class MainActivity extends AppCompatActivity
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        context = this;
-        activity = this;
-
         /*set up drawer*/
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         assert drawer != null;
@@ -111,25 +108,42 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         //if no data, import data
-        db = new LocalDB(this);
         gatherData(db.getGeneral("year"));
-
     }
 
-    private void createNavigationMenu(ArrayList<Info> menu){
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+    private void createNavigationMenu(){
+        navigationView = (LinearLayout) findViewById(R.id.nav_view);
         assert navigationView != null;
+        ArrayList<Info> menu = db.getNavigationTitles();
+
+        navigationList = (ListView) findViewById(R.id.nav_list);
+
+        //set up refresh menu
+        refreshList = (ListView) findViewById(R.id.refresh_list);
+        refreshCategories = getResources().getStringArray(R.array.refresh_options);
+        refreshList.setAdapter(new RefreshAdapter(context, R.layout.refresh_item, refreshCategories));
+        if (refreshItem == -1) {
+            refreshList.setItemChecked(1, true);
+            db.updateRefreshRate(refreshList.getItemAtPosition(1).toString());
+            refreshItem = 1;
+        }else{
+            refreshList.setItemChecked(refreshItem, true);
+        }
+
+        //set theme color
+        color = Color.parseColor(db.getThemeColor("themeColor"));
 
         //Navigation Header Color
-        int colors [] = {Color.parseColor(db.getThemeColor("themeDark")), Color.parseColor(db.getThemeColor("themeMedium")), Color.parseColor(db.getThemeColor("themeColor"))};
+        int colors [] = {Color.parseColor(db.getThemeColor("themeDark")), Color.parseColor(db.getThemeColor("themeMedium")), color};
         GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,colors);
-        View header = navigationView.getHeaderView(0);
+        LinearLayout header = (LinearLayout)findViewById(R.id.nav_header);
         header.setBackground(gd);
 
+
         //Navigation Header Image
-        ImageView image = (ImageView) header.findViewById(R.id.imageView);
+        ImageView image = (ImageView) findViewById(R.id.imageView);
         String logo = db.getGeneral("logo");
-        if (logo.equals("null")) {
+        if (logo == null ) {
             image.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_sbcat_transparent));
         }else{
             byte[] decodedBytes = Base64.decode(logo, Base64.DEFAULT);
@@ -138,35 +152,55 @@ public class MainActivity extends AppCompatActivity
         }
 
         //Navigation menu items
-        Menu navMenu = navigationView.getMenu();
-        navMenu.clear();
-        Resources r = getResources();
-        for (int m=0; m < menu.size();m++){
-            int drawableId = r.getIdentifier(menu.get(m).getBody(),"drawable","org.lightsys.sbcat");
-            navMenu.add(0, 0, Menu.NONE, menu.get(m).getHeader()).setIcon(drawableId);
-        }
-        navigationView.setNavigationItemSelectedListener(this);
+        ArrayList<HashMap<String, String>> itemList = generateListItems(menu);
+
+        String[] from = {"text"};
+        int[] to = {R.id.nav_item};
+        NavigationAdapter navAdapter = new NavigationAdapter(this, itemList, R.layout.drawer_list_item, from, to);
+        navigationList.setAdapter(navAdapter);
+        navigationList.setOnItemClickListener(new DrawerItemClickListener());
+        navigationList.setItemChecked(0, true);
 
         //Title bar Color
-        toolbar.setBackgroundColor(Color.parseColor(db.getThemeColor("themeColor")));
+        toolbar.setBackgroundColor(color);
 
         if (Build.VERSION.SDK_INT >= 21) {
             getWindow().setStatusBarColor(Color.parseColor(db.getThemeColor("themeDark")));
         }
+
+    }
+
+    private ArrayList<HashMap<String, String>> generateListItems(ArrayList<Info> menu) {
+        ArrayList<HashMap<String, String>> aList = new ArrayList<>();
+        for (Info m : menu) {
+            HashMap<String, String> hm = new HashMap<>();
+
+            hm.put("text", m.getHeader());
+            hm.put("icon", Integer.toString(getResources().getIdentifier(m.getBody(),"drawable","org.lightsys.sbcat")));
+
+            aList.add(hm);
+        }
+        return aList;
     }
 
     public void gatherData(String year){
+        Log.d(TAG, "gatherData:  "+ year);
 
         if (year == null) {
-            while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
+            /*while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
                 requestCameraPermission();
             }
             Intent QR = new Intent(MainActivity.this, myTest.class);
-            startActivityForResult(QR, QR_RESULT);
+            startActivityForResult(QR, QR_RESULT);*/
+            dataURL = "http://10.5.10.95:3000";
+
+            new DataConnection(context, activity, "new", dataURL, true).execute("");
         }else{
-            createNavigationMenu(db.getNavigationTitles());
+            Log.d(TAG, "gatherData: gather data");
+            createNavigationMenu();
+            navigationList.setItemChecked(0, true);
             fragment = new WelcomeView();
-            fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment,"WelcomeView")
+            fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment)
                     .commit();
         }
     }
@@ -183,6 +217,7 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public void onPostCreate(Bundle savedInstanceState){
+
         super.onPostCreate(savedInstanceState);
     }
 
@@ -227,36 +262,25 @@ public class MainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         switch (id){
             case R.id.action_refresh:
+                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true).execute("");
+                break;
+            case R.id.action_refresh_dropdown:
                 if (refreshList.getVisibility()==View.VISIBLE){
-                    refreshList.setVisibility(View.GONE);
+                    closeRefresh();
                 }else{
-                    refreshList.setVisibility(View.VISIBLE);
+                    openRefresh();
                     refreshList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                         @Override
                         public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                            switch(i){
-                                case 0:
-                                    Toast.makeText(context, "NOW", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case 1:
-                                    //adapterView.setBackgroundColor(ContextCompat.getColor(context, R.color.white));
-                                    adapterView.findViewById(R.id.refresh_list).setBackgroundColor(ContextCompat.getColor(context, R.color.white));
-                                    //view.setBackgroundColor(Color.parseColor(db.getThemeColor("themeColor")));
-                                    break;
-                                case 2:
-                                    view.setBackgroundColor(Color.parseColor(db.getThemeColor("themeColor")));
-                                    break;
-                                case 3:
-                                    view.setBackgroundColor(Color.parseColor(db.getThemeColor("themeColor")));
-                                    break;
-                                case 4:
-                                    view.setBackgroundColor(Color.parseColor(db.getThemeColor("themeColor")));
-                                    break;
-                            }
+
+                            //highlight new selection and set refresh rate
+                            refreshList.setItemChecked(i, true);
+                            refreshItem = i;
+                            db.updateRefreshRate(refreshCategories[i]);
+                            closeRefresh();
                         }
                     });
                 }
-
                 break;
             case R.id.action_rescan:
                 gatherData(null);
@@ -266,45 +290,69 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-        String title = (String) item.getTitle();
-        Log.d(TAG, "onNavigationItemSelected: " + title);
+    private void closeRefresh(){
+        refreshList.setVisibility(View.GONE);
+        findViewById(R.id.refresh_list_header).setVisibility(View.GONE);
+        findViewById(R.id.refresh_list_border).setVisibility(View.GONE);
+    }
 
+    private void openRefresh(){
+        refreshList.setVisibility(View.VISIBLE);
+        findViewById(R.id.refresh_list_header).setVisibility(View.VISIBLE);
+        findViewById(R.id.refresh_list_border).setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * The listener for the drawer menu. waits for a drawer item to be clicked.
+     */
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+            onNavigationItemSelected(view);
+        }
+    }
+
+    public boolean onNavigationItemSelected(View view) {
+        // Handle navigation view item clicks here.
+
+        if (previousNavView != null){
+            ((TextView)previousNavView.findViewById(R.id.nav_item)).setTextColor(ContextCompat.getColor(context, R.color.darkGray));
+            ((ImageView)previousNavView.findViewById(R.id.iconView)).setColorFilter(ContextCompat.getColor(context, R.color.darkGray));
+        } else{
+            ((TextView)navigationList.getChildAt(0).findViewById(R.id.nav_item)).setTextColor(ContextCompat.getColor(context, R.color.darkGray));
+            ((ImageView)navigationList.getChildAt(0).findViewById(R.id.iconView)).setColorFilter(ContextCompat.getColor(context, R.color.darkGray));
+        }
+        ((TextView) view.findViewById(R.id.nav_item)).setTextColor(color);
+        ((ImageView) view.findViewById(R.id.iconView)).setColorFilter(color);
+        previousNavView = view;
+
+        String title = ((TextView)view.findViewById(R.id.nav_item)).getText().toString();
         switch(title) {
             case "Notifications":
                 fragment = new WelcomeView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WelcomeView")
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
                         .commit();
                 break;
             case "Contacts":
                 fragment = new ContactsView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "ContactView")
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
                         .commit();
                 break;
             case "Schedule":
                 fragment = new ScheduleView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "ScheduleView")
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
                         .commit();
                 break;
             case "Housing":
                 fragment = new HousingView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "HousingView")
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
                     .commit();
                 break;
             case "Prayer Partners":
                 fragment = new PrayerPartnerView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "PrayerPartnerView")
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
                     .commit();
-                break;
-            case "Refresh":
-                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true).execute("");
-                break;
-            case "Rescan":
-                gatherData(null);
                 break;
             default:
                 Bundle bundle = new Bundle();
@@ -312,7 +360,7 @@ public class MainActivity extends AppCompatActivity
 
                 fragment = new InformationalPageView();
                 fragment.setArguments(bundle);
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "InformationalPageView")
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
                         .commit();
                 break;
         }
@@ -322,7 +370,7 @@ public class MainActivity extends AppCompatActivity
         assert drawer != null;
         drawer.closeDrawer(GravityCompat.START);
 
-        return id != R.id.nav_refresh;
+        return true;
     }
 
     @Override
@@ -346,6 +394,10 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
+        if (navigationList ==null){
+            createNavigationMenu();
+        }
+        navigationList.setItemChecked(0, true);
         fragment = new WelcomeView();
         fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WelcomeView")
                 .commit();
@@ -357,13 +409,29 @@ public class MainActivity extends AppCompatActivity
         public void onReceive(Context context, Intent intent) {
             // Extract data included in the Intent
 
+            //set Refresh dropdown select
+            if (refreshList.getCheckedItemPosition() == -1) {
+                int child = 0;
+                for (int i = 0; i < refreshCategories.length; i++) {
+                    if (refreshCategories[i].equals(db.getGeneral("refresh"))) {
+                        child = i;
+                    }
+                }
+                Log.d(TAG, "onReceive: " + child);
+                refreshList.setItemChecked(child, true);
+                Log.d(TAG, "onReceive: " + refreshList.getCheckedItemPosition());
+
+            }
+
+            //based on broadcast message received perform correct action
             if (intent.getStringExtra("action").equals("retry")){
                 RetryConnection();
             } else if (intent.getStringExtra("action").equals("new")) {
-                createNavigationMenu(db.getNavigationTitles());
+                createNavigationMenu();
                 fragment = new WelcomeView();
                 fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WelcomeView")
                         .commit();
+
             }else {
                 Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.contentFrame);
                 final FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();

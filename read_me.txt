@@ -2,7 +2,9 @@ JSON file:
 	DATE: mm/dd/yyyy hh:mm:ss
 	NOTIFICATIONS: names must be digits and unique (is this still true?)
 	CONTACTS PAGE ID: 0=textview, 1=listview (list items separated by ':'
-	NAVIGATION: if "nav is null for a page it will not be imported and page will not 		be displayed in nav menu.	
+	NAVIGATION: if "nav is null for a page it will not be imported and page will not 		be displayed in nav menu.
+	GENERAL: refresh must be in minutes
+	INFORMATION PAGES: "~" will be replaced with bullet arrow	
 	
 	AVAILABLE TITLE ICONS: 
 		"ic_contact" - 
@@ -11,7 +13,7 @@ JSON file:
 		"ic_mountains" - 
 		"ic_house" - 
 		"ic_group: - 
-		"ic_bell" (? change ic_notifications)
+		"ic_bell" -
 		"ic_refresh" - 
 		"ic_camera" - 
 
@@ -28,8 +30,7 @@ APP:
 	SCHEDULE PAGE:
 	HOUSING PAGE:
 	PRAYER PARTNERS PAGE:
-	HQ INFO PAGE:
-	FREE DAY IDEAS PAGE:
+	INFORMATION PAGES:
 	
 
 		

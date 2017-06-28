@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 import org.lightsys.sbcat.R;
 import org.lightsys.sbcat.data.Info;
@@ -19,6 +20,8 @@ import org.lightsys.sbcat.views.MainActivity;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * @author Judah Sistrunk
@@ -56,11 +59,13 @@ public class AutoUpdater extends Service {
             public void run() {
 
                 //get update period
+                int refreshRate = (db.getGeneral("refresh")==null)?15:Integer.parseInt(db.getGeneral("refresh"));
+
                 db.close();
 
                 Calendar currentDate = Calendar.getInstance();
-                //updateMillis = ONE_MINUTE;
-                updateMillis = NEVER;
+                updateMillis = refreshRate * ONE_MINUTE;
+                Log.d(TAG, "run: "+ updateMillis);
 
                 //difference between the previous time and the current time
                 long elapsedTime = currentDate.getTimeInMillis() - prevDate.getTimeInMillis();

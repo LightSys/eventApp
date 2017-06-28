@@ -5,6 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
-    android:textSize="@dimen/contact_dimen_lg"
+    android:textSize="@dimen/contact_dimen"
     android:lineSpacingExtra="5dp"
-    android:paddingBottom="@dimen/more_space_border_dimen_lg"/>
+    android:paddingBottom="@dimen/more_space_border_dimen"/>

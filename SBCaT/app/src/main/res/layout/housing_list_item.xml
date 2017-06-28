@@ -13,21 +13,20 @@
         android:textSize="@dimen/contact_dimen"
         android:textColor="@color/white"
         android:gravity="end"
-        android:padding="5dp"/>
+        android:padding="@dimen/more_space_border_dimen"/>
 
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="@dimen/border_dimen"
-        android:layout_marginBottom="@dimen/border_dimen">
+        android:layout_margin="@dimen/border_dimen">
         <!-- Donor body-->
         <include
             layout="@layout/contact_list_item"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="2"/>
+            android:layout_weight="3"/>
 
         <!-- List of students-->
 
@@ -36,7 +35,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textSize="@dimen/contact_dimen"
-            android:layout_weight="1"/>
+            android:layout_weight="2"/>
     </LinearLayout>
 
 </LinearLayout>

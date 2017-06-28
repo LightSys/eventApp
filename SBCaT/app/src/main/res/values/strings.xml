@@ -7,11 +7,10 @@
     <!--Refresh Resources-->
     <string name="action_settings">Refresh Period</string>
     <string-array name="refresh_options">
-        <item>Now</item>
-        <item>Never</item>
-        <item>15 minutes</item>
-        <item>30 minutes</item>
-        <item>1 Hour</item>
+        <item>-1</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
     </string-array>
 
     <!--Navigation Resources-->
@@ -25,6 +24,10 @@
     <string name="nav_refresh">Refresh</string>
     <string name="nav_logo">SBCaT Logo</string>
     <string name="nav_rescan">Rescan QR</string>
+
+
+    <string name="drawer_open">Drawer Open</string>
+    <string name="drawer_closed">Drawer Closed</string>
 
     <!--welcome resources-->
     <string name="welcome_header">Welcome to Code-a-Thon!</string>
@@ -41,8 +44,9 @@
     <!--Connection resources-->
     <string name="retry_connection_button">Retry Connection?</string>
     <string name="rescan_qr_button">Rescan QR?</string>
-    <!--Free Day resournces-->
-    <string name="bullet_custom">&#187;</string>
+    <!--Information Page resournces-->
+    <string name="bullet_custom">&#9654;</string>
+
     <!--
  Copyright (C) 2010 ZXing authors
 

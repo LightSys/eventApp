@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -33,6 +34,8 @@ import org.lightsys.sbcat.tools.LocalDB;
 
 import java.util.ArrayList;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by otter57 on 3/28/17.
  *
@@ -45,6 +48,8 @@ public class ScheduleView extends Fragment {
     private HorizontalScrollView ScrollH, ScrollB;
     private LocalDB db;
     private Context context;
+    private float density;
+    private int width, height, textSize, paddingLg, padding, divider;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -54,10 +59,16 @@ public class ScheduleView extends Fragment {
         mainLayout = (LinearLayout) v.findViewById(R.id.main_layout);
         ScrollH = (HorizontalScrollView)v.findViewById(R.id.HeaderScroll);
         ScrollB = (HorizontalScrollView)v.findViewById(R.id.bodyScroll);
-        int density = Math.round(getResources().getDisplayMetrics().density);
+        density = getResources().getDisplayMetrics().density;
 
         db = new LocalDB(getContext());
         ArrayList<String> days = db.getDays();
+        textSize = Math.round(15 * density);// + 0.5f);
+        paddingLg = Math.round(10 * density);//) + 0.5f);
+        padding = Math.round(5/2 * density);// + 0.5f);
+        width = Math.round(50 * density);// + 0.5f);
+        height = Math.round(75/2 * density);// + 0.5f);
+        divider = Math.round(1/2*density);
 
         CreateHeader(days,v);
 
@@ -144,7 +155,7 @@ public class ScheduleView extends Fragment {
         TextView header = new TextView(context);
         header.setText(" ");
         header.setTypeface(null, Typeface.BOLD);
-        header.setTextSize(30);
+        header.setTextSize(textSize);
         header.setGravity(Gravity.CENTER_HORIZONTAL);
         header.setLayoutParams(headerParams);
 
@@ -161,8 +172,8 @@ public class ScheduleView extends Fragment {
             header = new TextView(context);
             header.setText(d);
             header.setTypeface(null, Typeface.BOLD);
-            header.setTextSize(30);
-            header.setGravity(Gravity.CENTER_HORIZONTAL);
+            header.setTextSize(textSize);
+            header.setGravity(Gravity.CENTER);
             header.setLayoutParams(headerParams);
 
             divider_h = new View(context);
@@ -190,6 +201,7 @@ public class ScheduleView extends Fragment {
                 timeStr = Integer.toString(t);
             }
             time.setText(timeStr);
+            //time.setPadding(paddingLg, paddingLg, padding, paddingLg);
             time.setLayoutParams(timeParams);
 
             View divider_v = new View(context);
@@ -214,13 +226,13 @@ public class ScheduleView extends Fragment {
 
 
             iconsLayout.measure(0, 0);
-            int height = 75/15;//iconsLayout.getMeasuredHeight()*density;
-            int width = 400;
+            int heightCol = 75/15;
+            int widthCol = 400;
 
             int color = Color.parseColor("#d6d4d4");
 
             if (sch != null) {
-                height = (height * sch.getTimeLength() + Math.round(sch.getTimeLength()/15)-1);
+                heightCol = heightCol * sch.getTimeLength() + Math.round((sch.getTimeLength()/15)-1);
                 event.setText(sch.getDesc());
 
                 if (sch.getLocationName() != null){
@@ -230,7 +242,7 @@ public class ScheduleView extends Fragment {
                         car.setImageResource(R.drawable.ic_car);
                         car.setPadding(0, 10, 5, 10);
                         iconsLayout.addView(car);
-                        width -= 60+5;
+                        widthCol -= 60+5;
 
                         car.setOnClickListener(new OnCarClicked(contactInfo.getAddress()));
                     }
@@ -239,17 +251,17 @@ public class ScheduleView extends Fragment {
                         phone.setImageResource(R.drawable.ic_call_phone);
                         phone.setPadding(0, 10, 5, 10);
                         iconsLayout.addView(phone);
-                        width -= 60+5;
+                        widthCol -= 60+5;
 
                         phone.setOnClickListener(new OnPhoneClicked(contactInfo.getPhone()));
                     }
-                    event.setLayoutParams(new LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT));
+                    event.setLayoutParams(new LinearLayout.LayoutParams(widthCol, ViewGroup.LayoutParams.MATCH_PARENT));
                 }
 
                 color = Color.parseColor(db.getThemeColor(sch.getCategory()));
 
             }else{
-                height = height*15;
+                heightCol = heightCol*15;
             }
 
             int colors[] = { color , 0xfffffff,0xfffffff,0xfffffff,0xfffffff,0xfffffff, 0xfffffff };
@@ -262,7 +274,7 @@ public class ScheduleView extends Fragment {
             iconsLayout.setBackground(gd);
 
             //create cell of column containing event info
-            iconsLayout.setLayoutParams(new FrameLayout.LayoutParams(400, height));
+            iconsLayout.setLayoutParams(new FrameLayout.LayoutParams(400, heightCol));
 
             //textView padding
             event.setPadding(20,20,5,20);

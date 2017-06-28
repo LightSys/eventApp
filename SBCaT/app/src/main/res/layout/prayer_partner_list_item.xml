@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:padding="@dimen/more_space_border_dimen">
 
     <!-- Donor body -->
     <TextView
@@ -11,8 +12,8 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:textSize="@dimen/header_dimen_lg"
-        android:layout_weight="1"
-        android:layout_margin="10dp"/>
+        android:layout_weight="3"
+        android:gravity="center_vertical"/>
 
     <!-- List of students-->
     <TextView
@@ -20,7 +21,6 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:textSize="@dimen/contact_dimen_lg"
-        android:layout_weight="2"
-        android:layout_margin="10dp"/>
+        android:layout_weight="2"/>
 
 </LinearLayout>

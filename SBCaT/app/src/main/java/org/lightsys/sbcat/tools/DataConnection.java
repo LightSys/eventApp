@@ -121,7 +121,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         String test;
         try {
             // Attempt to pull information about the missionary from the API
-            test = GET(address + "/general");
+            test = GET(address + "/theme");
             // Unauthorized signals incorrect username or password
             // 404 not found signals invalid ID
             // Empty or null signals an incorrect server name
@@ -221,11 +221,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     loadHousing(GET(qrAddress + "/housing"));
                     loadPrayerPartners(GET(qrAddress + "/prayer_partners"));
                     loadInformationalPage(GET(qrAddress + "/information_page"));
-
                     loadGeneralInfo(GET(qrAddress + "/general"));
                     loadTheme(GET(qrAddress+"/theme"));
                     loadContacts(GET(qrAddress + "/contacts"));
-                    loadNavigationTitles(GET(qrAddress+"/navigation_titles"));
                 }else{
                     loadNotifications(GET(qrAddress+"/notifications"), false);
                 }
@@ -415,48 +413,18 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         if (json == null) {
             return;
         }
-        JSONArray tempNames = json.names();
 
-            try{
-                db.addGeneral("year",json.getString("year"));
-                db.addGeneral("logo",json.getString("logo"));
+        try{
+            db.addGeneral("year",json.getString("year"));
+            db.addGeneral("logo",json.getString("logo"));
+            if (db.getGeneral("refresh") == null){
+                db.addGeneral("refresh", json.getString("refresh"));
             }
-            catch(JSONException e){
-                e.printStackTrace();
-            }
-    }
-
-    /**
-     * Loads titles for app navigation
-     * @param result, result of API query for hq information
-     */
-    private void loadNavigationTitles(String result) {
-        JSONObject json = null;
-        try {
-            json = new JSONObject(result);
-        } catch (JSONException e1) {
-            e1.printStackTrace();
         }
-        if (json == null) {
-            return;
-        }
-        JSONArray tempNames = json.names();
-
-        for(int i = 0; i < tempNames.length(); i++){
-            try{
-                //@id signals a new object, but contains no information on that line
-                if(!tempNames.getString(i).equals("@id")){
-                    JSONObject notificationObj = json.getJSONObject(tempNames.getString(i));
-
-                    db.addNavigationTitles(tempNames.getString(i), notificationObj.getString("icon"));
-                }
-            }
-            catch(JSONException e){
-                e.printStackTrace();
-            }
+        catch(JSONException e){
+            e.printStackTrace();
         }
     }
-
 
     /**
      * Loads notifications Information
@@ -647,7 +615,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      */
     private void loadInformationalPage(String result) {
         JSONObject json = null;
-        boolean pageNav = true;
         try {
             json = new JSONObject(result);
         } catch (JSONException e1) {
@@ -664,9 +631,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 if(!tempNames.getString(i).equals("@id")){
                     JSONArray InfoArray = json.getJSONArray(tempNames.getString(i));
 
-                    db.addNavigationTitles(InfoArray.getJSONObject(0).getString("nav"), InfoArray.getJSONObject(0).getString("icon"));
+                    String title = InfoArray.getJSONObject(0).getString("nav");
 
-                    String title = tempNames.getString(i);
+                    db.addNavigationTitles(title, InfoArray.getJSONObject(0).getString("icon"));
 
                     for(int n = 1; n<InfoArray.length();n++){
 

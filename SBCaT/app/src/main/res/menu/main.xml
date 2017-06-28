@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group>
+        <item
+            android:id="@+id/action_rescan"
+            android:orderInCategory="100"
+            android:title="rescan"
+            android:icon="@drawable/ic_camera"
+            app:showAsAction="ifRoom"/>
+    </group>
+
     <group>
         <item
             android:id="@+id/action_refresh"
@@ -13,10 +23,10 @@
 
     <group>
         <item
-            android:id="@+id/action_rescan"
+            android:id="@+id/action_refresh_dropdown"
             android:orderInCategory="100"
-            android:title="rescan"
-            android:icon="@drawable/ic_camera"
+            android:title="refresh dropdown"
+            android:icon="@drawable/ic_drop_down"
             app:showAsAction="ifRoom"/>
     </group>
 

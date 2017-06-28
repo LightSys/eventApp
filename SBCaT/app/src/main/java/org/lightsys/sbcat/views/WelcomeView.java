@@ -51,7 +51,6 @@ public class WelcomeView extends Fragment {
             header.setBackgroundColor(Color.parseColor(db.getThemeColor("themeDark")));
         }
 
-
         ArrayList<HashMap<String,String>> itemList = generateListItems();
 
         // display donor name, fund name, date, and amount for all gifts

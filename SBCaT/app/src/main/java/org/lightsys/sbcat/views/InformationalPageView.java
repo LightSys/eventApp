@@ -3,6 +3,8 @@ package org.lightsys.sbcat.views;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +18,8 @@ import org.lightsys.sbcat.tools.LocalDB;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by otter57 on 3/29/17.
@@ -65,7 +69,7 @@ public class InformationalPageView extends Fragment {
             } else {
                 hm.put("header", null);
             }
-            hm.put("text", hq.getBody());
+            hm.put("text", hq.getBody().replace("~", getResources().getString(R.string.bullet_custom)));
 
             aList.add(hm);
         }

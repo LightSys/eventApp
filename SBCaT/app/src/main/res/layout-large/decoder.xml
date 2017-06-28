@@ -37,6 +37,6 @@
             android:background="@color/transparent"
             android:text="@string/msg_default_status"
             android:textColor="@color/status_text"
-            android:textSize="14sp"/>
+            android:textSize="@dimen/small_subtitle_dimen_lg"/>
 
 </merge>

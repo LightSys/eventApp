@@ -225,7 +225,7 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * adds code-a-thon general info (url, year, logo)
+     * adds code-a-thon general info (url, year, logo, refresh rate)
      */
     public void addGeneral(String type,String year) {
         ContentValues values = new ContentValues();
@@ -532,8 +532,9 @@ public class LocalDB extends SQLiteOpenHelper {
      */
     public ArrayList<Info> getHQ(String page) {
         ArrayList<Info> hq = new ArrayList<>();
-        String queryString = "SELECT * FROM " + TABLE_INFORMATION_PAGE + " WHERE " + COLUMN_PAGE
-                + " = \'" + page + "\'";
+
+        String queryString = "SELECT * FROM " + TABLE_INFORMATION_PAGE + " WHERE "
+                + COLUMN_PAGE + " LIKE \"%" + page + "%\"";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(queryString, null);
@@ -752,6 +753,18 @@ public class LocalDB extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.update(TABLE_NOTIFICATIONS, values, COLUMN_ID + " = " + id, null);
+        db.close();
+    }
+
+    /**
+     * update general table to set refresh rate
+     */
+    public void updateRefreshRate(String rate){
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_INFO, rate);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.update(TABLE_GENERAL_INFO, values, COLUMN_TYPE + " = 'refresh'", null);
         db.close();
     }
 

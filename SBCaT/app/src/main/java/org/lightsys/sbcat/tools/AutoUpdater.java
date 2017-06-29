@@ -11,8 +11,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
 
 import org.lightsys.sbcat.R;
 import org.lightsys.sbcat.data.Info;
@@ -20,8 +18,6 @@ import org.lightsys.sbcat.views.MainActivity;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * @author Judah Sistrunk
@@ -35,10 +31,6 @@ public class AutoUpdater extends Service {
     //time constants in milliseconds
     private static final int ONE_SECOND     = 1000;
     private static final int ONE_MINUTE     = ONE_SECOND * 60;
-    private static final int THIRTY_MINUTES = ONE_MINUTE * 30;
-    private static final int ONE_HOUR       = ONE_MINUTE * 60;
-    private static final int TWELVE_HOURS   = ONE_HOUR * 12;
-    private static final int ONE_DAY        = ONE_HOUR * 60;
     private static final int NEVER          = -1;
 
     private final LocalDB db; //local database
@@ -59,13 +51,12 @@ public class AutoUpdater extends Service {
             public void run() {
 
                 //get update period
-                int refreshRate = (db.getGeneral("refresh")==null)?15:Integer.parseInt(db.getGeneral("refresh"));
-
                 db.close();
 
                 Calendar currentDate = Calendar.getInstance();
-                updateMillis = refreshRate * ONE_MINUTE;
-                Log.d(TAG, "run: "+ updateMillis);
+
+                //set refresh frequency
+                updateMillis = (db.getGeneral("refresh") != null ? ONE_MINUTE*Integer.parseInt(db.getGeneral("refresh")) : ONE_MINUTE*15);
 
                 //difference between the previous time and the current time
                 long elapsedTime = currentDate.getTimeInMillis() - prevDate.getTimeInMillis();

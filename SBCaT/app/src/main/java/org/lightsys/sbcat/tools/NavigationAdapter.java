@@ -3,10 +3,8 @@ package org.lightsys.sbcat.tools;
 import android.content.Context;
 import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -16,8 +14,6 @@ import org.lightsys.sbcat.R;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static android.content.ContentValues.TAG;
-
 /**
  * Created by otter57 on 4/5/17.
  *
@@ -26,12 +22,12 @@ import static android.content.ContentValues.TAG;
 
 public class NavigationAdapter extends SimpleAdapter {
 
-    private Context context;
-    private int color;
-    private ArrayList<HashMap<String, String>> data;
+    private final Context context;
+    private final int color;
+    private final ArrayList<HashMap<String, String>> data;
 
-    public NavigationAdapter(Context context, ArrayList<HashMap<String, String>> data, int resource, String[] from, int [] to) {
-        super(context, data, resource, from, to);
+    public NavigationAdapter(Context context, ArrayList<HashMap<String, String>> data, String[] from, int [] to) {
+        super(context, data, R.layout.drawer_list_item, from, to);
         this.context = context;
         this.data = data;
         LocalDB db = new LocalDB(context);

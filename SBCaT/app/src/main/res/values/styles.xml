@@ -56,7 +56,7 @@
         <item name="android:fullDark">@color/spinner_blue</item>
     </style>
 
-    <style name="listview_no_divider" parent="@android:style/Widget.ListView">
+    <style name="list_view_no_divider" parent="@android:style/Widget.ListView">
         <item name="android:divider">@null</item>
         <item name="android:dividerHeight">0dip</item>
     </style>

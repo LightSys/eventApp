@@ -5,7 +5,6 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <!--Refresh Resources-->
-    <string name="action_settings">Refresh Period</string>
     <string-array name="refresh_options">
         <item>-1</item>
         <item>15</item>
@@ -13,21 +12,13 @@
         <item>60</item>
     </string-array>
 
+    <string name="refresh_title">Set Refresh rate</string>
+    <string name="refresh">refresh</string>
+    <string name="rescan">rescan</string>
+    <string name="refresh_dropdown">refresh dropdown</string>
+
     <!--Navigation Resources-->
-    <string name="nav_contacts">Contacts</string>
-    <string name="nav_notifications">Notifications</string>
-    <string name="nav_schedule">Schedule</string>
-    <string name="nav_housing">Housing</string>
-    <string name="nav_prayer_partners">Prayer Partners</string>
-    <string name="nav_free_day">Free Day Ideas</string>
-    <string name="nav_hq">HQ Info</string>
-    <string name="nav_refresh">Refresh</string>
     <string name="nav_logo">SBCaT Logo</string>
-    <string name="nav_rescan">Rescan QR</string>
-
-
-    <string name="drawer_open">Drawer Open</string>
-    <string name="drawer_closed">Drawer Closed</string>
 
     <!--welcome resources-->
     <string name="welcome_header">Welcome to Code-a-Thon!</string>
@@ -44,7 +35,8 @@
     <!--Connection resources-->
     <string name="retry_connection_button">Retry Connection?</string>
     <string name="rescan_qr_button">Rescan QR?</string>
-    <!--Information Page resournces-->
+
+    <!--Information Page resources-->
     <string name="bullet_custom">&#9654;</string>
 
     <!--

@@ -6,7 +6,7 @@
         <item
             android:id="@+id/action_rescan"
             android:orderInCategory="100"
-            android:title="rescan"
+            android:title="@string/rescan"
             android:icon="@drawable/ic_camera"
             app:showAsAction="ifRoom"/>
     </group>
@@ -16,7 +16,7 @@
             android:id="@+id/action_refresh"
             android:orderInCategory="100"
             android:icon="@drawable/ic_refresh"
-            android:title="refresh"
+            android:title="@string/refresh"
             app:showAsAction="always">
         </item>
     </group>
@@ -25,7 +25,7 @@
         <item
             android:id="@+id/action_refresh_dropdown"
             android:orderInCategory="100"
-            android:title="refresh dropdown"
+            android:title="@string/refresh_dropdown"
             android:icon="@drawable/ic_drop_down"
             app:showAsAction="ifRoom"/>
     </group>

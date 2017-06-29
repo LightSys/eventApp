@@ -53,7 +53,7 @@ public class HousingView extends Fragment {
         // display donor name, fund name, date, and amount for all gifts
         String[] from = {"host_info", "students", "driver"};
         int[] to = {R.id.infoText, R.id.studentsText, R.id.driver};
-        final HousingAdapter adapter = new HousingAdapter(getActivity(), itemList, R.layout.housing_list_item, from, to, Color.parseColor(db.getThemeColor("themeDark")));
+        final HousingAdapter adapter = new HousingAdapter(getActivity(), itemList, from, to, Color.parseColor(db.getThemeColor("themeDark")));
 
         listview.setAdapter(adapter);
 

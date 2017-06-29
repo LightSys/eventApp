@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import org.lightsys.sbcat.data.ContactInfo;
 import org.lightsys.sbcat.data.Info;
@@ -13,8 +12,6 @@ import org.lightsys.sbcat.data.HousingInfo;
 import org.lightsys.sbcat.data.ScheduleInfo;
 
 import java.util.ArrayList;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by otter57 on 3/30/17.
@@ -55,8 +52,6 @@ public class LocalDB extends SQLiteOpenHelper {
     private static final String COLUMN_STUDENTS = "students";
     //PRAYER PARTNER TABLE
     private static final String TABLE_PRAYER_PARTNERS = "prayer_partners";
-    //FREE DAY TABLE
-    private static final String TABLE_FREE_DAY = "free_day";
     //NOTIFICATIONS TABLE
     private static final String  TABLE_NOTIFICATIONS = "notifications";
     private static final String COLUMN_NEW = "new";
@@ -120,10 +115,6 @@ public class LocalDB extends SQLiteOpenHelper {
                 + COLUMN_STUDENTS + " TEXT)";
         db.execSQL(CREATE_TABLE_PRAYER_PARTNERS);
 
-        String CREATE_TABLE_FREE_DAY = "CREATE TABLE " + TABLE_FREE_DAY + "("
-                + COLUMN_HEADER + " TEXT," + COLUMN_INFO + " TEXT)";
-        db.execSQL(CREATE_TABLE_FREE_DAY);
-
         String CREATE_TABLE_NAVIGATION_TITLES = "CREATE TABLE " + TABLE_NAVIGATION_TITLES + "("
                 + COLUMN_NAME + " TEXT," + COLUMN_ICON + " TEXT)";
         db.execSQL(CREATE_TABLE_NAVIGATION_TITLES);
@@ -157,7 +148,6 @@ public class LocalDB extends SQLiteOpenHelper {
         db.delete(TABLE_HOUSING, null, null);
         db.delete(TABLE_PRAYER_PARTNERS, null, null);
         db.delete(TABLE_TIMESTAMP, null, null);
-        db.delete(TABLE_FREE_DAY, null, null);
         db.delete(TABLE_GENERAL_INFO, null, null);
         db.delete(TABLE_NOTIFICATIONS, null, null);
         db.delete(TABLE_NAVIGATION_TITLES, null, null);
@@ -552,30 +542,6 @@ public class LocalDB extends SQLiteOpenHelper {
         return hq;
     }
 
-
-    /**
-     * @return FreeDay info
-     */
-    public ArrayList<Info> getFreeDay() {
-        ArrayList<Info> freeDay = new ArrayList<>();
-        String queryString = "SELECT * FROM " + TABLE_FREE_DAY;
-
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor c = db.rawQuery(queryString, null);
-
-        while (c.moveToNext()) {
-            Info temp = new Info();
-
-            temp.setHeader(c.getString(0));
-            temp.setBody(c.getString(1));
-
-            freeDay.add(temp);
-        }
-        c.close();
-        db.close();
-        return freeDay;
-    }
-
     /**
      * @return Contact Page info
      */
@@ -670,28 +636,6 @@ public class LocalDB extends SQLiteOpenHelper {
         c.close();
         db.close();
         return notificationTitles;
-    }
-
-    /**
-     * returns Notifications
-     * @return Info
-     */
-    public Info getCurrentNotificationByDate(String date) {
-        Info temp = new Info();
-        String queryString = "SELECT * FROM " + TABLE_NOTIFICATIONS + " WHERE " + COLUMN_DATE + "=" + date;
-
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor c = db.rawQuery(queryString, null);
-
-        while (c.moveToNext()) {
-            temp.setId(c.getInt(0));
-            temp.setHeader(c.getString(1));
-            temp.setBody(c.getString(2));
-            temp.setDate(c.getString(4));
-        }
-        c.close();
-        db.close();
-        return temp;
     }
 
     /**

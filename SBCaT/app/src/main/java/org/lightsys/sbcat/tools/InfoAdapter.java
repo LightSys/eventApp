@@ -20,11 +20,10 @@ import java.util.Map;
 public class InfoAdapter extends SimpleAdapter {
 
     private final List<? extends Map<String, String>> data;
-    private int color;
+    private final int color;
 
-    public InfoAdapter(Context context, List<? extends Map<String, String>> data,
-                       int resource, String[] from, int[] to, int color) {
-        super(context, data, resource, from, to);
+    public InfoAdapter(Context context, List<? extends Map<String, String>> data, String[] from, int[] to, int color) {
+        super(context, data, R.layout.info_list_item, from, to);
         this.data = data;
         this.color = color;
     }

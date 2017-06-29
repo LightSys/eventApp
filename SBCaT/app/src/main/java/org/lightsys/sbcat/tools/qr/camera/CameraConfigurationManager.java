@@ -61,6 +61,7 @@ public final class CameraConfigurationManager {
         if (width < height) {
             Log.i(TAG, "Display reports portrait orientation; assuming this is incorrect");
             int temp = width;
+            //noinspection SuspiciousNameCombination
             width = height;
             height = temp;
         }

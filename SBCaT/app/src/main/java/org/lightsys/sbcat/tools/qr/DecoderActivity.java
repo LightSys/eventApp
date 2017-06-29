@@ -126,11 +126,8 @@ public class DecoderActivity extends Activity implements IDecoderActivity, Surfa
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_FOCUS || keyCode == KeyEvent.KEYCODE_CAMERA) {
-            // Handle these events so they don't launch the Camera app
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
+        // Handle these events so they don't launch the Camera app
+        return keyCode == KeyEvent.KEYCODE_FOCUS || keyCode == KeyEvent.KEYCODE_CAMERA || super.onKeyDown(keyCode, event);
     }
 
     @Override

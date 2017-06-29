@@ -9,7 +9,7 @@
         android:id="@+id/infoList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="@style/listview_no_divider"
+        style="@style/list_view_no_divider"
         />
 
 </LinearLayout>

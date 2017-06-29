@@ -79,7 +79,7 @@ public class ContactsView extends Fragment {
     private void generateContactList(Info c){
 
         // initialize list for contact info
-        ListView list = new ListView(this.getContext(), null, R.style.listview_no_divider);
+        ListView list = new ListView(this.getContext(), null, R.style.list_view_no_divider);
 
         //get address info
         ArrayList<ContactInfo> contact = new ArrayList<>();
@@ -94,7 +94,7 @@ public class ContactsView extends Fragment {
         txt.setTextColor(Color.parseColor(db.getThemeColor("themeMedium")));
         mainLayout.addView(txt);
 
-        //display listview items
+        //display ListView items
         ArrayList<HashMap<String, String>> hmContact = generateAddressItems(contact);
         String[] from = {"info"};
         int[] to = {R.id.infoText};

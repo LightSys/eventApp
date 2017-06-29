@@ -3,13 +3,10 @@ package org.lightsys.sbcat.views;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import org.lightsys.sbcat.R;
 import org.lightsys.sbcat.data.Info;
@@ -18,8 +15,6 @@ import org.lightsys.sbcat.tools.LocalDB;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by otter57 on 3/29/17.
@@ -47,7 +42,7 @@ public class InformationalPageView extends Fragment {
         // display schedule
         String[] from = {"header", "text"};
         int[] to = {R.id.headerText, R.id.text};
-        InfoAdapter adapter = new InfoAdapter(getActivity(), itemList, R.layout.info_list_item, from, to, Color.parseColor(db.getThemeColor("themeMedium")) );
+        InfoAdapter adapter = new InfoAdapter(getActivity(), itemList, from, to, Color.parseColor(db.getThemeColor("themeMedium")) );
         infoListView.setAdapter(adapter);
 
         infoListView.setSelector(android.R.color.transparent);

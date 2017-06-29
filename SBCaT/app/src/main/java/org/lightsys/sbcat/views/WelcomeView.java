@@ -29,14 +29,13 @@ import java.util.Locale;
 public class WelcomeView extends Fragment {
 
     private ArrayList<Info> events = new ArrayList<>();
-    private LocalDB db;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.welcome, container, false);
         getActivity().setTitle("Welcome");
 
-        db = new LocalDB(getActivity());
+        LocalDB db = new LocalDB(getActivity());
 
         //set up notifications
         ListView eventList = (ListView) v.findViewById(R.id.eventList);
@@ -69,11 +68,11 @@ public class WelcomeView extends Fragment {
      * @return a HashMap array with gift information, to be used in a SimpleAdapter
      */
     private ArrayList<HashMap<String,String>> generateListItems(){
-        ArrayList<HashMap<String,String>> aList = new ArrayList<HashMap<String,String>>();
+        ArrayList<HashMap<String,String>> aList = new ArrayList<>();
         SimpleDateFormat formatter = new SimpleDateFormat("mm/dd/yyyy hh:mm:ss", Locale.US);
 
         for(Info event : events){
-            HashMap<String,String> hm = new HashMap<String,String>();
+            HashMap<String,String> hm = new HashMap<>();
             hm.put("title", event.getHeader());
             hm.put("content", event.getBody());
             String date = null;

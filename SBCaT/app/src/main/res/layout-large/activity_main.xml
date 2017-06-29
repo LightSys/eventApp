@@ -21,7 +21,7 @@
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:id="@+id/refresh_list_header"
-            android:text="Set Refresh rate"
+            android:text="@string/refresh_title"
             android:visibility="invisible"
             android:gravity="center_horizontal"
             android:textStyle="bold"

@@ -58,6 +58,7 @@ final class DecodeHandler extends Handler {
             break;
         case R.id.quit:
             running = false;
+            //noinspection ConstantConditions
             Looper.myLooper().quit();
             break;
         }

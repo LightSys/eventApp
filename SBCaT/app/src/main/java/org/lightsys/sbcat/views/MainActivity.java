@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Fragment fragment;
     private final FragmentManager fragmentManager = getSupportFragmentManager();
-    private String dataURL;
     private Context context;
     private Activity activity;
     private LocalDB db;
@@ -112,8 +111,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void createNavigationMenu(){
-        navigationView = (LinearLayout) findViewById(R.id.nav_view);
-        assert navigationView != null;
+        //navigationView = (LinearLayout) findViewById(R.id.nav_view);
+        //assert navigationView != null;
         ArrayList<Info> menu = db.getNavigationTitles();
 
         navigationList = (ListView) findViewById(R.id.nav_list);
@@ -121,11 +120,20 @@ public class MainActivity extends AppCompatActivity {
         //set up refresh menu
         refreshList = (ListView) findViewById(R.id.refresh_list);
         refreshCategories = getResources().getStringArray(R.array.refresh_options);
-        refreshList.setAdapter(new RefreshAdapter(context, R.layout.refresh_item, refreshCategories));
+        refreshList.setAdapter(new RefreshAdapter(context, refreshCategories));
         if (refreshItem == -1) {
-            refreshList.setItemChecked(1, true);
-            db.updateRefreshRate(refreshList.getItemAtPosition(1).toString());
-            refreshItem = 1;
+            int index = -1;
+            for (int n = 0; n<refreshCategories.length;n++){
+                if (refreshCategories[n].equals(db.getGeneral("refresh"))){
+                    index = n;
+                }
+            }
+            if (index == -1){
+                index = 1;
+                db.updateRefreshRate(refreshList.getItemAtPosition(index).toString());
+            }
+            refreshList.setItemChecked(index, true);
+            refreshItem = index;
         }else{
             refreshList.setItemChecked(refreshItem, true);
         }
@@ -156,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
 
         String[] from = {"text"};
         int[] to = {R.id.nav_item};
-        NavigationAdapter navAdapter = new NavigationAdapter(this, itemList, R.layout.drawer_list_item, from, to);
+        NavigationAdapter navAdapter = new NavigationAdapter(this, itemList, from, to);
         navigationList.setAdapter(navAdapter);
         navigationList.setOnItemClickListener(new DrawerItemClickListener());
         navigationList.setItemChecked(0, true);
@@ -187,14 +195,11 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "gatherData:  "+ year);
 
         if (year == null) {
-            /*while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
+            while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
                 requestCameraPermission();
             }
             Intent QR = new Intent(MainActivity.this, myTest.class);
-            startActivityForResult(QR, QR_RESULT);*/
-            dataURL = "http://10.5.10.95:3000";
-
-            new DataConnection(context, activity, "new", dataURL, true).execute("");
+            startActivityForResult(QR, QR_RESULT);
         }else{
             Log.d(TAG, "gatherData: gather data");
             createNavigationMenu();
@@ -313,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public boolean onNavigationItemSelected(View view) {
+    private void onNavigationItemSelected(View view) {
         // Handle navigation view item clicks here.
 
         if (previousNavView != null){
@@ -370,14 +375,13 @@ public class MainActivity extends AppCompatActivity {
         assert drawer != null;
         drawer.closeDrawer(GravityCompat.START);
 
-        return true;
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == QR_RESULT && resultCode == RESULT_OK && data != null) {
-            dataURL = data.getStringExtra(QR_DATA_EXTRA);
+            String dataURL = data.getStringExtra(QR_DATA_EXTRA);
 
             new DataConnection(context, activity, "new", dataURL, true).execute("");
         }
@@ -417,9 +421,7 @@ public class MainActivity extends AppCompatActivity {
                         child = i;
                     }
                 }
-                Log.d(TAG, "onReceive: " + child);
                 refreshList.setItemChecked(child, true);
-                Log.d(TAG, "onReceive: " + refreshList.getCheckedItemPosition());
 
             }
 

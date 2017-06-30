@@ -87,7 +87,7 @@
         "start_time": 1045,
         "length": 90,
         "description":"Church service (for those who are already in town)",
-        "location": "Church",
+        "location": "LightSys (and Chapel Hills Church)",
         "category": "schedule_worship"
       },
       {
@@ -117,7 +117,7 @@
         "start_time": 815,
         "length": 15,
         "description":"Arrive at Company office",
-        "location": "Church",
+        "location": "LightSys (and Chapel Hills Church)",
         "category": "schedule_travel"
       },
       {
@@ -159,7 +159,7 @@
         "start_time": 1830,
         "length": 30,
         "description":"Dinner at A's Home",
-        "location": "Greg and Dorinda A",
+        "location": "Greg and Dorinda Beeley",
         "category": "schedule_food"
       },
       {
@@ -182,7 +182,7 @@
         "start_time": 815,
         "length": 15,
         "description":"Arrive at Company office",
-        "location": "Church",
+        "location": "LightSys (and Chapel Hills Church)",
         "category": "schedule_travel"
       },
       {
@@ -224,7 +224,7 @@
         "start_time": 1830,
         "length": 60,
         "description":"Dinner at the A's Home",
-        "location": "Phil and Melinda A",
+        "location": "Phil and Melinda Struska",
         "category": "schedule_food"
       },
       {
@@ -256,7 +256,7 @@
         "start_time": 815,
         "length": 15,
         "description":"Arrive at Company office",
-        "location": "Church",
+        "location": "LightSys (and Chapel Hills Church)",
         "category": "schedule_travel"
       },
       {
@@ -335,7 +335,7 @@
         "start_time": 815,
         "length": 15,
         "description":"Arrive at Company office",
-        "location": "Church",
+        "location": "LightSys (and Chapel Hills Church)",
         "category": "schedule_travel"
       },
       {
@@ -488,6 +488,7 @@
     {"themeDark":"#304166"},
     {"themeMedium": "#364871"},
     {"themeColor": "#4E69B8"},
+
     {"schedule_travel":"#FFBFB7"},
     {"schedule_worship":"#F3C8FF"},
     {"schedule_food":"#F3FFB5"},

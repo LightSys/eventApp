@@ -4,7 +4,19 @@ JSON file:
 	CONTACTS PAGE ID: 0=textview, 1=listview (list items separated by ':'
 	NAVIGATION: if "nav is null for a page it will not be imported and page will not 		be displayed in nav menu.
 	GENERAL: refresh must be in minutes
-	INFORMATION PAGES: "~" will be replaced with bullet arrow	
+		 icon - must be in base64 format. if unavailable set value as "null"
+	THEME: "theme..." colors can be valid colors or set as "null" for default theme colors 
+		"schedule..." color names can be changed as long as they match Schedule item categories
+	SCHEDULE: 
+		start_time: based on 24-hour clock
+		length: in minutes
+		description: text will show in schedule
+		location: if available links to directions (must match contact name exactly), may be set to null
+		category must match a specified color
+		   
+
+	INFORMATION PAGES: "~" will be replaced with bullet arrow
+	
 	
 	AVAILABLE TITLE ICONS: 
 		"ic_contact" - 

@@ -149,7 +149,6 @@ public class LocalDB extends SQLiteOpenHelper {
         db.delete(TABLE_PRAYER_PARTNERS, null, null);
         db.delete(TABLE_TIMESTAMP, null, null);
         db.delete(TABLE_GENERAL_INFO, null, null);
-        db.delete(TABLE_NOTIFICATIONS, null, null);
         db.delete(TABLE_NAVIGATION_TITLES, null, null);
         db.delete(TABLE_THEME, null, null);
         db.delete(TABLE_CONTACT_PAGE, null, null);
@@ -572,7 +571,7 @@ public class LocalDB extends SQLiteOpenHelper {
      */
     public ArrayList<Info> getNotifications() {
         ArrayList<Info> notifications = new ArrayList<>();
-        String queryString = "SELECT * FROM " + TABLE_NOTIFICATIONS + " ORDER BY " + COLUMN_ID + " DESC";
+        String queryString = "SELECT * FROM " + TABLE_NOTIFICATIONS + " ORDER BY " + COLUMN_DATE + " DESC";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(queryString, null);

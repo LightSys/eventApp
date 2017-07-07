@@ -7,11 +7,11 @@
     <!--Refresh Resources-->
     <string-array name="refresh_options">
         <item>-1</item>
+        <item>5</item>
         <item>15</item>
         <item>30</item>
         <item>60</item>
     </string-array>
-
     <string name="refresh_title">Set Refresh rate</string>
     <string name="refresh">refresh</string>
     <string name="rescan">rescan</string>
@@ -20,7 +20,7 @@
     <!--Navigation Resources-->
     <string name="nav_logo">SBCaT Logo</string>
 
-    <!--welcome resources-->
+    <!--Welcome resources-->
     <string name="welcome_header">Welcome to Code-a-Thon!</string>
     <string name="notifications_header">Notifications</string>
 
@@ -55,6 +55,6 @@
  limitations under the License.
  -->
 
-    <string name="msg_default_status">Place a barcode inside the viewfinder rectangle to scan it.</string>
+    <string name="msg_default_status">Scan a QR code to import event data.</string>
 
 </resources>

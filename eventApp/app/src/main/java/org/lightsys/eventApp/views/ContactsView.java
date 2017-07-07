@@ -103,8 +103,6 @@ public class ContactsView extends Fragment {
 
         list.setAdapter(adapter);
         list.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        int padding = (int) getResources().getDimension(R.dimen.more_space_border_dimen_lg);
-        list.setPadding(padding, padding, padding, padding);
         list.setOnItemClickListener(new OnAddressClicked (contact));
         list.setSelector(ResourcesCompat.getDrawable(getResources(), R.drawable.button_pressed, null));
 

@@ -16,8 +16,7 @@
         android:layout_margin="@dimen/more_space_border_dimen_indent_lg"
         android:textSize="@dimen/large_header_dimen"
         android:layout_gravity="center_horizontal"
-        android:gravity="center_horizontal"
-        android:text="@string/welcome_header"/>
+        android:gravity="center_horizontal"/>
 
     <LinearLayout
         android:id="@+id/eventLayout"

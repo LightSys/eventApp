@@ -232,7 +232,8 @@ public class ScheduleView extends Fragment {
             int color = Color.parseColor("#d6d4d4");
 
             if (sch != null) {
-                heightCol = heightCol * sch.getTimeLength() + divider*(Math.ceil(sch.getTimeLength()/15)-1);
+                heightCol = heightCol * sch.getTimeLength() + divider*(Math.round(sch.getTimeLength()/15)-1);
+                heightCol = sch.getTimeLength()%15!=0?heightCol + 0.5 *divider:heightCol;
 
                 event.setText(sch.getDesc());
 

@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import org.lightsys.eventApp.views.MainActivity;
 import org.lightsys.eventApp.R;
@@ -18,6 +19,8 @@ import org.lightsys.eventApp.data.Info;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * @author Judah Sistrunk
@@ -57,7 +60,7 @@ public class AutoUpdater extends Service {
 
                 //set refresh frequency
                 updateMillis = (db.getGeneral("refresh") != null ? ONE_MINUTE*Integer.parseInt(db.getGeneral("refresh")) : ONE_MINUTE*15);
-
+                updateMillis = ONE_MINUTE;
                 //difference between the previous time and the current time
                 long elapsedTime = currentDate.getTimeInMillis() - prevDate.getTimeInMillis();
 
@@ -113,7 +116,6 @@ public class AutoUpdater extends Service {
         // BigTextStyle allows notification to be expanded if text is more than one line
         Intent notificationIntent = new Intent(context, MainActivity.class);
         PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
 
         nBuild = new NotificationCompat.Builder(context)
                 .setContentTitle(title)

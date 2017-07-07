@@ -3,7 +3,7 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-     android:padding="@dimen/more_space_border_dimen_lg">
+     android:padding="@dimen/more_space_border_dimen">
 
     <TextView
         android:id="@+id/headerText"
@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:layout_margin="@dimen/border_dimen"
+        android:textSize="@dimen/contact_dimen"
         android:lineSpacingExtra="3dp"
         android:layout_marginTop="@dimen/more_space_border_dimen"/>
 

@@ -18,6 +18,11 @@ public class Info {
     public Info() {
     }
 
+    public Info(String header, String body){
+        this.header = header;
+        this.body = body;
+    }
+
     public int getId() {
         return id;
     }

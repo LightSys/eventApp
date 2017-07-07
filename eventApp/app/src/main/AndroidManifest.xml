@@ -37,7 +37,7 @@
         </activity>
 
         <activity
-            android:name="org.lightsys.eventApp.tools.qr.myTest"
+            android:name="org.lightsys.eventApp.tools.qr.launchQRScanner"
             android:configChanges="orientation|screenSize"
             android:label="QR Scan">
             <!--for QR code-->

@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -42,7 +44,7 @@ import org.lightsys.eventApp.tools.DataConnection;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.NavigationAdapter;
 import org.lightsys.eventApp.tools.RefreshAdapter;
-import org.lightsys.eventApp.tools.qr.myTest;
+import org.lightsys.eventApp.tools.qr.launchQRScanner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,11 +66,13 @@ public class MainActivity extends AppCompatActivity {
     private AlertDialog alert;
     private Toolbar toolbar;
     private ListView refreshList;
+    private LinearLayout refreshLayout;
     private View previousNavView;
     private String [] refreshCategories;
     private ListView navigationList;
-    private int color;
-    private int refreshItem = -1;
+    private int color, refreshItem = -1;
+    private boolean successfullConnection = true;
+    private Menu optionsMenu;
 
     //stuff to automatically refresh the current fragment
     private final android.os.Handler refreshHandler = new android.os.Handler();
@@ -108,14 +112,193 @@ public class MainActivity extends AppCompatActivity {
         gatherData(db.getGeneral("year"));
     }
 
+    /**
+     * Used by the drawer to refresh the toggle button
+     * (on activity resume)
+     */
+    @Override
+    public void onPostCreate(Bundle savedInstanceState){
+
+        super.onPostCreate(savedInstanceState);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        onNavigationItemSelected(navigationList.getChildAt(0));
+        navigationList.setItemChecked(0, true);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Register mMessageReceiver to receive messages.
+        //if opened from notification - open notification screen
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                new IntentFilter(RELOAD_PAGE));
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (navigationList ==null){
+            createNavigationMenu();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == QR_RESULT && resultCode == RESULT_OK && data != null) {
+            String dataURL = data.getStringExtra(QR_DATA_EXTRA);
+            db.addGeneral("url",dataURL);
+
+            new DataConnection(context, activity, "new", dataURL, true).execute("");
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        optionsMenu = menu;
+        getMenuInflater().inflate(R.menu.main, menu);
+        if (!successfullConnection) {
+            menu.getItem(1).setIcon(R.drawable.ic_refresh_error);
+        }
+        invalidateOptionsMenu();
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        switch (id){
+            case R.id.action_refresh:
+                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true).execute("");
+                break;
+            case R.id.action_refresh_dropdown:
+                if (refreshLayout.getVisibility()==View.VISIBLE){
+                    closeRefresh();
+                }else{
+                    openRefresh();
+                    refreshList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+                            //highlight new selection and set refresh rate
+                            refreshList.setItemChecked(i, true);
+                            refreshItem = i;
+                            db.updateRefreshRate(refreshCategories[i]);
+                            closeRefresh();
+                        }
+                    });
+                }
+                break;
+            case R.id.action_rescan:
+                gatherData(null);
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer != null && drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        // Unregister since the activity is not visible
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+        super.onStop();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            View content = findViewById(R.id.refresh_layout);
+            int[] contentLocation = new int[2];
+            content.getLocationOnScreen(contentLocation);
+            Rect refreshRect = new Rect(contentLocation[0],
+                    contentLocation[1],
+                    contentLocation[0] + content.getWidth(),
+                    contentLocation[1] + content.getHeight());
+
+            content = findViewById(R.id.toolbar);
+            contentLocation = new int[2];
+            content.getLocationOnScreen(contentLocation);
+            Rect toolBarRect = new Rect(contentLocation[0],
+                    contentLocation[1],
+                    contentLocation[0] + content.getWidth(),
+                    contentLocation[1] + content.getHeight());
+
+            if (!(refreshRect.contains((int) event.getX(), (int) event.getY())) && !(toolBarRect.contains((int) event.getX(), (int) event.getY())) && refreshLayout.getVisibility() == View.VISIBLE) {
+                closeRefresh();
+            }
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    public void gatherData(String year){
+        //db.addGeneral("url","http://10.0.0.20:3000");
+
+        //new DataConnection(context, activity, "new", "http://10.0.0.20:3000", true).execute("");
+
+        if (year == null) {
+            while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
+                requestCameraPermission();
+            }
+            Intent QR = new Intent(MainActivity.this, launchQRScanner.class);
+            startActivityForResult(QR, QR_RESULT);
+        }else{
+            createNavigationMenu();
+            navigationList.setItemChecked(0, true);
+            fragment = new WelcomeView();
+            fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment)
+                    .commit();
+        }
+    }
+
+    private void requestCameraPermission() {
+        Log.w("Barcode-reader", "Camera permission is not granted. Requesting permission");
+        final String[] permissions = new String[]{"android.permission.CAMERA"};
+        if(!ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
+            ActivityCompat.requestPermissions(this, permissions, 2);
+        } else {
+            new View.OnClickListener() {
+                public void onClick(View view) {
+                    ActivityCompat.requestPermissions(MainActivity.this, permissions, 2);
+                }
+            };
+        }
+    }
+
     private void createNavigationMenu(){
-        //navigationView = (LinearLayout) findViewById(R.id.nav_view);
-        //assert navigationView != null;
         ArrayList<Info> menu = db.getNavigationTitles();
 
         navigationList = (ListView) findViewById(R.id.nav_list);
 
         //set up refresh menu
+        refreshLayout = (LinearLayout) findViewById(R.id.refresh_layout);
         refreshList = (ListView) findViewById(R.id.refresh_list);
         refreshCategories = getResources().getStringArray(R.array.refresh_options);
         refreshList.setAdapter(new RefreshAdapter(context, refreshCategories));
@@ -176,6 +359,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void closeRefresh(){
+        refreshLayout.setVisibility(View.GONE);
+    }
+
+    private void openRefresh(){
+        refreshLayout.setVisibility(View.VISIBLE);
+    }
+
     private ArrayList<HashMap<String, String>> generateListItems(ArrayList<Info> menu) {
         ArrayList<HashMap<String, String>> aList = new ArrayList<>();
         for (Info m : menu) {
@@ -189,120 +380,35 @@ public class MainActivity extends AppCompatActivity {
         return aList;
     }
 
-    public void gatherData(String year){
-        Log.d(TAG, "gatherData:  "+ year);
-
-        if (year == null) {
-            while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
-                requestCameraPermission();
-            }
-            Intent QR = new Intent(MainActivity.this, myTest.class);
-            startActivityForResult(QR, QR_RESULT);
-        }else{
-            Log.d(TAG, "gatherData: gather data");
-            createNavigationMenu();
-            navigationList.setItemChecked(0, true);
-            fragment = new WelcomeView();
-            fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment)
-                    .commit();
+    private void RetryConnection(){
+        if (alert !=null){
+            alert.cancel();
         }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-    }
-
-    /**
-     * Used by the drawer to refresh the toggle button
-     * (on activity resume)
-     */
-    @Override
-    public void onPostCreate(Bundle savedInstanceState){
-
-        super.onPostCreate(savedInstanceState);
-    }
-
-    private void requestCameraPermission() {
-        Log.w("Barcode-reader", "Camera permission is not granted. Requesting permission");
-        final String[] permissions = new String[]{"android.permission.CAMERA"};
-        if(!ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
-            ActivityCompat.requestPermissions(this, permissions, 2);
-        } else {
-            new View.OnClickListener() {
-                public void onClick(View view) {
-                    ActivityCompat.requestPermissions(MainActivity.this, permissions, 2);
-                }
-            };
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer != null && drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate((R.menu.main), menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        switch (id){
-            case R.id.action_refresh:
-                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true).execute("");
-                break;
-            case R.id.action_refresh_dropdown:
-                if (refreshList.getVisibility()==View.VISIBLE){
-                    closeRefresh();
-                }else{
-                    openRefresh();
-                    refreshList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-                            //highlight new selection and set refresh rate
-                            refreshList.setItemChecked(i, true);
-                            refreshItem = i;
-                            db.updateRefreshRate(refreshCategories[i]);
-                            closeRefresh();
-                        }
-                    });
-                }
-                break;
-            case R.id.action_rescan:
-                gatherData(null);
-                break;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void closeRefresh(){
-        refreshList.setVisibility(View.GONE);
-        findViewById(R.id.refresh_list_header).setVisibility(View.GONE);
-        findViewById(R.id.refresh_list_border).setVisibility(View.GONE);
-    }
-
-    private void openRefresh(){
-        refreshList.setVisibility(View.VISIBLE);
-        findViewById(R.id.refresh_list_header).setVisibility(View.VISIBLE);
-        findViewById(R.id.refresh_list_border).setVisibility(View.VISIBLE);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder
+                .setCancelable(false)
+                .setMessage("Error: data not imported")
+                .setNegativeButton(R.string.retry_connection_button, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.d(TAG, "onClick: " + db.getGeneral("url"));
+                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true).execute("");
+                    }
+                })
+                .setPositiveButton(R.string.rescan_qr_button, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        gatherData(null);
+                    }
+                })
+                .setNeutralButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert);
+        alert = builder.create();
+        alert.show();
     }
 
     /**
@@ -375,36 +481,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == QR_RESULT && resultCode == RESULT_OK && data != null) {
-            String dataURL = data.getStringExtra(QR_DATA_EXTRA);
-
-            new DataConnection(context, activity, "new", dataURL, true).execute("");
-        }
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        // Register mMessageReceiver to receive messages.
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
-                new IntentFilter(RELOAD_PAGE));
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (navigationList ==null){
-            createNavigationMenu();
-        }
-        navigationList.setItemChecked(0, true);
-        fragment = new WelcomeView();
-        fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WelcomeView")
-                .commit();
-    }
-
     // handler for received Intents for the RELOAD_PAGE  event
     private final BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -422,10 +498,14 @@ public class MainActivity extends AppCompatActivity {
                 refreshList.setItemChecked(child, true);
 
             }
+            successfullConnection = true;
 
             //based on broadcast message received perform correct action
             if (intent.getStringExtra("action").equals("retry")){
+                successfullConnection = false;
                 RetryConnection();
+            } else if (intent.getStringExtra("action").equals("auto_update_error")) {
+                successfullConnection = false;
             } else if (intent.getStringExtra("action").equals("new")) {
                 createNavigationMenu();
                 fragment = new WelcomeView();
@@ -441,42 +521,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-
-    private void RetryConnection(){
-        if (alert !=null){
-            alert.cancel();
-        }
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder
-                .setCancelable(false)
-                .setMessage("Error: data not imported")
-                .setNegativeButton(R.string.retry_connection_button, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Log.d(TAG, "onClick: " + db.getGeneral("url"));
-                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true).execute("");
-                    }
-                })
-                .setPositiveButton(R.string.rescan_qr_button, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        gatherData(null);
-                    }
-                })
-                .setNeutralButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                }
-        })
-                .setIcon(android.R.drawable.ic_dialog_alert);
-        alert = builder.create();
-        alert.show();
-    }
-
-    @Override
-    protected void onStop() {
-        // Unregister since the activity is not visible
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
-        super.onStop();
-    }
 }

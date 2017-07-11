@@ -6,12 +6,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -31,7 +34,15 @@ import org.lightsys.eventApp.data.ScheduleInfo;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.R;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by otter57 on 3/28/17.
@@ -45,7 +56,9 @@ public class ScheduleView extends Fragment {
     private HorizontalScrollView ScrollH, ScrollB;
     private LocalDB db;
     private Context context;
-    private int width, height, textSizeHeader, paddingLg, padding, divider, textSizeContent, iconSize;
+    private int width, height, textSizeHeader, paddingLg, padding, divider, textSizeContent, iconSize, initScrollX;
+    private String today = "";
+    private Calendar calNow;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -103,8 +116,7 @@ public class ScheduleView extends Fragment {
                 }
                 i++;
             }
-            CreateColumn(schedule);
-
+            CreateColumn(schedule, today.equals(d));
         }
 
 
@@ -136,6 +148,16 @@ public class ScheduleView extends Fragment {
 
         });
 
+        //set Scroll to current day
+        Handler h = new Handler();
+        h.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ScrollB.setScrollX(initScrollX);
+                ScrollH.setScrollX(initScrollX);
+            }
+        }, 250);
+
         return v;
     }
 
@@ -147,6 +169,8 @@ public class ScheduleView extends Fragment {
     private void CreateHeader(ArrayList<String> days, View v){
         LinearLayout dayLayout = v.findViewById(R.id.day_layout);
         LinearLayout Box = v.findViewById(R.id.topLeftBox);
+
+        int scrollWidth = 0;
 
         //create Time header
         LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(width + padding + paddingLg, height + (2 * paddingLg));
@@ -164,11 +188,23 @@ public class ScheduleView extends Fragment {
         Box.addView(header,0);
         Box.addView(divider_h,1);
 
+        //prep to convert date to day of week for schedule display
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+        Calendar cal = Calendar.getInstance();
+        calNow = Calendar.getInstance();
+        calNow.setTimeZone(TimeZone.getDefault());
+        cal.setTimeZone(TimeZone.getTimeZone("GMT-04:00"));
 
         for (String d:days) {
+            try{
+                cal.setTime(formatter.parse(d));
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
             headerParams = new LinearLayout.LayoutParams(4*width+padding + paddingLg, width+(2*paddingLg));
             header = new TextView(context);
-            header.setText(d);
+            header.setText(dayIntToString(cal.get(Calendar.DAY_OF_WEEK)));
             header.setTypeface(null, Typeface.BOLD);
             header.setTextSize(textSizeHeader);
             header.setGravity(Gravity.CENTER);
@@ -180,6 +216,15 @@ public class ScheduleView extends Fragment {
 
             dayLayout.addView(header);
             dayLayout.addView(divider_h);
+
+            if (cal.get(Calendar.DATE) == calNow.get(Calendar.DATE)){
+                today = d;
+                initScrollX=scrollWidth;
+                header.setTextColor(ContextCompat.getColor(context, R.color.color_blue));
+                header.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_header));
+            }else{
+                scrollWidth+=4*width+padding + paddingLg+divider;
+            }
         }
     }
 
@@ -213,13 +258,17 @@ public class ScheduleView extends Fragment {
     }
 
     //create day column for schedule
-    private void CreateColumn(ArrayList<ScheduleInfo> schedule){
+    private void CreateColumn(ArrayList<ScheduleInfo> schedule, boolean isToday){
 
         //create Column containing event info
         LinearLayout columnLayout = new LinearLayout(context);
         columnLayout.setLayoutParams(new LinearLayout.LayoutParams(width*4+padding + paddingLg, LinearLayout.LayoutParams.MATCH_PARENT));
         columnLayout.setOrientation(LinearLayout.VERTICAL);
 
+        if (isToday){
+            columnLayout.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_right));
+
+        }
 
         for (ScheduleInfo sch : schedule){
 
@@ -261,6 +310,32 @@ public class ScheduleView extends Fragment {
                     }
                     event.setLayoutParams(new LinearLayout.LayoutParams(widthCol + padding + paddingLg, ViewGroup.LayoutParams.MATCH_PARENT));
                 }
+                if (isToday){
+                    event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
+
+                    //todo add red Line across current day at current time
+                    /*Calendar cal = Calendar.getInstance();
+                    String[]timeStr=new String[2];
+                    String time = Integer.toString(sch.getTimeStart());
+                    while (time.length()<4){
+                        time = "0" + time;
+                    }
+                    timeStr[0] = time.substring(0,2);
+                    timeStr[1] = time.substring(2,4);
+
+                    cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStr[0]));
+                    cal.set(Calendar.MINUTE, Integer.parseInt(timeStr[1]));
+
+                    long timeDif = calNow.getTimeInMillis()-cal.getTimeInMillis();
+                    if (timeDif>=0 && timeDif<=sch.getTimeLength()*60000){
+                        View redLine = new View(context);
+                        redLine.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 10));
+                        redLine.setBackgroundColor(ContextCompat.getColor(context, R.color.red));
+
+                    }*/
+                    //todo end
+
+                }
 
                 color = Color.parseColor(db.getThemeColor(sch.getCategory()));
 
@@ -269,7 +344,6 @@ public class ScheduleView extends Fragment {
             }
 
             int colors[] = { color , 0xfffffff,0xfffffff,0xfffffff,0xfffffff,0xfffffff, 0xfffffff };
-
 
             GradientDrawable gd = new GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,colors);
@@ -301,7 +375,6 @@ public class ScheduleView extends Fragment {
         //add layout to your mainLayout
         mainLayout.addView(columnLayout);
         mainLayout.addView(divider_h);
-
     }
 
     private class OnCarClicked implements AdapterView.OnClickListener {
@@ -344,7 +417,7 @@ public class ScheduleView extends Fragment {
     private class OnPhoneClicked implements AdapterView.OnClickListener {
         final String phone;
 
-        public OnPhoneClicked(String phone){
+        private OnPhoneClicked(String phone){
             this.phone = phone;
         }
 
@@ -375,6 +448,26 @@ public class ScheduleView extends Fragment {
                     .show();
         }
 
+    }
+
+    private String dayIntToString(int day){
+        switch(day){
+            case 1:
+                return "Sunday";
+            case 2:
+                return "Monday";
+            case 3:
+                return "Tuesday";
+            case 4:
+                return "Wednesday";
+            case 5:
+                return "Thursday";
+            case 6:
+                return "Friday";
+            case 7:
+                return "Saturday";
+        }
+        return " ";
     }
 
 }

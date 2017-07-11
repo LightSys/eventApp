@@ -259,9 +259,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void gatherData(String year){
-        //db.addGeneral("url","http://10.0.0.20:3000");
+        /*for testing on device w/o camera
+        db.addGeneral("url","http://10.5.10.95:3000");
 
-        //new DataConnection(context, activity, "new", "http://10.0.0.20:3000", true).execute("");
+        new DataConnection(context, activity, "new", "http://10.5.10.95:3000", true).execute("");*/
 
         if (year == null) {
             while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {

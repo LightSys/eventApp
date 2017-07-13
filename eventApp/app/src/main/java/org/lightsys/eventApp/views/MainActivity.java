@@ -260,11 +260,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void gatherData(String year){
         //for testing on device w/o camera
-        /*db.addGeneral("url","http://10.5.10.95:3000");
+        db.addGeneral("url","http://172.31.62.220:3000");
 
-        new DataConnection(context, activity, "new", "http://10.5.10.95:3000", true).execute("");*/
+        new DataConnection(context, activity, "new", "http://172.31.62.220:3000", true).execute("");
 
-        if (year == null) {
+        /*if (year == null) {
             while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
                 requestCameraPermission();
             }
@@ -276,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
             fragment = new WelcomeView();
             fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment, "WELCOME")
                     .commit();
-        }
+        }*/
     }
 
     private void requestCameraPermission() {
@@ -324,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
         color = Color.parseColor(db.getThemeColor("themeColor"));
 
         //Navigation Header Color
-        int colors [] = {Color.parseColor(db.getThemeColor("themeDark")), Color.parseColor(db.getThemeColor("themeMedium")), color};
+        int colors [] = {Color.parseColor(db.getThemeColor("theme1")), Color.parseColor(db.getThemeColor("theme2")), color};
         GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,colors);
         LinearLayout header = (LinearLayout)findViewById(R.id.nav_header);
         header.setBackground(gd);

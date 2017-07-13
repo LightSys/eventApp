@@ -493,8 +493,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                             if (notificationObj.getBoolean("refresh") && !loadAll) {
                                 new DataConnection(dataContext, dataActivity, action, qrAddress, true).execute("");
                             }
-
-                            db.addNotification(temp, true);
+                            if (action.equals("new")){
+                                db.addNotification(temp, false);
+                            }else{
+                                db.addNotification(temp, true);
+                            }
                         }
                     }
                 } catch (JSONException e) {

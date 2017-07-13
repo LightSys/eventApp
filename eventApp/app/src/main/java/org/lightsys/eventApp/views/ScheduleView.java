@@ -193,7 +193,7 @@ public class ScheduleView extends Fragment {
         Calendar cal = Calendar.getInstance();
         calNow = Calendar.getInstance();
         calNow.setTimeZone(TimeZone.getDefault());
-        cal.setTimeZone(TimeZone.getTimeZone("GMT-04:00"));
+        cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone")));
 
         for (String d:days) {
             try{
@@ -310,10 +310,17 @@ public class ScheduleView extends Fragment {
                     }
                     event.setLayoutParams(new LinearLayout.LayoutParams(widthCol + padding + paddingLg, ViewGroup.LayoutParams.MATCH_PARENT));
                 }
-                if (isToday){
-                    event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
 
-                    //todo add red Line across current day at current time
+                color = Color.parseColor(db.getThemeColor(sch.getCategory()));
+
+            }else{
+                heightCol = heightCol*15 + 2* paddingLg;
+            }
+
+            if (isToday){
+                event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
+
+                //todo add red Line across current day at current time
                     /*Calendar cal = Calendar.getInstance();
                     String[]timeStr=new String[2];
                     String time = Integer.toString(sch.getTimeStart());
@@ -333,14 +340,8 @@ public class ScheduleView extends Fragment {
                         redLine.setBackgroundColor(ContextCompat.getColor(context, R.color.red));
 
                     }*/
-                    //todo end
+                //todo end
 
-                }
-
-                color = Color.parseColor(db.getThemeColor(sch.getCategory()));
-
-            }else{
-                heightCol = heightCol*15 + 2* paddingLg;
             }
 
             int colors[] = { color , 0xfffffff,0xfffffff,0xfffffff,0xfffffff,0xfffffff, 0xfffffff };

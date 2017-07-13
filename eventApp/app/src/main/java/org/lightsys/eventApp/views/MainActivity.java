@@ -259,8 +259,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void gatherData(String year){
-        /*for testing on device w/o camera
-        db.addGeneral("url","http://10.5.10.95:3000");
+        //for testing on device w/o camera
+        /*db.addGeneral("url","http://10.5.10.95:3000");
 
         new DataConnection(context, activity, "new", "http://10.5.10.95:3000", true).execute("");*/
 
@@ -274,7 +274,7 @@ public class MainActivity extends AppCompatActivity {
             createNavigationMenu();
             navigationList.setItemChecked(0, true);
             fragment = new WelcomeView();
-            fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment)
+            fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment, "WELCOME")
                     .commit();
         }
     }
@@ -441,27 +441,27 @@ public class MainActivity extends AppCompatActivity {
         switch(title) {
             case "Notifications":
                 fragment = new WelcomeView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
                         .commit();
                 break;
             case "Contacts":
                 fragment = new ContactsView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "CONTACTS")
                         .commit();
                 break;
             case "Schedule":
                 fragment = new ScheduleView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
                         .commit();
                 break;
             case "Housing":
                 fragment = new HousingView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "HOUSING")
                     .commit();
                 break;
             case "Prayer Partners":
                 fragment = new PrayerPartnerView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "PRAYER_PARTNERS")
                     .commit();
                 break;
             default:
@@ -470,7 +470,7 @@ public class MainActivity extends AppCompatActivity {
 
                 fragment = new InformationalPageView();
                 fragment.setArguments(bundle);
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment)
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "INFO")
                         .commit();
                 break;
         }
@@ -510,7 +510,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (intent.getStringExtra("action").equals("new")) {
                 createNavigationMenu();
                 fragment = new WelcomeView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WelcomeView")
+                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
                         .commit();
 
             }else {

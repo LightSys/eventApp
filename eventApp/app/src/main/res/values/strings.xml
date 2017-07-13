@@ -7,6 +7,7 @@
     <!--Refresh Resources-->
     <string-array name="refresh_options">
         <item>-1</item>
+        <item>1</item>
         <item>5</item>
         <item>15</item>
         <item>30</item>

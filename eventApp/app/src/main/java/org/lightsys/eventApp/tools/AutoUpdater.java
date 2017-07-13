@@ -60,7 +60,6 @@ public class AutoUpdater extends Service {
 
                 //set refresh frequency
                 updateMillis = (db.getGeneral("refresh") != null ? ONE_MINUTE*Integer.parseInt(db.getGeneral("refresh")) : ONE_MINUTE*15);
-                updateMillis = ONE_MINUTE;
                 //difference between the previous time and the current time
                 long elapsedTime = currentDate.getTimeInMillis() - prevDate.getTimeInMillis();
 

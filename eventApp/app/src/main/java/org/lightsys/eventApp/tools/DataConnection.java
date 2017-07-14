@@ -31,8 +31,10 @@ import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
 import javax.net.ssl.SSLHandshakeException;
 
@@ -70,6 +72,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         qrAddress = QR;
         this.loadAll = loadAll;
         this.action = action;
+        this.db = new LocalDB(dataContext);
         Log.d(TAG, "DataConnection: " + qrAddress);
         if (activity != null) {
             spinner = new ProgressDialog(dataContext, R.style.MySpinnerStyle);
@@ -78,11 +81,20 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     @Override
     protected String doInBackground(String... params) {
+        Calendar cal = Calendar.getInstance();
+        Calendar calNow = Calendar.getInstance();
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
         try{
+            if(db.getGeneral("refresh_expire") != null) {
+                cal.setTime(formatter.parse(db.getGeneral("refresh_expire")));
+            }
+
             if (qrAddress == null){
                 ((MainActivity)dataActivity).gatherData(null);
-            }else {
+            }else if(calNow.get(Calendar.DATE)<= cal.get(Calendar.DATE) || action.equals("new")){
                 DataPull();
+            }else{
+                action="expired";
             }
         }
         catch(Exception e){
@@ -110,7 +122,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     }
                 }
             }
-            if (!connection){
+            if (!connection && !action.equals("expired")){
                 action = action.equals("auto_update")?"auto_update_error":"retry";
             }
         Log.d(TAG, "onPostExecute: " + action);

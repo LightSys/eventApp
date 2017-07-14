@@ -36,6 +36,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.Info;
@@ -260,11 +261,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void gatherData(String year){
         //for testing on device w/o camera
-        db.addGeneral("url","http://172.31.62.220:3000");
+        /*db.addGeneral("url","http://172.31.62.220:3000");
+        Log.d(TAG, "gatherData: http://172.31.62.220:3000");
 
-        new DataConnection(context, activity, "new", "http://172.31.62.220:3000", true).execute("");
+        new DataConnection(context, activity, "new", "http://172.31.62.220:3000", true).execute("");*/
 
-        /*if (year == null) {
+        if (year == null) {
             while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
                 requestCameraPermission();
             }
@@ -276,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
             fragment = new WelcomeView();
             fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment, "WELCOME")
                     .commit();
-        }*/
+        }
     }
 
     private void requestCameraPermission() {
@@ -500,6 +502,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
             successfullConnection = true;
+            Log.d(TAG, "onReceive: " + intent.getStringExtra("action"));
 
             //based on broadcast message received perform correct action
             if (intent.getStringExtra("action").equals("retry")){
@@ -512,7 +515,9 @@ public class MainActivity extends AppCompatActivity {
                 fragment = new WelcomeView();
                 fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
                         .commit();
-
+            }else if (intent.getStringExtra("action").equals("expired")){
+                Toast.makeText(context, "Event has expired, please scan a QR for a new event", Toast.LENGTH_SHORT).show();
+                successfullConnection = false;
             }else {
                 Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.contentFrame);
                 final FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();

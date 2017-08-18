@@ -160,12 +160,6 @@ public class LocalDB extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void deleteNavigationTitles(){
-        SQLiteDatabase db = this.getReadableDatabase();
-        db.delete(TABLE_NAVIGATION_TITLES, null, null);
-        db.close();
-    }
-
 	/* ************************* Add Queries ************************* */
 
     /**
@@ -328,26 +322,6 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
 	/* ************************* Get Queries ************************* */
-
-    /**
-     * Pulls the timestamp from the database
-     * @return A timestamp of the last update in millisecond form
-     */
-    public long getTimeStamp() {
-        String queryString = "SELECT " + COLUMN_DATE + " FROM " + TABLE_TIMESTAMP;
-
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor c = db.rawQuery(queryString, null);
-
-        long date = -1;
-
-        if (c.moveToFirst()) {
-            date = Long.parseLong(c.getString(0));
-        }
-        c.close();
-        db.close();
-        return date;
-    }
 
     /**
      * @return general info (year, url, logo)

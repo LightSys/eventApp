@@ -3,7 +3,6 @@ package org.lightsys.eventApp.views;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +13,6 @@ import android.widget.TextView;
 import org.lightsys.eventApp.data.Info;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.R;
-import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

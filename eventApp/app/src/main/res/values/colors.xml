@@ -10,6 +10,9 @@
     <color name="darkGray">#474747</color>
     <color name="transparent">#00000000</color>
     <color name="spinner_blue">#4169E1</color>
+    <color name="color_blue_faded">#331479b7</color>
+    <color name="current_event">#779AA2A5</color>
+
 
     <!--QR-->
     <color name="color_green">#14808d</color>

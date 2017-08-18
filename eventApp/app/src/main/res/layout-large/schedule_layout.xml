@@ -10,29 +10,22 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-
-    <!--Table Head Container-->
-    <org.lightsys.eventApp.tools.HorizontalScrollNoFling
-        android:id="@+id/HeaderScroll"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none">
-        <!--Right Col Labels-->
-
-        <LinearLayout
-            android:id="@+id/day_layout"
-            android:layout_width="wrap_content"
+        <!--Table Head Container-->
+        <org.lightsys.eventApp.tools.HorizontalScrollNoFling
+            android:id="@+id/HeaderScroll"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-        </LinearLayout>
-    </org.lightsys.eventApp.tools.HorizontalScrollNoFling>
-    </LinearLayout>
+            android:scrollbars="none">
+            <!--Right Col Labels-->
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:background="@color/black">
-    </View>
+            <LinearLayout
+                android:id="@+id/day_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+            </LinearLayout>
+        </org.lightsys.eventApp.tools.HorizontalScrollNoFling>
+    </LinearLayout>
 
     <!--Body-->
     <ScrollView

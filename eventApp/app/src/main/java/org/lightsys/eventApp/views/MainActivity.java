@@ -72,8 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private String [] refreshCategories;
     private ListView navigationList;
     private int color, refreshItem = -1;
-    private boolean successfullConnection = true;
-    private Menu optionsMenu;
+    private boolean successfulConnection = true;
 
     //stuff to automatically refresh the current fragment
     private final android.os.Handler refreshHandler = new android.os.Handler();
@@ -143,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        if (navigationList ==null){
+        if (navigationList == null){
             createNavigationMenu();
         }
     }
@@ -162,9 +161,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        optionsMenu = menu;
         getMenuInflater().inflate(R.menu.main, menu);
-        if (!successfullConnection) {
+        if (!successfulConnection) {
             menu.getItem(1).setIcon(R.drawable.ic_refresh_error);
         }
         invalidateOptionsMenu();
@@ -326,7 +324,11 @@ public class MainActivity extends AppCompatActivity {
         color = Color.parseColor(db.getThemeColor("themeColor"));
 
         //Navigation Header Color
-        int colors [] = {Color.parseColor(db.getThemeColor("theme1")), Color.parseColor(db.getThemeColor("theme2")), color};
+        int colors [] = {Color.parseColor(db.getThemeColor("theme1"))==0? Color.parseColor(db.getThemeColor("theme1")): Color.parseColor(db.getThemeColor("themeDark")),
+                Color.parseColor(db.getThemeColor("theme2"))==0? Color.parseColor(db.getThemeColor("theme2")): Color.parseColor(db.getThemeColor("themeMedium")),
+                Color.parseColor(db.getThemeColor("theme3"))==0? Color.parseColor(db.getThemeColor("theme3")): color
+        };
+
         GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,colors);
         LinearLayout header = (LinearLayout)findViewById(R.id.nav_header);
         header.setBackground(gd);
@@ -501,15 +503,15 @@ public class MainActivity extends AppCompatActivity {
                 refreshList.setItemChecked(child, true);
 
             }
-            successfullConnection = true;
+            successfulConnection = true;
             Log.d(TAG, "onReceive: " + intent.getStringExtra("action"));
 
             //based on broadcast message received perform correct action
             if (intent.getStringExtra("action").equals("retry")){
-                successfullConnection = false;
+                successfulConnection = false;
                 RetryConnection();
             } else if (intent.getStringExtra("action").equals("auto_update_error")) {
-                successfullConnection = false;
+                successfulConnection = false;
             } else if (intent.getStringExtra("action").equals("new")) {
                 createNavigationMenu();
                 fragment = new WelcomeView();
@@ -517,7 +519,7 @@ public class MainActivity extends AppCompatActivity {
                         .commit();
             }else if (intent.getStringExtra("action").equals("expired")){
                 Toast.makeText(context, "Event has expired, please scan a QR for a new event", Toast.LENGTH_SHORT).show();
-                successfullConnection = false;
+                successfulConnection = false;
             }else {
                 Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.contentFrame);
                 final FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();

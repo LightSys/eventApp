@@ -11,7 +11,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 import org.lightsys.eventApp.views.MainActivity;
 import org.lightsys.eventApp.R;
@@ -19,8 +18,6 @@ import org.lightsys.eventApp.data.Info;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * @author Judah Sistrunk
@@ -124,7 +121,7 @@ public class AutoUpdater extends Service {
                 .setSmallIcon(R.drawable.ic_sbcat_transparent_nowords)
                 .setColor(Color.parseColor(db.getThemeColor("themeDark")))
                 .setContentIntent(intent)
-                .setPriority(Notification.PRIORITY_HIGH)
+                .setPriority(1)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(subject));
 
         n = nBuild.build();

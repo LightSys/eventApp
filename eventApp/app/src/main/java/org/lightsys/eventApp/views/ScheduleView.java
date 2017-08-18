@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -26,6 +25,7 @@ import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,11 +34,9 @@ import org.lightsys.eventApp.data.ScheduleInfo;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.R;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -58,7 +56,8 @@ public class ScheduleView extends Fragment {
     private Context context;
     private int width, height, textSizeHeader, paddingLg, padding, divider, textSizeContent, iconSize, initScrollX;
     private String today = "";
-    private Calendar calNow;
+    private float density;
+    Calendar calNow;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -68,7 +67,8 @@ public class ScheduleView extends Fragment {
         mainLayout = v.findViewById(R.id.main_layout);
         ScrollH = v.findViewById(R.id.HeaderScroll);
         ScrollB = v.findViewById(R.id.bodyScroll);
-        float density = (getResources().getDisplayMetrics().density)/2;
+
+        density = (getResources().getDisplayMetrics().density)/2;
 
         db = new LocalDB(getContext());
         ArrayList<String> days = db.getDays();
@@ -173,7 +173,7 @@ public class ScheduleView extends Fragment {
         int scrollWidth = 0;
 
         //create Time header
-        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(width + padding + paddingLg, height + (2 * paddingLg));
+        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(width + padding + paddingLg, width + (2 * paddingLg));
         TextView header = new TextView(context);
         header.setText(" ");
         header.setTypeface(null, Typeface.BOLD);
@@ -181,12 +181,22 @@ public class ScheduleView extends Fragment {
         header.setGravity(Gravity.CENTER_HORIZONTAL);
         header.setLayoutParams(headerParams);
 
-        View divider_h = new View(context);
-        divider_h.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
-        divider_h.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
+        View dividerHorizontal = new View(context);
+        dividerHorizontal.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
+        dividerHorizontal.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        Box.addView(header,0);
-        Box.addView(divider_h,1);
+        View dividerVertical1 = new View(context);
+        dividerVertical1.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
+        dividerVertical1.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,divider*5));
+
+        LinearLayout headerBox1 = new LinearLayout(context);
+        headerBox1.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        headerBox1.setOrientation(LinearLayout.VERTICAL);
+        headerBox1.addView(header, 0);
+        headerBox1.addView(dividerVertical1, 1);
+
+        Box.addView(headerBox1,0);
+        Box.addView(dividerHorizontal,1);
 
         //prep to convert date to day of week for schedule display
         SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
@@ -210,18 +220,31 @@ public class ScheduleView extends Fragment {
             header.setGravity(Gravity.CENTER);
             header.setLayoutParams(headerParams);
 
-            divider_h = new View(context);
-            divider_h.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
-            divider_h.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
+            dividerHorizontal = new View(context);
+            dividerHorizontal.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
+            dividerHorizontal.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
 
-            dayLayout.addView(header);
-            dayLayout.addView(divider_h);
+            LinearLayout headerBox = new LinearLayout(context);
+            headerBox.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            headerBox.setOrientation(LinearLayout.VERTICAL);
 
-            if (cal.get(Calendar.DATE) == calNow.get(Calendar.DATE)){
+            View dividerVertical = new View(context);
+            dividerVertical.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
+            dividerVertical.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,divider*5));
+
+            headerBox.addView(header);
+            headerBox.addView(dividerVertical);
+            dayLayout.addView(dividerHorizontal);
+            dayLayout.addView(headerBox);
+
+
+            if (formatter.format(calNow.getTime()).equals(formatter.format(cal.getTime()))){
                 today = d;
                 initScrollX=scrollWidth;
                 header.setTextColor(ContextCompat.getColor(context, R.color.color_blue));
                 header.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_header));
+                dividerVertical.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.color_blue));
+
             }else{
                 scrollWidth+=4*width+padding + paddingLg+divider;
             }
@@ -272,7 +295,7 @@ public class ScheduleView extends Fragment {
 
         for (ScheduleInfo sch : schedule){
 
-            LinearLayout iconsLayout = (LinearLayout) View.inflate(context, R.layout.schedule_event_item, null);
+            RelativeLayout iconsLayout = (RelativeLayout) View.inflate(context, R.layout.schedule_event_item, null);
             TextView event = iconsLayout.findViewById(R.id.eventText);
 
             double heightCol = (height + (2.00* paddingLg))/15.00;
@@ -288,9 +311,32 @@ public class ScheduleView extends Fragment {
 
                 if (sch.getLocationName() != null){
                     ContactInfo contactInfo = db.getContactByName(sch.getLocationName());
+
+                    RelativeLayout.LayoutParams iconLPPhone = new RelativeLayout.LayoutParams(iconSize,(int) Math.round(iconSize*1.2));
+                    iconLPPhone.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+
+                    RelativeLayout.LayoutParams iconLPCar = new RelativeLayout.LayoutParams(iconSize,(int) Math.round(iconSize*1.2));
+
+
+                    if (contactInfo.getPhone() != null){
+                        ImageButton phone = (ImageButton) View.inflate(context, R.layout.contact_button, null);
+                        phone.setLayoutParams(iconLPPhone);
+                        phone.setImageResource(R.drawable.ic_call_phone);
+                        phone.setPadding(0, paddingLg/2, padding, paddingLg/2);
+                        phone.setId(R.id.phoneIcon);
+
+                        iconsLayout.addView(phone);
+                        widthCol -= iconSize;
+
+                        phone.setOnClickListener(new OnPhoneClicked(contactInfo.getPhone()));
+                        iconLPCar.addRule(RelativeLayout.LEFT_OF, R.id.phoneIcon);
+
+                    }else{
+                        iconLPCar.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                    }
                     if(contactInfo.getAddress() != null) {
                         ImageButton car = (ImageButton) View.inflate(context, R.layout.contact_button, null);
-                        car.setLayoutParams(new ViewGroup.LayoutParams(iconSize,(int) Math.round(iconSize*1.2)));
+                        car.setLayoutParams(iconLPCar);
                         car.setImageResource(R.drawable.ic_car);
                         car.setPadding(0, paddingLg/2, padding, paddingLg/2);
                         iconsLayout.addView(car);
@@ -298,17 +344,8 @@ public class ScheduleView extends Fragment {
 
                         car.setOnClickListener(new OnCarClicked(contactInfo.getAddress()));
                     }
-                    if (contactInfo.getPhone() != null){
-                        ImageButton phone = (ImageButton) View.inflate(context, R.layout.contact_button, null);
-                        phone.setLayoutParams(new ViewGroup.LayoutParams(iconSize,(int) Math.round(iconSize*1.2)));
-                        phone.setImageResource(R.drawable.ic_call_phone);
-                        phone.setPadding(0, paddingLg/2, padding, paddingLg/2);
-                        iconsLayout.addView(phone);
-                        widthCol -= iconSize;
 
-                        phone.setOnClickListener(new OnPhoneClicked(contactInfo.getPhone()));
-                    }
-                    event.setLayoutParams(new LinearLayout.LayoutParams(widthCol + padding + paddingLg, ViewGroup.LayoutParams.MATCH_PARENT));
+                    event.setLayoutParams(new RelativeLayout.LayoutParams(widthCol + padding + paddingLg, RelativeLayout.LayoutParams.MATCH_PARENT));
                 }
 
                 color = Color.parseColor(db.getThemeColor(sch.getCategory()));
@@ -318,29 +355,42 @@ public class ScheduleView extends Fragment {
             }
 
             if (isToday){
-                event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
 
-                //todo add red Line across current day at current time
-                    /*Calendar cal = Calendar.getInstance();
-                    String[]timeStr=new String[2];
-                    String time = Integer.toString(sch.getTimeStart());
-                    while (time.length()<4){
-                        time = "0" + time;
-                    }
-                    timeStr[0] = time.substring(0,2);
-                    timeStr[1] = time.substring(2,4);
+                Calendar cal = Calendar.getInstance();
+                String[]timeStr=new String[2];
+                String time = Integer.toString(sch.getTimeStart());
+                while (time.length()<4){
+                    time = "0" + time;
+                }
+                timeStr[0] = time.substring(0,2);
+                timeStr[1] = time.substring(2,4);
 
-                    cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStr[0]));
-                    cal.set(Calendar.MINUTE, Integer.parseInt(timeStr[1]));
+                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStr[0]));
+                cal.set(Calendar.MINUTE, Integer.parseInt(timeStr[1]));
 
-                    long timeDif = calNow.getTimeInMillis()-cal.getTimeInMillis();
-                    if (timeDif>=0 && timeDif<=sch.getTimeLength()*60000){
-                        View redLine = new View(context);
-                        redLine.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 10));
-                        redLine.setBackgroundColor(ContextCompat.getColor(context, R.color.red));
+                long timeDif = calNow.getTimeInMillis()-cal.getTimeInMillis();
 
-                    }*/
-                //todo end
+                if (timeDif>=0 && timeDif<=sch.getTimeLength()*60000){
+                    event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_item));
+                    iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.current_event));
+                    event.setTypeface(event.getTypeface(), Typeface.BOLD);
+
+                    View redLine = new View(context);
+                    RelativeLayout.LayoutParams redlineLP = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 4);
+
+                    //math to figure out where redline should be located
+                    int redYLoc = (int)((timeDif/60000)*(Math.round(heightCol))/(sch.getTimeLength()));
+
+                    redlineLP.setMargins(Math.round(5*density), redYLoc, Math.round(5*density), 0);
+                    redLine.setLayoutParams(redlineLP);
+                    redLine.setBackgroundColor(ContextCompat.getColor(context, R.color.red));
+                    iconsLayout.addView(redLine);
+
+                }else{
+                    event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
+                    iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.transparent));
+                    event.setTypeface(event.getTypeface(), Typeface.NORMAL);
+                }
 
             }
 
@@ -369,13 +419,13 @@ public class ScheduleView extends Fragment {
         }
 
 
-        View divider_h = new View(context);
-        divider_h.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
-        divider_h.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
+        View dividerHeader = new View(context);
+        dividerHeader.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
+        dividerHeader.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
 
         //add layout to your mainLayout
         mainLayout.addView(columnLayout);
-        mainLayout.addView(divider_h);
+        mainLayout.addView(dividerHeader);
     }
 
     private class OnCarClicked implements AdapterView.OnClickListener {

@@ -6,7 +6,8 @@ JSON file:
 	GENERAL: titles must be "refresh", "year", "welcome_message", and "logo"
 		refresh must be in minutes
 		icon - must be in base64 format. if unavailable set value as "null"
-	THEME: "theme..." colors can be valid colors or set as "null" for default theme colors 
+	THEME: "theme..." colors can be valid colors or set as "null" for default theme colors
+		"theme1, theme2, and theme3 can be used if logo doesn't display properly over theme colors in. navigation header.  
 		"schedule..." color names can be changed as long as they match Schedule item categories
 	SCHEDULE: days must be MM/dd/yyyy format 
 		start_time: based on 24-hour clock. can be set to any time, but schedule items may not overlap

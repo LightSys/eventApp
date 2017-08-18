@@ -28,12 +28,6 @@
     </org.lightsys.eventApp.tools.HorizontalScrollNoFling>
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:background="@color/black">
-    </View>
-
     <!--Body-->
     <ScrollView
         android:layout_width="match_parent"

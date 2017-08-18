@@ -22,7 +22,6 @@
     <string name="nav_logo">SBCaT Logo</string>
 
     <!--Welcome resources-->
-    <string name="welcome_header">Welcome to Code-a-Thon!</string>
     <string name="notifications_header">Notifications</string>
 
     <!--Housing resources-->

@@ -23,4 +23,9 @@
   <item type="id" name="quit"/>
   <item type="id" name="restart_preview"/>
   <item type="id" name="return_scan_result"/>
+
+
+    <item name="carIcon" type="id"/>
+    <item name="phoneIcon" type="id"/>
+
 </resources>

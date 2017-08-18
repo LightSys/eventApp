@@ -3,21 +3,14 @@ package org.lightsys.eventApp.tools.qr;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
-import android.widget.TextView;
 
 import com.google.android.gms.samples.vision.barcodereader.BarcodeCapture;
 import com.google.android.gms.samples.vision.barcodereader.BarcodeGraphic;
@@ -25,7 +18,6 @@ import com.google.android.gms.vision.barcode.Barcode;
 
 import org.lightsys.eventApp.R;
 
-import java.text.Normalizer;
 import java.util.List;
 
 import xyz.belvi.mobilevisionbarcodescanner.BarcodeRetriever;
@@ -38,7 +30,7 @@ import xyz.belvi.mobilevisionbarcodescanner.BarcodeRetriever;
 public class launchQRScanner extends AppCompatActivity implements BarcodeRetriever{
 
     private static final String QR_DATA_EXTRA = "qr_data";
-    Dialog dialog;
+    private Dialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

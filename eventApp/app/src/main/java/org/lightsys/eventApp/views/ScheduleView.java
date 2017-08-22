@@ -238,13 +238,13 @@ public class ScheduleView extends Fragment {
             dayLayout.addView(headerBox);
 
 
+
             if (formatter.format(calNow.getTime()).equals(formatter.format(cal.getTime()))){
                 today = d;
                 initScrollX=scrollWidth;
                 header.setTextColor(ContextCompat.getColor(context, R.color.color_blue));
                 header.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_header));
                 dividerVertical.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.color_blue));
-
             }else{
                 scrollWidth+=4*width+padding + paddingLg+divider;
             }
@@ -367,10 +367,12 @@ public class ScheduleView extends Fragment {
 
                 cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStr[0]));
                 cal.set(Calendar.MINUTE, Integer.parseInt(timeStr[1]));
+                cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone")));
 
                 long timeDif = calNow.getTimeInMillis()-cal.getTimeInMillis();
 
                 if (timeDif>=0 && timeDif<=sch.getTimeLength()*60000){
+
                     event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_item));
                     iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.current_event));
                     event.setTypeface(event.getTypeface(), Typeface.BOLD);

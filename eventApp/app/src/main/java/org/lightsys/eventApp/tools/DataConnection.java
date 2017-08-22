@@ -81,17 +81,16 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     @Override
     protected String doInBackground(String... params) {
-        Calendar cal = Calendar.getInstance();
+        Calendar calExpire = Calendar.getInstance();
         Calendar calNow = Calendar.getInstance();
         SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
         try{
             if(db.getGeneral("refresh_expire") != null) {
-                cal.setTime(formatter.parse(db.getGeneral("refresh_expire")));
+                calExpire.setTime(formatter.parse(db.getGeneral("refresh_expire")));
             }
-
             if (qrAddress == null){
                 ((MainActivity)dataActivity).gatherData(null);
-            }else if(calNow.get(Calendar.DATE)<= cal.get(Calendar.DATE) || action.equals("new")){
+            }else if(calNow.getTimeInMillis()<= calExpire.getTimeInMillis() || action.equals("new")){
                 DataPull();
             }else{
                 action="expired";

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import org.lightsys.eventApp.data.Info;
 import org.lightsys.eventApp.data.ContactInfo;
@@ -378,7 +379,7 @@ public class LocalDB extends SQLiteOpenHelper {
 
             temp.setHeader(c.getString(0));
             temp.setBody(c.getString(1));
-
+            Log.d("HERE", "getNavigationTitles: " + temp.getBody() + temp.getHeader());
             titles.add(temp);
 
         }
@@ -476,8 +477,15 @@ public class LocalDB extends SQLiteOpenHelper {
                 timeStart = temp;
             }
             int tempE = (c.getInt(1));//-15
-            if (timeEnd<temp+tempE){
-                timeEnd = temp + tempE;
+            int x=0;
+            if (tempE>=60){
+                x = tempE/60;
+                x= (tempE-(x*60))+(x*100);
+            }else{
+                x=tempE;
+            }
+            if (timeEnd<temp+x){
+                timeEnd = temp + x;
             }
         }
         times.add(timeStart);

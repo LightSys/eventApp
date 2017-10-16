@@ -1,0 +1,29 @@
+{ "notifications": {
+    "nav": "Notifications",
+    "icon": "ic_bell",
+    "1": {
+      "title": "Everybody needs to do something now!",
+      "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+      "date": "06/01/2017 10:28:00",
+      "refresh": false
+    },
+    "2": {
+      "title": "Everybody needs to do something now!",
+      "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+      "date": "06/01/2017 10:28:00",
+      "refresh": true
+    },
+    "5": {
+      "title": "dont upload new!",
+      "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+      "date": "06/01/2017 10:28:00",
+      "refresh": false
+    },
+    "6": {
+      "title": "dont upload new!",
+      "body": "We have new information and it turns out that everyone has done everything wrong. please start over immediately!",
+      "date": "06/01/2017 10:28:00",
+      "refresh": true
+    }
+  }
+}

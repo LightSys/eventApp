@@ -58,6 +58,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     private String action;
     private final boolean loadAll; //specifies whether all info should be reloaded or only notifications
     private boolean connection;
+    private String connectionResult;
 
     private static final String RELOAD_PAGE = "reload_page";
 
@@ -109,33 +110,33 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         if (dataActivity != null) {
             spinner.dismiss();
         }
-            if (dataContext.getClass() == MainActivity.class && connection && !action.equals("auto_update")) {
-                Toast.makeText(dataContext, "data successfully imported", Toast.LENGTH_SHORT).show();
-                if (action.equals("new")) {
-                    try {
-                        Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                        Ringtone r = RingtoneManager.getRingtone(dataContext, notification);
-                        r.play();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+        if (dataContext.getClass() == MainActivity.class && connection && !action.equals("auto_update")) {
+            Toast.makeText(dataContext, "data successfully imported", Toast.LENGTH_SHORT).show();
+            if (action.equals("new")) {
+                try {
+                    Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                    Ringtone r = RingtoneManager.getRingtone(dataContext, notification);
+                    r.play();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
-            if (!connection && !action.equals("expired")){
-                action = action.equals("auto_update")?"auto_update_error":"retry";
-            }
+        }
+        if (!connection && !action.equals("expired")){
+            action = action.equals("auto_update")?"auto_update_error":"retry";
+        }
         Log.d(TAG, "onPostExecute: " + action);
-                Intent reloadIntent = new Intent(RELOAD_PAGE);
-                reloadIntent.putExtra("action", action);
-                LocalBroadcastManager.getInstance(dataContext)
-                        .sendBroadcast(reloadIntent);
+        Intent reloadIntent = new Intent(RELOAD_PAGE);
+        reloadIntent.putExtra("action", action);
+        LocalBroadcastManager.getInstance(dataContext)
+                .sendBroadcast(reloadIntent);
     }
 
     private boolean checkConnection(String address)  {
         String test;
         try {
             // Attempt to pull information from the API
-            test = GET(address + "/general");
+            test = GET(address);
             // Unauthorized signals incorrect username or password
             // 404 not found signals invalid ID
             // Empty or null signals an incorrect server name
@@ -193,6 +194,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             }
             return false;
         }
+        connectionResult = test;
         return true;
     }
 
@@ -228,16 +230,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 if(loadAll) {
                     db.clear();
                     db.addGeneral("url",qrAddress);
-                    loadNotifications(GET(qrAddress+"/notifications"), true);
-                    loadContactPage(GET(qrAddress+"/contact_page"));
-                    loadSchedule(GET(qrAddress + "/schedule"));
-                    loadHousing(GET(qrAddress + "/housing"));
-                    loadPrayerPartners(GET(qrAddress + "/prayer_partners"));
-                    loadInformationalPage(GET(qrAddress + "/information_page"));
-                    loadGeneralInfo(GET(qrAddress + "/general"));
-                    loadTheme(GET(qrAddress+"/theme"));
-                    loadContacts(GET(qrAddress + "/contacts"));
+                    db.addNavigationTitles("Notifications", "ic_bell");
+                    loadEventInfo(connectionResult);
                     db.addNavigationTitles("About", "ic_info");
+
 
                     //add about page
                     db.addInformationPage(new Info("","This app is created by LightSys Technology Services for the use of distributing event information for ministry events."), "About");
@@ -245,12 +241,8 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     db.addInformationPage(new Info("Mobile Vision Barcode Scanner","Copyright (c) 2016 Nosakhare Belvi\nLicense: MIT License\nWebsite: https://github.com/KingsMentor/MobileVisionBarcodeScanner"), "About");
 
                 }else{
-                    loadNotifications(GET(qrAddress+"/notifications"), false);
+                    loadNotifications(connectionResult);
                 }
-
-
-
-
             } catch (Exception e) {
                 e.printStackTrace();
                 if (e.getClass().equals(SocketTimeoutException.class)) {
@@ -269,12 +261,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
     }
 
-
     /**
-     * Loads Contact info
+     * Loads Event info
      * @param result, result of the API query for the contact info
      */
-    private void loadContacts(String result) {
+    private void loadEventInfo(String result) {
         JSONObject json = null;
         if (result != null) {
             try {
@@ -285,171 +276,173 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             if (json == null) {
                 return;
             }
-            JSONArray tempNames = json.names();
-
-            for (int i = 0; i < tempNames.length(); i++) {
-                try {
-                    //@id signals a new object, but contains no information on that line
-                    if (!tempNames.getString(i).equals("@id")) {
-                        JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
-
-                        String contact_name = tempNames.getString(i);
-                        String contact_address = (ContactObj.getString("address").equals("null")) ? null : ContactObj.getString("address");
-                        String contact_phone = (ContactObj.getString("phone").equals("null")) ? null : ContactObj.getString("phone");
-
-                        // add the Contact Object to db
-                        ContactInfo temp = new ContactInfo();
-                        temp.setName(contact_name);
-                        temp.setAddress(contact_address);
-                        temp.setPhone(contact_phone);
-
-                        db.addContact(temp);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
-     * Loads Contact Page info
-     * @param result, result of the API query for the contact info
-     */
-    private void loadContactPage(String result) {
-        JSONObject json = null;
-        if (result != null) {
             try {
-                json = new JSONObject(result);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
-                return;
-            }
-            JSONArray tempNames = json.names();
-
-            try {
-                if (json.getString("nav").equals("null")) {
-                    return;
-                }
-                db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
+                loadContactPage(json.getJSONObject("contact_page"));
+                loadSchedule(json.getJSONObject("schedule"));
+                loadHousing(json.getJSONObject("housing"));
+                loadPrayerPartners(json.getJSONArray("prayer_partners"));
+                loadInformationalPage(json.getJSONObject("information_page"));
+                loadGeneralInfo(json.getJSONObject("general"));
+                loadTheme(json.getJSONArray("theme"));
+                loadContacts(json.getJSONObject("contacts"));
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        }
+    }
 
-            for (int i = 0; i < tempNames.length(); i++) {
-                try {
-                    //@id signals a new object, but contains no information on that line
-                    if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
-                        JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
 
-                        // add the Contact Object to db
-                        Info temp = new Info();
-                        temp.setHeader(ContactObj.getString("header"));
-                        temp.setBody(ContactObj.getString("content"));
-                        temp.setId(ContactObj.getInt("id"));
+    /**
+     * Loads Contact info
+     * @param json, result of the API query for the contact info
+     */
+    private void loadContacts(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        JSONArray tempNames = json.names();
 
-                        db.addContactPage(temp);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+        for (int i = 0; i < tempNames.length(); i++) {
+            try {
+                //@id signals a new object, but contains no information on that line
+                if (!tempNames.getString(i).equals("@id")) {
+                    JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
+
+                    String contact_name = tempNames.getString(i);
+                    String contact_address = (ContactObj.getString("address").equals("null")) ? null : ContactObj.getString("address");
+                    String contact_phone = (ContactObj.getString("phone").equals("null")) ? null : ContactObj.getString("phone");
+
+                    // add the Contact Object to db
+                    ContactInfo temp = new ContactInfo();
+                    temp.setName(contact_name);
+                    temp.setAddress(contact_address);
+                    temp.setPhone(contact_phone);
+
+                    db.addContact(temp);
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    /**
+     * Loads Contact Page info
+     * @param json, result of the API query for the contact page info
+     */
+    private void loadContactPage(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        JSONArray tempNames = json.names();
+
+        try {
+            if (json.getString("nav").equals("null")) {
+                return;
+            }
+            db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < tempNames.length(); i++) {
+            try {
+                //@id signals a new object, but contains no information on that line
+                if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
+                    JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
+
+                    // add the Contact Object to db
+                    Info temp = new Info();
+                    temp.setHeader(ContactObj.getString("header"));
+                    temp.setBody(ContactObj.getString("content"));
+                    temp.setId(ContactObj.getInt("id"));
+
+                    db.addContactPage(temp);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }
 
     /**
      * Loads schedule
-     * @param result, result of API query for schedule
+     * @param json, result of API query for schedule
      */
-    private void loadSchedule(String result) {
-        JSONObject json = null;
-        if (result != null) {
-            try {
-                json = new JSONObject(result);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
+    private void loadSchedule(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        JSONArray tempNames = json.names();
+
+        try {
+            if (json.getString("nav").equals("null")) {
                 return;
             }
-            JSONArray tempNames = json.names();
+            db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
 
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < tempNames.length(); i++) {
             try {
-                if (json.getString("nav").equals("null")) {
-                    return;
-                }
-                db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
+                //@id signals a new object, but contains no information on that line
+                if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
+                    JSONArray DayArray = json.getJSONArray(tempNames.getString(i));
 
+                    for (int n = 0; n < DayArray.length(); n++) {
+                        JSONObject Event = DayArray.getJSONObject(n);
+
+                        String sch_day = tempNames.getString(i);
+                        int sch_time_start = Event.getInt("start_time");
+                        int sch_time_length = Event.getInt("length");
+                        String sch_description = Event.getString("description");
+                        String sch_location = Event.getString("location");
+                        String sch_category = Event.getString("category");
+
+                        // add the Schedule Object to db
+                        ScheduleInfo temp = new ScheduleInfo();
+                        temp.setDay(sch_day);
+                        temp.setTimeStart(sch_time_start);
+                        temp.setTimeLength(sch_time_length);
+                        temp.setDesc(sch_description);
+                        temp.setLocationName(sch_location);
+                        temp.setCategory(sch_category);
+
+                        db.addSchedule(temp);
+                    }
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
-            }
-
-            for (int i = 0; i < tempNames.length(); i++) {
-                try {
-                    //@id signals a new object, but contains no information on that line
-                    if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
-                        JSONArray DayArray = json.getJSONArray(tempNames.getString(i));
-
-                        for (int n = 0; n < DayArray.length(); n++) {
-                            JSONObject Event = DayArray.getJSONObject(n);
-
-                            String sch_day = tempNames.getString(i);
-                            int sch_time_start = Event.getInt("start_time");
-                            int sch_time_length = Event.getInt("length");
-                            String sch_description = Event.getString("description");
-                            String sch_location = Event.getString("location");
-                            String sch_category = Event.getString("category");
-
-                            // add the Schedule Object to db
-                            ScheduleInfo temp = new ScheduleInfo();
-                            temp.setDay(sch_day);
-                            temp.setTimeStart(sch_time_start);
-                            temp.setTimeLength(sch_time_length);
-                            temp.setDesc(sch_description);
-                            temp.setLocationName(sch_location);
-                            temp.setCategory(sch_category);
-
-                            db.addSchedule(temp);
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
             }
         }
     }
 
     /**
      * Loads general Information
-     * @param result, result of API query for hq information
+     * @param json, result of API query for general information
      */
-    private void loadGeneralInfo(String result) {
-        JSONObject json = null;
-        if (result != null) {
-            try {
-                json = new JSONObject(result);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
-                return;
-            }
-            JSONArray tempGeneral = json.names();
+    private void loadGeneralInfo(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        JSONArray tempGeneral = json.names();
 
-            for (int i = 0; i < tempGeneral.length(); i++) {
-                try {
-                    //@id signals a new object, but contains no information on that line
-                    if (!tempGeneral.getString(i).equals("@id")) {
-                        if (!tempGeneral.getString(i).equals("refresh") || db.getGeneral("refresh") == null) {
-                            db.addGeneral(tempGeneral.getString(i), json.getString(tempGeneral.getString(i)));
-                        }
+        for (int i = 0; i < tempGeneral.length(); i++) {
+            try {
+                //@id signals a new object, but contains no information on that line
+                if (!tempGeneral.getString(i).equals("@id")) {
+                    if (!tempGeneral.getString(i).equals("refresh") || db.getGeneral("refresh") == null) {
+                        db.addGeneral(tempGeneral.getString(i), json.getString(tempGeneral.getString(i)));
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    Log.d(TAG, "loadGeneralInfo: " + db.getGeneral("refresh"));
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -458,14 +451,16 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Loads notifications Information
      * @param result, result of API query for hq information
      */
-    private void loadNotifications(String result, boolean loadNav) {
+    private void loadNotifications(String result) {
         ArrayList<Integer> currentNotifications = db.getCurrentNotifications();
 
         db.deleteNotifications();
+        boolean loadData = false;
+
         if (result != null) {
             JSONObject json = null;
             try {
-                json = new JSONObject(result);
+                json = new JSONObject(result).getJSONObject("notifications");
             } catch (JSONException e1) {
                 e1.printStackTrace();
             }
@@ -473,18 +468,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 return;
             }
             JSONArray tempNames = json.names();
-
-            //add navigation title
-            if (loadNav) {
-                try {
-                    if (json.getString("nav").equals("null")) {
-                        return;
-                    }
-                    db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
 
             for (int i = 0; i < tempNames.length(); i++) {
                 try {
@@ -501,8 +484,8 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                             db.addNotification(temp, false);
 
                         } else {
-                            if (notificationObj.getBoolean("refresh") && !loadAll) {
-                                new DataConnection(dataContext, dataActivity, action, qrAddress, true).execute("");
+                            if (notificationObj.getBoolean("refresh")) {
+                                loadData = true;
                             }
                             if (action.equals("new")){
                                 db.addNotification(temp, false);
@@ -515,191 +498,162 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     e.printStackTrace();
                 }
             }
-        } else{
-            db.addNavigationTitles("Welcome", "ic_house");
+            if(loadData){
+                new DataConnection(dataContext, dataActivity, action, qrAddress, true).execute("");
+
+            }
         }
 
     }
 
     /**
      * Loads all housing assignments
-     * @param result, result of API query for housing
+     * @param json, result of API query for housing
      */
-    private void loadHousing(String result) {
-        JSONObject json = null;
-        if (result != null) {
-            try {
-                json = new JSONObject(result);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
+    private void loadHousing(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        JSONArray tempNames = json.names();
+
+        try {
+            if (json.getString("nav").equals("null")) {
                 return;
             }
-            JSONArray tempNames = json.names();
+            db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
 
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < tempNames.length(); i++) {
             try {
-                if (json.getString("nav").equals("null")) {
-                    return;
-                }
-                db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
+                //@id signals a new object, but contains no information on that line
+                if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
+                    JSONObject HousingObj = json.getJSONObject(tempNames.getString(i));
 
+                    String host_name = tempNames.getString(i);
+                    String driver = HousingObj.getString("driver");
+                    String students = HousingObj.getString("students");
+
+                    // add the Contact Object to db
+                    HousingInfo temp = new HousingInfo();
+                    temp.setName(host_name);
+                    temp.setDriver(driver);
+                    temp.setStudents(students);
+
+                    db.addHousing(temp);
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
-            }
-
-            for (int i = 0; i < tempNames.length(); i++) {
-                try {
-                    //@id signals a new object, but contains no information on that line
-                    if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
-                        JSONObject HousingObj = json.getJSONObject(tempNames.getString(i));
-
-                        String host_name = tempNames.getString(i);
-                        String driver = HousingObj.getString("driver");
-                        String students = HousingObj.getString("students");
-
-                        // add the Contact Object to db
-                        HousingInfo temp = new HousingInfo();
-                        temp.setName(host_name);
-                        temp.setDriver(driver);
-                        temp.setStudents(students);
-
-                        db.addHousing(temp);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
             }
         }
     }
 
     /**
      * Loads all Prayer Partner teams
-     * @param result, result of API query for prayer partners
+     * @param json, result of API query for prayer partners
      */
-    private void loadPrayerPartners(String result) {
-        JSONArray json = null;
-        if (result != null) {
-            try {
-                json = new JSONArray(result);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
+    private void loadPrayerPartners(JSONArray json) {
+        if (json == null) {
+            return;
+        }
+
+        try {
+            if (json.getJSONObject(0).getString("nav").equals("null")) {
                 return;
             }
+            db.addNavigationTitles(json.getJSONObject(0).getString("nav"), json.getJSONObject(0).getString("icon"));
 
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 1; i < json.length(); i++) {
             try {
-                if (json.getJSONObject(0).getString("nav").equals("null")) {
-                    return;
-                }
-                db.addNavigationTitles(json.getJSONObject(0).getString("nav"), json.getJSONObject(0).getString("icon"));
+                JSONObject PrayerPartnerObj = json.getJSONObject(i);
 
+                String students = PrayerPartnerObj.getString("students");
+                // add the Contact Object to db
+                db.addPrayerPartners(students);
             } catch (JSONException e) {
                 e.printStackTrace();
-            }
-
-            for (int i = 1; i < json.length(); i++) {
-                try {
-                    JSONObject PrayerPartnerObj = json.getJSONObject(i);
-
-                    String students = PrayerPartnerObj.getString("students");
-                    // add the Contact Object to db
-                    db.addPrayerPartners(students);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
             }
         }
     }
 
     /**
      * Loads colors for theme and schedule
-     * @param result, result of API query for prayer partners
+     * @param json, result of API query for theme
      */
-    private void loadTheme(String result) {
-        JSONArray json = null;
-        if (result != null) {
+    private void loadTheme(JSONArray json) {
+
+        if (json == null) {
+            return;
+        }
+
+        for (int i = 0; i < json.length(); i++) {
             try {
-                json = new JSONArray(result);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
-                return;
-            }
+                JSONObject ColorObj = json.getJSONObject(i);
 
-            for (int i = 0; i < json.length(); i++) {
-                try {
-                    JSONObject ColorObj = json.getJSONObject(i);
-
-                    String name = ColorObj.names().getString(0);
-                    String color = ColorObj.getString(name);
-                    // add the Contact Object to db
-                    if (color.equals("null")) {
-                        switch (name) {
-                            case "themeDark":
-                                color = "#304166";
-                                break;
-                            case "themeMedium":
-                                color = "#364871";
-                                break;
-                            case "themeColor":
-                                color = "#4E69B8";
-                                break;
-                        }
+                String name = ColorObj.names().getString(0);
+                String color = ColorObj.getString(name);
+                // add the Contact Object to db
+                if (color.equals("null")) {
+                    switch (name) {
+                        case "themeDark":
+                            color = "#304166";
+                            break;
+                        case "themeMedium":
+                            color = "#364871";
+                            break;
+                        case "themeColor":
+                            color = "#4E69B8";
+                            break;
                     }
-                    db.addThemeColor(name, color);
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
+                db.addThemeColor(name, color);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }
 
     /**
      * Loads Hq Information
-     * @param result, result of API query for hq information
+     * @param json, result of API query for information pages
      */
-    private void loadInformationalPage(String result) {
-        JSONObject json = null;
-        if (result !=null) {
+    private void loadInformationalPage(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        JSONArray tempNames = json.names();
+
+        for (int i = 0; i < tempNames.length(); i++) {
             try {
-                json = new JSONObject(result);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
-                return;
-            }
-            JSONArray tempNames = json.names();
+                //@id signals a new object, but contains no information on that line
+                if (!tempNames.getString(i).equals("@id")) {
+                    JSONArray InfoArray = json.getJSONArray(tempNames.getString(i));
 
-            for (int i = 0; i < tempNames.length(); i++) {
-                try {
-                    //@id signals a new object, but contains no information on that line
-                    if (!tempNames.getString(i).equals("@id")) {
-                        JSONArray InfoArray = json.getJSONArray(tempNames.getString(i));
+                    String title = InfoArray.getJSONObject(0).getString("nav");
 
-                        String title = InfoArray.getJSONObject(0).getString("nav");
+                    db.addNavigationTitles(title, InfoArray.getJSONObject(0).getString("icon"));
 
-                        db.addNavigationTitles(title, InfoArray.getJSONObject(0).getString("icon"));
+                    for (int n = 1; n < InfoArray.length(); n++) {
 
-                        for (int n = 1; n < InfoArray.length(); n++) {
+                        JSONObject information = InfoArray.getJSONObject(n);
 
-                            JSONObject information = InfoArray.getJSONObject(n);
+                        // add the Information Object to db
 
-                            // add the Information Object to db
+                        Info temp = new Info();
+                        temp.setHeader(information.getString("title"));
+                        temp.setBody(information.getString("description"));
 
-                            Info temp = new Info();
-                            temp.setHeader(information.getString("title"));
-                            temp.setBody(information.getString("description"));
-
-                            db.addInformationPage(temp, title);
-                        }
+                        db.addInformationPage(temp, title);
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }

@@ -25,7 +25,6 @@
   <item type="id" name="return_scan_result"/>
 
 
-    <item name="carIcon" type="id"/>
     <item name="phoneIcon" type="id"/>
 
 </resources>

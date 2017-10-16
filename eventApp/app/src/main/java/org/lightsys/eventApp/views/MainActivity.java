@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         toggle.syncState();
 
         //if no data, import data
-        gatherData(db.getGeneral("year"));
+        gatherData(db.getGeneral("refresh_expire"));
     }
 
     /**
@@ -257,14 +257,14 @@ public class MainActivity extends AppCompatActivity {
         return super.dispatchTouchEvent(event);
     }
 
-    public void gatherData(String year){
+    public void gatherData(String refreshExpire){
         //for testing on device w/o camera
-        /*db.addGeneral("url","http://172.31.62.220:3000");
-        Log.d(TAG, "gatherData: http://172.31.62.220:3000");
+        db.addGeneral("url","http://192.168.0.23:3000/db");
+        Log.d(TAG, "gatherData: http://192.168.0.23:3000/db");
 
-        new DataConnection(context, activity, "new", "http://172.31.62.220:3000", true).execute("");*/
+        new DataConnection(context, activity, "new", "http://192.168.0.23:3000/db", true).execute("");
 
-        if (year == null) {
+        /*if (refreshExpire == null) {
             while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
                 requestCameraPermission();
             }
@@ -276,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
             fragment = new WelcomeView();
             fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment, "WELCOME")
                     .commit();
-        }
+        }*/
     }
 
     private void requestCameraPermission() {

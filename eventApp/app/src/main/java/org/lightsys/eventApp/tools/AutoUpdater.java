@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import org.lightsys.eventApp.views.MainActivity;
 import org.lightsys.eventApp.R;
@@ -58,6 +59,7 @@ public class AutoUpdater extends Service {
                 //set refresh frequency
                 updateMillis = (db.getGeneral("refresh") != null ? ONE_MINUTE*Integer.parseInt(db.getGeneral("refresh")) : ONE_MINUTE*15);
                 //difference between the previous time and the current time
+                Log.d("AutoUpdater", "run: " + updateMillis + db.getGeneral("refresh"));
                 long elapsedTime = currentDate.getTimeInMillis() - prevDate.getTimeInMillis();
 
                 //check to see if the time elapsed is greater than the update period
@@ -89,7 +91,7 @@ public class AutoUpdater extends Service {
     private  void getUpdates()
     {
         //updates each account
-           new DataConnection(this.getBaseContext(),null, "auto_update",db.getGeneral("url"),false).execute("");
+           new DataConnection(this.getBaseContext(),null, "auto_update",db.getGeneral("notifications_url"),false).execute("");
 
         //list of new notifications
         ArrayList<Info> notifications = db.getNewNotifications();

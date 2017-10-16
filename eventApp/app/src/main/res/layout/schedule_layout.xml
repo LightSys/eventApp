@@ -2,7 +2,7 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical" android:layout_width="match_parent"
-              android:layout_height="match_parent" android:id="@+id/parent_layout">
+              android:layout_height="match_parent">
 
     <LinearLayout
         android:id="@+id/topLeftBox"
@@ -35,7 +35,6 @@
 
         <!--General two cols container-->
         <LinearLayout
-            android:id="@+id/bodyLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">

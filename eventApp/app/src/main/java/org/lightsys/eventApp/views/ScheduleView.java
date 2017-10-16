@@ -13,7 +13,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -40,8 +42,6 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import static android.content.ContentValues.TAG;
-
 /**
  * Created by otter57 on 3/28/17.
  *
@@ -54,10 +54,10 @@ public class ScheduleView extends Fragment {
     private HorizontalScrollView ScrollH, ScrollB;
     private LocalDB db;
     private Context context;
-    private int width, height, textSizeHeader, paddingLg, padding, divider, textSizeContent, iconSize, initScrollX;
+    private int width, height, textSizeHeader, paddingLg, padding, divider, textSizeContent, iconSize, initScrollX, extraW, extraH;
     private String today = "";
-    private float density;
-    Calendar calNow;
+    private float density, screenWidth, screenHeight;
+    private Calendar calNow;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -76,6 +76,8 @@ public class ScheduleView extends Fragment {
         textSizeContent = 14;
         paddingLg = Math.round(20*density);
         padding = Math.round(5*density);
+        screenWidth = getResources().getDisplayMetrics().widthPixels;
+        screenHeight = getResources().getDisplayMetrics().heightPixels - getActionBarHeight();
         width = Math.round(100*density);
         height = Math.round(75*density);
         divider = Math.round(1*density);
@@ -86,14 +88,23 @@ public class ScheduleView extends Fragment {
         //create time column
         ArrayList<Integer> times = db.getScheduleTimeRange();
         int startTime = times.get(0);
+        int endTime = times.get(1);
 
-        for (int time = times.get(0); time < times.get(1); time+=15) {
+        for (int time = startTime; time < endTime; time+=15) {
 
 
             if ((time%100) == 60){
                 time+=40;
             }
             times.add(time);
+            if (time+15>times.get(1)){
+                time +=15;
+                if ((time%100) == 60){
+                    time+=40;
+                }
+                times.set(1,time);
+            }
+
         }
 
         CreateTimeCol(times,v);
@@ -102,6 +113,7 @@ public class ScheduleView extends Fragment {
             ArrayList<ScheduleInfo> schedule = db.getScheduleByDay(d);
 
             int timeLengthMin = minutesBetweenTimes(times.get(0), times.get(1));
+            Log.d("ScheduleView", "onCreateView: " + times.get(0) + times.get(1));
             int currentTime = 0;
             int i = 0;
             while(timeLengthMin > currentTime) {
@@ -166,14 +178,33 @@ public class ScheduleView extends Fragment {
         return ((timeEnd- ((int)Math.floor(timeEnd/100))*100)%60 + ((int)Math.floor(timeEnd/100))*60) - ((timeStart-((int)Math.floor(timeStart/100))*100)%60 + ((int)Math.floor(timeStart/100))*60);
     }
 
+    public int getActionBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        TypedValue tv = new TypedValue();
+        if (getActivity().getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))
+        {
+            result = result + TypedValue.complexToDimensionPixelSize(tv.data,getResources().getDisplayMetrics());
+        }
+
+        return result;
+    }
+
     private void CreateHeader(ArrayList<String> days, View v){
         LinearLayout dayLayout = v.findViewById(R.id.day_layout);
         LinearLayout Box = v.findViewById(R.id.topLeftBox);
 
         int scrollWidth = 0;
 
+        //check if schedule width is too small for screen
+        screenWidth = screenWidth - (width +padding+paddingLg) - days.size()*(4*width+padding + paddingLg);
+        extraW = screenWidth>0 ? Math.round(screenWidth/(days.size()+1)):0;
+
         //create Time header
-        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(width + padding + paddingLg, width + (2 * paddingLg));
+        LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(width + padding + paddingLg+extraW, width + (2 * paddingLg));
         TextView header = new TextView(context);
         header.setText(" ");
         header.setTypeface(null, Typeface.BOLD);
@@ -212,7 +243,7 @@ public class ScheduleView extends Fragment {
                 e.printStackTrace();
             }
 
-            headerParams = new LinearLayout.LayoutParams(4*width+padding + paddingLg, width+(2*paddingLg));
+            headerParams = new LinearLayout.LayoutParams(4*width+padding + paddingLg +extraW, width+(2*paddingLg));
             header = new TextView(context);
             header.setText(dayIntToString(cal.get(Calendar.DAY_OF_WEEK)));
             header.setTypeface(null, Typeface.BOLD);
@@ -246,14 +277,19 @@ public class ScheduleView extends Fragment {
                 header.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_header));
                 dividerVertical.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.color_blue));
             }else{
-                scrollWidth+=4*width+padding + paddingLg+divider;
+                scrollWidth+=4*width+padding + paddingLg+divider +extraW;
             }
         }
     }
 
     private void CreateTimeCol(ArrayList<Integer> times, View v){
+
+        //check if schedule height is too small for screen
+        screenHeight = (int)Math.ceil(screenHeight - (width + (2 * paddingLg) + divider*5 + divider*(times.size()-2) + (height+(2*paddingLg))*(times.size()-2)));
+        extraH = screenHeight>0? (int)Math.ceil(screenHeight/(times.size()-2)):0;
+
         LinearLayout timeLayout = v.findViewById(R.id.time);
-        LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(width+paddingLg+padding, height+(2*paddingLg));
+        LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(width+paddingLg+padding+extraW, height+(2*paddingLg)+extraH);
 
         for (int i=2; i<times.size();i++) {
             int t = times.get(i);
@@ -285,7 +321,7 @@ public class ScheduleView extends Fragment {
 
         //create Column containing event info
         LinearLayout columnLayout = new LinearLayout(context);
-        columnLayout.setLayoutParams(new LinearLayout.LayoutParams(width*4+padding + paddingLg, LinearLayout.LayoutParams.MATCH_PARENT));
+        columnLayout.setLayoutParams(new LinearLayout.LayoutParams(width*4+padding + paddingLg+extraW, LinearLayout.LayoutParams.MATCH_PARENT));
         columnLayout.setOrientation(LinearLayout.VERTICAL);
 
         if (isToday){
@@ -298,8 +334,8 @@ public class ScheduleView extends Fragment {
             RelativeLayout iconsLayout = (RelativeLayout) View.inflate(context, R.layout.schedule_event_item, null);
             TextView event = iconsLayout.findViewById(R.id.eventText);
 
-            double heightCol = (height + (2.00* paddingLg))/15.00;
-            int widthCol = 4*width;
+            double heightCol = (extraH+height + (2.00* paddingLg))/15.00;
+            int widthCol = 4*width + extraW;
 
             int color = Color.parseColor("#d6d4d4");
 
@@ -358,6 +394,7 @@ public class ScheduleView extends Fragment {
 
                 Calendar cal = Calendar.getInstance();
                 String[]timeStr=new String[2];
+                assert sch != null;
                 String time = Integer.toString(sch.getTimeStart());
                 while (time.length()<4){
                     time = "0" + time;
@@ -378,13 +415,13 @@ public class ScheduleView extends Fragment {
                     event.setTypeface(event.getTypeface(), Typeface.BOLD);
 
                     View redLine = new View(context);
-                    RelativeLayout.LayoutParams redlineLP = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 4);
+                    RelativeLayout.LayoutParams redLineLP = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 4);
 
                     //math to figure out where redline should be located
                     int redYLoc = (int)((timeDif/60000)*(Math.round(heightCol))/(sch.getTimeLength()));
 
-                    redlineLP.setMargins(Math.round(5*density), redYLoc, Math.round(5*density), 0);
-                    redLine.setLayoutParams(redlineLP);
+                    redLineLP.setMargins(Math.round(5*density), redYLoc, Math.round(5*density), 0);
+                    redLine.setLayoutParams(redLineLP);
                     redLine.setBackgroundColor(ContextCompat.getColor(context, R.color.red));
                     iconsLayout.addView(redLine);
 
@@ -405,7 +442,7 @@ public class ScheduleView extends Fragment {
             iconsLayout.setBackground(gd);
 
             //create cell of column containing event info
-            iconsLayout.setLayoutParams(new FrameLayout.LayoutParams(width*4 + paddingLg + padding, (int)Math.round(heightCol)));
+            iconsLayout.setLayoutParams(new FrameLayout.LayoutParams(width*4 + paddingLg + padding+extraW, (int)Math.round(heightCol)));
 
             //textView padding
             event.setPadding(paddingLg,paddingLg,padding,paddingLg);

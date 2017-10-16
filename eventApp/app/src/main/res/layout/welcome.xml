@@ -19,7 +19,6 @@
         android:gravity="center_horizontal"/>
 
     <LinearLayout
-        android:id="@+id/eventLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="bottom"

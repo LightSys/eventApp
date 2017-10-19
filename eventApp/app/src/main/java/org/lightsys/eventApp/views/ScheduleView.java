@@ -13,8 +13,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -45,7 +43,7 @@ import java.util.TimeZone;
 /**
  * Created by otter57 on 3/28/17.
  *
- * Displays events schedules
+ * Displays event's schedules
  */
 
 public class ScheduleView extends Fragment {
@@ -68,20 +66,21 @@ public class ScheduleView extends Fragment {
         ScrollH = v.findViewById(R.id.HeaderScroll);
         ScrollB = v.findViewById(R.id.bodyScroll);
 
+        //sets constants for schedule display (density changes values based on screen
         density = (getResources().getDisplayMetrics().density)/2;
-
         db = new LocalDB(getContext());
         ArrayList<String> days = db.getDays();
         textSizeHeader = 30;
         textSizeContent = 14;
         paddingLg = Math.round(20*density);
         padding = Math.round(5*density);
-        screenWidth = getResources().getDisplayMetrics().widthPixels;
-        screenHeight = getResources().getDisplayMetrics().heightPixels - getActionBarHeight();
         width = Math.round(100*density);
         height = Math.round(75*density);
         divider = Math.round(1*density);
         iconSize = Math.round(60*density);
+        //used to expand items if they do not fill screen
+        screenWidth = getResources().getDisplayMetrics().widthPixels;
+        screenHeight = getResources().getDisplayMetrics().heightPixels - getActionBarHeight();
 
         CreateHeader(days,v);
 
@@ -91,7 +90,6 @@ public class ScheduleView extends Fragment {
         int endTime = times.get(1);
 
         for (int time = startTime; time < endTime; time+=15) {
-
 
             if ((time%100) == 60){
                 time+=40;
@@ -104,16 +102,15 @@ public class ScheduleView extends Fragment {
                 }
                 times.set(1,time);
             }
-
         }
 
         CreateTimeCol(times,v);
 
+        //creates schedule column for each day
         for (String d : days) {
             ArrayList<ScheduleInfo> schedule = db.getScheduleByDay(d);
 
             int timeLengthMin = minutesBetweenTimes(times.get(0), times.get(1));
-            Log.d("ScheduleView", "onCreateView: " + times.get(0) + times.get(1));
             int currentTime = 0;
             int i = 0;
             while(timeLengthMin > currentTime) {
@@ -131,7 +128,7 @@ public class ScheduleView extends Fragment {
             CreateColumn(schedule, today.equals(d));
         }
 
-
+        //synchronize scroll header and scroll body
         ScrollB.setOnTouchListener(new View.OnTouchListener(){
 
             @Override
@@ -173,11 +170,13 @@ public class ScheduleView extends Fragment {
         return v;
     }
 
+    //gets the number of minutes between two clock times
     private int minutesBetweenTimes(int timeStart, int timeEnd){
 
         return ((timeEnd- ((int)Math.floor(timeEnd/100))*100)%60 + ((int)Math.floor(timeEnd/100))*60) - ((timeStart-((int)Math.floor(timeStart/100))*100)%60 + ((int)Math.floor(timeStart/100))*60);
     }
 
+    //subtracted from total height for schedule display height minimum
     public int getActionBarHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
@@ -212,14 +211,17 @@ public class ScheduleView extends Fragment {
         header.setGravity(Gravity.CENTER_HORIZONTAL);
         header.setLayoutParams(headerParams);
 
+        //divider between each day header
         View dividerHorizontal = new View(context);
         dividerHorizontal.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
         dividerHorizontal.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
 
+        //divider between header and body
         View dividerVertical1 = new View(context);
         dividerVertical1.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
         dividerVertical1.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,divider*5));
 
+        //add time header and divider
         LinearLayout headerBox1 = new LinearLayout(context);
         headerBox1.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         headerBox1.setOrientation(LinearLayout.VERTICAL);
@@ -236,6 +238,7 @@ public class ScheduleView extends Fragment {
         calNow.setTimeZone(TimeZone.getDefault());
         cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone")));
 
+        //create headers for each day
         for (String d:days) {
             try{
                 cal.setTime(formatter.parse(d));
@@ -243,6 +246,7 @@ public class ScheduleView extends Fragment {
                 e.printStackTrace();
             }
 
+            //create day header
             headerParams = new LinearLayout.LayoutParams(4*width+padding + paddingLg +extraW, width+(2*paddingLg));
             header = new TextView(context);
             header.setText(dayIntToString(cal.get(Calendar.DAY_OF_WEEK)));
@@ -251,6 +255,7 @@ public class ScheduleView extends Fragment {
             header.setGravity(Gravity.CENTER);
             header.setLayoutParams(headerParams);
 
+            //divider between header items
             dividerHorizontal = new View(context);
             dividerHorizontal.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
             dividerHorizontal.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -259,23 +264,26 @@ public class ScheduleView extends Fragment {
             headerBox.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             headerBox.setOrientation(LinearLayout.VERTICAL);
 
+            //divider between header and body
             View dividerVertical = new View(context);
             dividerVertical.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
             dividerVertical.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,divider*5));
 
+            //add header and divider
             headerBox.addView(header);
             headerBox.addView(dividerVertical);
             dayLayout.addView(dividerHorizontal);
             dayLayout.addView(headerBox);
 
-
-
+            //if day is today, highlight
             if (formatter.format(calNow.getTime()).equals(formatter.format(cal.getTime()))){
                 today = d;
                 initScrollX=scrollWidth;
                 header.setTextColor(ContextCompat.getColor(context, R.color.color_blue));
                 header.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_header));
                 dividerVertical.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.color_blue));
+
+            //if not today scroll past day
             }else{
                 scrollWidth+=4*width+padding + paddingLg+divider +extraW;
             }
@@ -291,22 +299,26 @@ public class ScheduleView extends Fragment {
         LinearLayout timeLayout = v.findViewById(R.id.time);
         LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(width+paddingLg+padding+extraW, height+(2*paddingLg)+extraH);
 
+        //create time header for each time (exclude 1st 2 times which are start and end times)
         for (int i=2; i<times.size();i++) {
             int t = times.get(i);
 
             TextView time = new TextView(context);
             time.setGravity(Gravity.CENTER);
             String timeStr;
+            //set time format to ####
             if (t<1000) {
                 timeStr = "0" + Integer.toString(t);
             }else{
                 timeStr = Integer.toString(t);
             }
+
             time.setText(timeStr);
             time.setPadding(paddingLg, paddingLg, padding, paddingLg);
             time.setLayoutParams(timeParams);
             time.setTextSize(textSizeContent);
 
+            //divider between time column and schedule columns
             View divider_v = new View(context);
             divider_v.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
             divider_v.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,divider));
@@ -326,7 +338,6 @@ public class ScheduleView extends Fragment {
 
         if (isToday){
             columnLayout.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_right));
-
         }
 
         for (ScheduleInfo sch : schedule){
@@ -353,7 +364,7 @@ public class ScheduleView extends Fragment {
 
                     RelativeLayout.LayoutParams iconLPCar = new RelativeLayout.LayoutParams(iconSize,(int) Math.round(iconSize*1.2));
 
-
+                    // if phone number is present, add phone icon to event
                     if (contactInfo.getPhone() != null){
                         ImageButton phone = (ImageButton) View.inflate(context, R.layout.contact_button, null);
                         phone.setLayoutParams(iconLPPhone);
@@ -370,6 +381,7 @@ public class ScheduleView extends Fragment {
                     }else{
                         iconLPCar.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
                     }
+                    // if address is present, add car icon to event
                     if(contactInfo.getAddress() != null) {
                         ImageButton car = (ImageButton) View.inflate(context, R.layout.contact_button, null);
                         car.setLayoutParams(iconLPCar);
@@ -380,18 +392,18 @@ public class ScheduleView extends Fragment {
 
                         car.setOnClickListener(new OnCarClicked(contactInfo.getAddress()));
                     }
-
                     event.setLayoutParams(new RelativeLayout.LayoutParams(widthCol + padding + paddingLg, RelativeLayout.LayoutParams.MATCH_PARENT));
                 }
 
+                //add background color based on type of event
                 color = Color.parseColor(db.getThemeColor(sch.getCategory()));
 
             }else{
                 heightCol = heightCol*15 + 2* paddingLg;
             }
 
+            //if column is current day, add red line at current time
             if (isToday){
-
                 Calendar cal = Calendar.getInstance();
                 String[]timeStr=new String[2];
                 assert sch != null;
@@ -402,6 +414,7 @@ public class ScheduleView extends Fragment {
                 timeStr[0] = time.substring(0,2);
                 timeStr[1] = time.substring(2,4);
 
+                //adjust for time zone difference if device time zone is different from event time zone
                 cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStr[0]));
                 cal.set(Calendar.MINUTE, Integer.parseInt(timeStr[1]));
                 cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone")));
@@ -417,7 +430,7 @@ public class ScheduleView extends Fragment {
                     View redLine = new View(context);
                     RelativeLayout.LayoutParams redLineLP = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 4);
 
-                    //math to figure out where redline should be located
+                    //math to figure out where red line should be located
                     int redYLoc = (int)((timeDif/60000)*(Math.round(heightCol))/(sch.getTimeLength()));
 
                     redLineLP.setMargins(Math.round(5*density), redYLoc, Math.round(5*density), 0);
@@ -433,8 +446,8 @@ public class ScheduleView extends Fragment {
 
             }
 
+            //gradient background to show event types
             int colors[] = { color , 0xfffffff,0xfffffff,0xfffffff,0xfffffff,0xfffffff, 0xfffffff };
-
             GradientDrawable gd = new GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,colors);
             gd.setCornerRadius(0f);
@@ -457,16 +470,17 @@ public class ScheduleView extends Fragment {
             columnLayout.addView(divider_v);
         }
 
-
-        View dividerHeader = new View(context);
-        dividerHeader.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
-        dividerHeader.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
+        //divider between day columns
+        View dividerDay = new View(context);
+        dividerDay.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.black));
+        dividerDay.setLayoutParams(new ViewGroup.LayoutParams(divider, ViewGroup.LayoutParams.MATCH_PARENT));
 
         //add layout to your mainLayout
         mainLayout.addView(columnLayout);
-        mainLayout.addView(dividerHeader);
+        mainLayout.addView(dividerDay);
     }
 
+    //asks user then opens maps
     private class OnCarClicked implements AdapterView.OnClickListener {
         final String address;
 
@@ -504,6 +518,7 @@ public class ScheduleView extends Fragment {
 
     }
 
+    //asks user then opens phone
     private class OnPhoneClicked implements AdapterView.OnClickListener {
         final String phone;
 
@@ -540,6 +555,7 @@ public class ScheduleView extends Fragment {
 
     }
 
+    //converts day number to day name
     private String dayIntToString(int day){
         switch(day){
             case 1:

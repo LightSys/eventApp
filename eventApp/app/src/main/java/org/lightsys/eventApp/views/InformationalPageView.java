@@ -24,7 +24,7 @@ import java.util.HashMap;
 
 public class InformationalPageView extends Fragment {
 
-    private ArrayList<Info> HQInfo;
+    private ArrayList<Info> InfoPage;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -33,13 +33,13 @@ public class InformationalPageView extends Fragment {
         getActivity().setTitle(page);
 
         LocalDB db = new LocalDB(getContext());
-        HQInfo = db.getHQ(page);
+        InfoPage = db.getInfoPage(page);
 
         ListView infoListView = v.findViewById(R.id.infoList);
 
-
         ArrayList<HashMap<String, String>> itemList = generateListItems();
-        // display schedule
+
+        // display Information
         String[] from = {"header", "text"};
         int[] to = {R.id.headerText, R.id.text};
         InfoAdapter adapter = new InfoAdapter(getActivity(), itemList, from, to, Color.parseColor(db.getThemeColor("themeMedium")) );
@@ -54,8 +54,7 @@ public class InformationalPageView extends Fragment {
         ArrayList<HashMap<String, String>> aList = new ArrayList<>();
         String oldHeader = null;
 
-
-        for (Info hq : HQInfo) {
+        for (Info hq : InfoPage) {
             HashMap<String, String> hm = new HashMap<>();
 
             if (!hq.getHeader().equals(oldHeader)) {

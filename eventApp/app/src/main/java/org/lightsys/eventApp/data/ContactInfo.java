@@ -5,7 +5,7 @@ package org.lightsys.eventApp.data;
  * @author otter57
  * created on 3/30/2017.
  *
- * Class represents contact information info
+ * Class represents Contact Info
  */
 public class ContactInfo {
 

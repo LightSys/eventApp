@@ -32,6 +32,7 @@ public class InfoAdapter extends SimpleAdapter {
     public View getView(int position, View v, ViewGroup parent) {
         View mView = super.getView(position, v, parent);
 
+        //if header is present, display
         TextView header = mView.findViewById(R.id.headerText);
         if (data.get(position).get("header") != null) {
             header.setVisibility(View.VISIBLE);

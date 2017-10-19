@@ -139,8 +139,9 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
 	/* ************************* Clear Queries ************************* */
-	public void clear(){
 
+	//delete event data
+	public void clear(){
         SQLiteDatabase db = this.getWritableDatabase();
 
         db.delete(TABLE_CONTACTS, null, null);
@@ -155,6 +156,7 @@ public class LocalDB extends SQLiteOpenHelper {
         db.delete(TABLE_CONTACT_PAGE, null, null);
     }
 
+    //delete all notifications
     public void deleteNotifications(){
         SQLiteDatabase db = this.getReadableDatabase();
         db.delete(TABLE_NOTIFICATIONS, null, null);
@@ -209,12 +211,14 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * adds code-a-thon general info (url, year, logo, refresh rate)
+     * @param type, name information is stored under
+     * @param content, information to be stored
+     * adds code-a-thon general info (url, refresh rate, refresh expire, time zone, welcome message, notification url, logo)
      */
-    public void addGeneral(String type,String year) {
+    public void addGeneral(String type, String content) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_TYPE, type);
-        values.put(COLUMN_INFO, year);
+        values.put(COLUMN_INFO, content);
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_GENERAL_INFO, null, values);
@@ -223,6 +227,8 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      * adds titles for navigation
+     * @param title, navigation name
+     * @param icon, name of icon
      */
     public void addNavigationTitles(String title, String icon) {
         ContentValues values = new ContentValues();
@@ -236,6 +242,7 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      * adds contact info
+     * @param contact, contact info to be stored
      */
     public void addContact(ContactInfo contact) {
         ContentValues values = new ContentValues();
@@ -250,7 +257,7 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      * adds schedule info
-     * //if schedule item occurs multiple days separate with comma
+     * if schedule item occurs multiple days separate with comma
      */
     public void addSchedule(ScheduleInfo scheduleInfo) {
         ContentValues values = new ContentValues();
@@ -311,7 +318,7 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * adds housing info
+     * adds prayer partner info
      */
     public void addPrayerPartners(String students) {
         ContentValues values = new ContentValues();
@@ -325,7 +332,9 @@ public class LocalDB extends SQLiteOpenHelper {
 	/* ************************* Get Queries ************************* */
 
     /**
-     * @return general info (year, url, logo)
+     * get general info
+     * @param type, title under which info is stored
+     * @return general info (year, url, logo, etc.)
      */
     public String getGeneral(String type) {
         String general=null;
@@ -459,7 +468,7 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * @return different days in schedule
+     * @return time range of schedule
      */
     public ArrayList<Integer> getScheduleTimeRange() {
         ArrayList<Integer> times = new ArrayList<>();
@@ -477,7 +486,7 @@ public class LocalDB extends SQLiteOpenHelper {
                 timeStart = temp;
             }
             int tempE = (c.getInt(1));//-15
-            int x=0;
+            int x;
             if (tempE>=60){
                 x = tempE/60;
                 x= (tempE-(x*60))+(x*100);
@@ -501,7 +510,7 @@ public class LocalDB extends SQLiteOpenHelper {
      * returns Informational page data
      * @return an ArrayList of Info objects for page
      */
-    public ArrayList<Info> getHQ(String page) {
+    public ArrayList<Info> getInfoPage(String page) {
         ArrayList<Info> hq = new ArrayList<>();
 
         String queryString = "SELECT * FROM " + TABLE_INFORMATION_PAGE + " WHERE "
@@ -620,7 +629,7 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * @return Contacts
+     * @return Housing info
      */
     public ArrayList<HousingInfo> getHousing() {
         ArrayList<HousingInfo> housing = new ArrayList<>();
@@ -650,7 +659,7 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * @return Info
+     * @return Prayer partner info
      */
     public ArrayList<String> getPrayerPartners() {
         ArrayList<String> students = new ArrayList<>();

@@ -52,6 +52,13 @@ import java.util.HashMap;
 
 import static android.content.ContentValues.TAG;
 
+/**
+ * Created by otter57 on 3/29/17.
+ *
+ * creates theme, navigation menu, and options menu
+ * base activity for app fragment views
+ *
+ */
 
 public class MainActivity extends AppCompatActivity {
     static private final String QR_DATA_EXTRA = "qr_data";
@@ -122,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPostCreate(savedInstanceState);
     }
 
+    //displays home page as selected in navigation menu
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -143,10 +151,11 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         if (navigationList == null){
-            createNavigationMenu();
+            setupMenusAndTheme();
         }
     }
 
+    //on return from QRScanner, import data
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -169,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    //options menu (refresh, refresh frequency, rescan QR)
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -230,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
     }
 
+    //if refresh dropdown is open and click occurs outside dropdown, dropdown closes
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
 
@@ -257,28 +268,30 @@ public class MainActivity extends AppCompatActivity {
         return super.dispatchTouchEvent(event);
     }
 
+    //launches QR scanner
     public void gatherData(String refreshExpire){
-        //for testing on device w/o camera
+        /*for testing on device w/o camera
         db.addGeneral("url","http://192.168.0.23:3000/db");
         Log.d(TAG, "gatherData: http://192.168.0.23:3000/db");
 
         new DataConnection(context, activity, "new", "http://192.168.0.23:3000/db", true).execute("");
-
-        /*if (refreshExpire == null) {
+*/
+        if (refreshExpire == null) {
             while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
                 requestCameraPermission();
             }
             Intent QR = new Intent(MainActivity.this, launchQRScanner.class);
             startActivityForResult(QR, QR_RESULT);
         }else{
-            createNavigationMenu();
+            setupMenusAndTheme();
             navigationList.setItemChecked(0, true);
             fragment = new WelcomeView();
             fragmentManager.beginTransaction().replace(R.id.contentFrame,fragment, "WELCOME")
                     .commit();
-        }*/
+        }
     }
 
+    //if app does not have camera permission, ask user for permission
     private void requestCameraPermission() {
         Log.w("Barcode-reader", "Camera permission is not granted. Requesting permission");
         final String[] permissions = new String[]{"android.permission.CAMERA"};
@@ -293,7 +306,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void createNavigationMenu(){
+    //navigation, theme, refresh menu setup
+    private void setupMenusAndTheme(){
         ArrayList<Info> menu = db.getNavigationTitles();
 
         navigationList = (ListView) findViewById(R.id.nav_list);
@@ -372,6 +386,7 @@ public class MainActivity extends AppCompatActivity {
         refreshLayout.setVisibility(View.VISIBLE);
     }
 
+    //generate items for navigation menu
     private ArrayList<HashMap<String, String>> generateListItems(ArrayList<Info> menu) {
         ArrayList<HashMap<String, String>> aList = new ArrayList<>();
         for (Info m : menu) {
@@ -385,6 +400,7 @@ public class MainActivity extends AppCompatActivity {
         return aList;
     }
 
+    //If error, gives user options to retry, rescan, or cancel
     private void RetryConnection(){
         if (alert !=null){
             alert.cancel();
@@ -427,9 +443,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //sends user to appropriate page
     private void onNavigationItemSelected(View view) {
-        // Handle navigation view item clicks here.
-
         if (previousNavView != null){
             ((TextView)previousNavView.findViewById(R.id.nav_item)).setTextColor(ContextCompat.getColor(context, R.color.darkGray));
             ((ImageView)previousNavView.findViewById(R.id.iconView)).setColorFilter(ContextCompat.getColor(context, R.color.darkGray));
@@ -487,6 +502,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // handler for received Intents for the RELOAD_PAGE  event
+    //depending on where DataConnection was called from and what the result was, performs different actions
     private final BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -506,18 +522,22 @@ public class MainActivity extends AppCompatActivity {
             successfulConnection = true;
             Log.d(TAG, "onReceive: " + intent.getStringExtra("action"));
 
-            //based on broadcast message received perform correct action
+            /*based on broadcast message received perform correct action*/
             if (intent.getStringExtra("action").equals("retry")){
+                //sets refresh error icon and allows user to retry
                 successfulConnection = false;
                 RetryConnection();
             } else if (intent.getStringExtra("action").equals("auto_update_error")) {
+                //sets refresh error icon
                 successfulConnection = false;
             } else if (intent.getStringExtra("action").equals("new")) {
-                createNavigationMenu();
+                //if new, sets up menus and theme and sends user to welcome page
+                setupMenusAndTheme();
                 fragment = new WelcomeView();
                 fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
                         .commit();
             }else if (intent.getStringExtra("action").equals("expired")){
+                //if event has expired
                 Toast.makeText(context, "Event has expired, please scan a QR for a new event", Toast.LENGTH_SHORT).show();
                 successfulConnection = false;
             }else {

@@ -23,7 +23,7 @@ import java.util.Locale;
 /**
  * Created by otter57 on 3/29/17.
  *
- * Welcomes user to code-a-thon
+ * Welcomes user to event
  */
 
 public class WelcomeView extends Fragment {
@@ -56,7 +56,7 @@ public class WelcomeView extends Fragment {
 
         ArrayList<HashMap<String,String>> itemList = generateListItems();
 
-        // display donor name, fund name, date, and amount for all gifts
+        // display title, content, and date posted for notification
         String[] from = {"title", "content", "date"};
         int[] to = {R.id.titleText, R.id.noteText, R.id.dateText};
         final SimpleAdapter adapter = new SimpleAdapter(getActivity(), itemList, R.layout.notification_item, from, to );
@@ -67,9 +67,9 @@ public class WelcomeView extends Fragment {
     }
 
     /**
-     * Formats the gift information into a HashMap ArrayList.
+     * Formats the notification item into a HashMap ArrayList.
      *
-     * @return a HashMap array with gift information, to be used in a SimpleAdapter
+     * @return a HashMap array with notification information, to be used in a SimpleAdapter
      */
     private ArrayList<HashMap<String,String>> generateListItems(){
         ArrayList<HashMap<String,String>> aList = new ArrayList<>();
@@ -94,6 +94,7 @@ public class WelcomeView extends Fragment {
         return aList;
     }
 
+    //formats the calendar date for display
     private String getDatePrintOut(Calendar cal){
         Calendar calNow = Calendar.getInstance();
         if (calNow.get(Calendar.DATE) == cal.get(Calendar.DATE)) {
@@ -105,10 +106,12 @@ public class WelcomeView extends Fragment {
             return formatter.format(cal.getTime());
         }
     }
+    //set minutes in date to ## format
     private String minutesFormat(String minutes){
         return minutes.length() == 1? "0"+minutes:minutes;
     }
 
+    //converts day number to day string
     private String dayIntToString(int day){
         switch(day){
             case 1:

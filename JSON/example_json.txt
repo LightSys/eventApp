@@ -2,11 +2,11 @@
 instructions on creating a json file for hosting event
 
 general rules
-1. change integer and boolean values to your liking
-2. change strings starting with *
-3. if options are listed below, the value MUST be one of the options
+1. change integer and boolean values to fit your event
+2. if format is listed, the value MUST be expressed in that format
+3. if options are listed, the value MUST be one of the options
 4. (optional) items must be included, but can be set as "null"
-6. nav: string to display in navigation menu (if this is null, the page will no be loaded or displayed)
+5. nav: string to display in navigation menu (if this is null, the page will not be loaded or displayed)
 icon: set navigation menu icon
 options:
 "ic_contact"
@@ -32,8 +32,7 @@ options:
 30
 60
 
-*Note: this ONLY refreshes notifications. if other app data changes, it will only be downloaded to the app
-if a notification is posted with the refresh value set to true.
+*Note: this ONLY refreshes notifications. if other app data changes, it will only be downloaded to the app if a notification is posted with the refresh value set to true.
 
 ### refresh_expire
 at this date the app will stop trying to pull data from your event server
@@ -53,6 +52,7 @@ url from which to upload notifications
 Optional: create logo for the event to be displayed in the menu
 format: base64 image
 
+
 ## contact_page
 display event contact info (i.e. emergency contacts, important addresses, etc)
 
@@ -62,7 +62,7 @@ you may have as many sections as desired
 id
 "0" creates a textview
 "1" creates a listview. input content as a string, but separate list items by :
-(e.g. "item1:item2:item3")
+(e.g. "item1:item2:item3") if list items match contact info address will be displayed and clickable
 options 0,1
 
 ## contacts
@@ -72,7 +72,7 @@ any contact info used elsewhere should be listed here
 item label should be the persons name and must be matched exactly elsewhere to reference
 
 #### address (optional)
-format: "11 road RD\ncity, State"
+format: "## road\ncity, State"
 
 #### phone (optional)
 format: "(###) ###-####"
@@ -107,7 +107,7 @@ Colors to be used in theme and schedule
 ### theme... colors (optional)
 if set to null, default theme will be used
 
-if logo does not display well over your theme colors in the navigation header add with your desired header background colors
+if custom logo does not display well over your theme colors in the navigation header, header background colors can be changed without modifying theme using
 	{"theme1":"#304166"},
 	{"theme2": "#364871"},
 	{"theme3": "#4E69B8"},
@@ -115,19 +115,4 @@ if logo does not display well over your theme colors in the navigation header ad
 	## notifications (this should be separate from other .json elements. see example_notifications.json)
 	label: unique integer
 	date: format "mm/dd/yyyy hh:mm:ss"
-	refresh: refresh other app content
-
-APP:
-
-	IMPORT:
-		- imports data from a JSON file (?see JSON example for format)
-		ON INSTALL/RESCAN BUTTON: asks for QR code to retrieve data
-		ON REFRESH BUTTON: uses previous QR code to retrieve data
-		AUTOUPDATE: checks for new notifications. if notifications has "refresh": 		true, entire database will be refreshed (?untested)
-		ERROR: gives options to 1. retry connecting using old QR code 2. rescan QR 		3. cancel and use old data
-	NOTIFICATIONS PAGE:
-	CONTACTS PAGE:
-	SCHEDULE PAGE:
-	HOUSING PAGE:
-	PRAYER PARTNERS PAGE:
-	INFORMATION PAGES:
+	refresh: if true refresh other app content

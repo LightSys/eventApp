@@ -51,9 +51,7 @@ public class AutoUpdater extends Service {
             @Override
             public void run() {
 
-                //get update period
                 db.close();
-
                 Calendar currentDate = Calendar.getInstance();
 
                 //set refresh frequency

@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.res.ResourcesCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,8 +22,6 @@ import org.lightsys.eventApp.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by otter57 on 3/28/17.
@@ -48,15 +45,13 @@ public class HousingView extends Fragment {
         housing = db.getHousing();
 
         ArrayList<HashMap<String, String>> itemList = generateListItems();
-        Log.d(TAG, "onCreateView: " + housing.size());
 
-        // display donor name, fund name, date, and amount for all gifts
+        // display host name (address and phone), students, and driver
         String[] from = {"host_info", "students", "driver"};
         int[] to = {R.id.infoText, R.id.studentsText, R.id.driver};
         final HousingAdapter adapter = new HousingAdapter(getActivity(), itemList, from, to, Color.parseColor(db.getThemeColor("themeDark")));
 
         listview.setAdapter(adapter);
-
         listview.setOnItemClickListener(new OnHostClicked());
         listview.setSelector(ResourcesCompat.getDrawable(getResources(), R.drawable.button_pressed, null));
 
@@ -70,6 +65,7 @@ public class HousingView extends Fragment {
         for (HousingInfo h : housing) {
             HashMap<String, String> hm = new HashMap<>();
 
+            //get host info
             String info = h.getName();
             info += (h.getAddress()==null)? "":"\n"+ h.getAddress();
             info += (h.getPhone()==null)? "":"\n"+ h.getPhone();
@@ -77,6 +73,7 @@ public class HousingView extends Fragment {
             hm.put("host_info", info);
             hm.put("students", h.getStudents());
 
+            //if driver is present, get driver
             if (!h.getDriver().equals(oldDriver)) {
                 oldDriver = h.getDriver();
                 hm.put("driver", "Driver: "+h.getDriver());
@@ -88,6 +85,7 @@ public class HousingView extends Fragment {
         return aList;
     }
 
+
     private class OnHostClicked implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id){
@@ -97,6 +95,7 @@ public class HousingView extends Fragment {
             title = (address == null)?"Go to phone?":title;
             title = (phone == null)?"Go to maps?":title;
 
+            //ask user if they want directions (if address is present) or if they want to call (if phone number is present)
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder
                     .setCancelable(false)

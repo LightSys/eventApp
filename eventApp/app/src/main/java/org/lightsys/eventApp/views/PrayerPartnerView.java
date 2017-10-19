@@ -39,7 +39,7 @@ public class PrayerPartnerView extends Fragment{
 
         ArrayList<HashMap<String, String>> itemList = generateListItems();
 
-        // display donor name, fund name, date, and amount for all gifts
+        // display group number and people in group
         String[] from = {"groupNum", "students"};
         int[] to = {R.id.groupNumberText, R.id.studentsText};
         final SimpleAdapter adapter = new SimpleAdapter(getActivity(), itemList, R.layout.prayer_partner_list_item, from, to){
@@ -54,11 +54,12 @@ public class PrayerPartnerView extends Fragment{
         };
 
         listview.setAdapter(adapter);
-        listview.setSelector(android.R.color.transparent);
+        listview.setSelector(android.R.color.transparent); //makes list items not visibly clickable
 
         return v;
     }
 
+    //generates list of students and group numbers to be displayed
     private ArrayList<HashMap<String, String>> generateListItems() {
         ArrayList<HashMap<String, String>> aList = new ArrayList<>();
 

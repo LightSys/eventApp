@@ -38,10 +38,12 @@ public class NavigationAdapter extends SimpleAdapter {
     public View getView(int position, View v, ViewGroup parent) {
         View mView = super.getView(position, v, parent);
 
+        //set specified icon for navigation menu
         ImageView icon = mView.findViewById(R.id.iconView);
         icon.setImageDrawable(ContextCompat.getDrawable(context,Integer.parseInt(data.get(position).get("icon"))));
         icon.setColorFilter(ContextCompat.getColor(context, R.color.darkGray));
 
+        //sets Notification tab as preselected
         if (position==0){
             icon.setColorFilter(color);
             ((TextView) mView.findViewById(R.id.nav_item)).setTextColor(color);

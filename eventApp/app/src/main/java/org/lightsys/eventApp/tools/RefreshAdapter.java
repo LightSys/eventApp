@@ -12,7 +12,7 @@ import org.lightsys.eventApp.R;
 /**
  * Created by otter57 on 4/5/17.
  *
- * adapter for housing list
+ * adapter for refresh dropdown view
  */
 
 public class RefreshAdapter extends ArrayAdapter<String> {
@@ -29,9 +29,11 @@ public class RefreshAdapter extends ArrayAdapter<String> {
     public View getView(int position, View v, @NonNull ViewGroup parent) {
         View mView = super.getView(position, v, parent);
         TextView textView = mView.findViewById(R.id.headerText);
+
         int time = Integer.parseInt(data[position]);
         String displayText;
 
+        //depending on value, set appropriate text
         if (time == -1){
             displayText = "Never";
             textView.setText(displayText);

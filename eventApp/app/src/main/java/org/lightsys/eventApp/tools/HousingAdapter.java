@@ -32,11 +32,11 @@ public class HousingAdapter extends SimpleAdapter {
     public View getView(int position, View v, ViewGroup parent) {
         View mView = super.getView(position, v, parent);
 
+        //if driver is listed, makes bar visible and displays driver text
         TextView driver = mView.findViewById(R.id.driver);
         if (data.get(position).get("driver") != null) {
             driver.setVisibility(View.VISIBLE);
             driver.setBackgroundColor(color);
-
         } else {
             driver.setVisibility(View.GONE);
         }

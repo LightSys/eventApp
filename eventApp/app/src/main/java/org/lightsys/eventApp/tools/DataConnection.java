@@ -42,8 +42,8 @@ import static android.content.ContentValues.TAG;
 
 /**
  * This class is used to pull JSON files (from the API URLs)
- * for a specific account and then format and store the data into the
- * local SQLite database as well as validate a new account
+ * for an event and then format and store the data into the
+ * local SQLite database
  *
  * @author otter57
  *
@@ -61,8 +61,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     private String connectionResult;
 
     private static final String RELOAD_PAGE = "reload_page";
-
-
 
     private static final String Tag = "DPS";
 
@@ -199,7 +197,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     }
 
     /**
-     * Pulls all data attached to account
+     * Pulls all event data
      */
     private void DataPull()  {
         db = new LocalDB(dataContext);
@@ -219,6 +217,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
         connection = checkConnection(qrAddress);
 
+        //if connection error occurred, cancel spinner
         if (!connection && dataActivity != null){
             spinner.dismiss();
         }
@@ -239,7 +238,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     db.addInformationPage(new Info("","This app is created by LightSys Technology Services for the use of distributing event information for ministry events."), "About");
                     db.addInformationPage(new Info("Open Source","This app includes the following open source libraries"), "About");
                     db.addInformationPage(new Info("Mobile Vision Barcode Scanner","Copyright (c) 2016 Nosakhare Belvi\nLicense: MIT License\nWebsite: https://github.com/KingsMentor/MobileVisionBarcodeScanner"), "About");
-
                 }else{
                     loadNotifications(connectionResult);
                 }
@@ -277,6 +275,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 return;
             }
             try {
+                //separate JSON object and get individual parts to be stored in Local Database
                 loadContactPage(json.getJSONObject("contact_page"));
                 loadSchedule(json.getJSONObject("schedule"));
                 loadHousing(json.getJSONObject("housing"));
@@ -338,6 +337,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
         JSONArray tempNames = json.names();
 
+        //if valid, adds page to navigation
         try {
             if (json.getString("nav").equals("null")) {
                 return;
@@ -354,7 +354,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
                     JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
 
-                    // add the Contact Object to db
+                    // add the Contact Page Object to db
                     Info temp = new Info();
                     temp.setHeader(ContactObj.getString("header"));
                     temp.setBody(ContactObj.getString("content"));
@@ -378,6 +378,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
         JSONArray tempNames = json.names();
 
+        //if valid, adds page to navigation
         try {
             if (json.getString("nav").equals("null")) {
                 return;
@@ -436,10 +437,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             try {
                 //@id signals a new object, but contains no information on that line
                 if (!tempGeneral.getString(i).equals("@id")) {
+                    //only loads 'refresh' info if it is not already specified by the user
                     if (!tempGeneral.getString(i).equals("refresh") || db.getGeneral("refresh") == null) {
                         db.addGeneral(tempGeneral.getString(i), json.getString(tempGeneral.getString(i)));
                     }
-                    Log.d(TAG, "loadGeneralInfo: " + db.getGeneral("refresh"));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -480,13 +481,17 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                         temp.setBody(notificationObj.getString("body"));
                         temp.setDate(notificationObj.getString("date"));
 
+                        //if notification has already been loaded, set refresh to false
                         if (currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
                             db.addNotification(temp, false);
 
+                            //if notification is new
                         } else {
+                            //if refresh is true, reload all app data
                             if (notificationObj.getBoolean("refresh")) {
                                 loadData = true;
                             }
+                            //if this is first data import, set reload to false
                             if (action.equals("new")){
                                 db.addNotification(temp, false);
                             }else{
@@ -620,7 +625,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     }
 
     /**
-     * Loads Hq Information
+     * Loads Information pages
      * @param json, result of API query for information pages
      */
     private void loadInformationalPage(JSONObject json) {
@@ -644,7 +649,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                         JSONObject information = InfoArray.getJSONObject(n);
 
                         // add the Information Object to db
-
                         Info temp = new Info();
                         temp.setHeader(information.getString("title"));
                         temp.setBody(information.getString("description"));
@@ -659,12 +663,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     }
 
     /**
-     * Attempts to do basic Http Authentication, and send a get request from the url
+     * Send a get request from the url
      *
      * @param urlString, url for get request.
      * @return string results of the query.
      */
-
     private String GET(String urlString) {
         String response = null;
         try{

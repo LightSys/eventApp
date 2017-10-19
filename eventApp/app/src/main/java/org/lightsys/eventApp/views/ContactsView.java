@@ -68,7 +68,7 @@ public class ContactsView extends Fragment {
 
         //display ListView Items
         for (Info c : contactsInfo) {
-            if (c.getId() == 1) {
+            if (c.getId() == 1) { //checks if item is for listView
                 generateContactList(c);
             }
         }
@@ -130,7 +130,7 @@ public class ContactsView extends Fragment {
         for (Info c : contactsInfo) {
                 HashMap<String, String> hm = new HashMap<>();
 
-            if (c.getId() == 0) {
+            if (c.getId() == 0) { //checks if item is for textView
                 hm.put("header", c.getHeader());
                 hm.put("text", c.getBody());
                 hm.put("type", Integer.toString(c.getId()));
@@ -141,6 +141,9 @@ public class ContactsView extends Fragment {
         return aList;
     }
 
+
+    //Asks user if they want to go to maps or phone
+    //performs desired action
     private class OnAddressClicked implements AdapterView.OnItemClickListener {
 
         final ArrayList<ContactInfo> contact;

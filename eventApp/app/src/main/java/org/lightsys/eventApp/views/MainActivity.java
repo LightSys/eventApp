@@ -78,7 +78,8 @@ public class MainActivity extends AppCompatActivity {
     private View previousNavView;
     private String [] refreshCategories;
     private ListView navigationList;
-    private int color, refreshItem = -1;
+    private int color;
+    private String refreshRate = null;
     private boolean successfulConnection = true;
 
     //stuff to automatically refresh the current fragment
@@ -116,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         toggle.syncState();
 
         //if no data, import data
-        gatherData(db.getGeneral("refresh_expire"));
+        gatherData(db.getGeneral("refresh_expire") == null);
     }
 
     /**
@@ -202,15 +203,15 @@ public class MainActivity extends AppCompatActivity {
 
                             //highlight new selection and set refresh rate
                             refreshList.setItemChecked(i, true);
-                            refreshItem = i;
                             db.updateRefreshRate(refreshCategories[i]);
+                            refreshRate = db.getGeneral("refresh");
                             closeRefresh();
                         }
                     });
                 }
                 break;
             case R.id.action_rescan:
-                gatherData(null);
+                gatherData(true);
                 break;
         }
 
@@ -269,14 +270,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //launches QR scanner
-    public void gatherData(String refreshExpire){
+    public void gatherData(boolean launchScanner){
         /*for testing on device w/o camera
         db.addGeneral("url","http://192.168.0.23:3000/db");
         Log.d(TAG, "gatherData: http://192.168.0.23:3000/db");
 
         new DataConnection(context, activity, "new", "http://192.168.0.23:3000/db", true).execute("");
 */
-        if (refreshExpire == null) {
+        if (launchScanner) {
             while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
                 requestCameraPermission();
             }
@@ -317,22 +318,19 @@ public class MainActivity extends AppCompatActivity {
         refreshList = (ListView) findViewById(R.id.refresh_list);
         refreshCategories = getResources().getStringArray(R.array.refresh_options);
         refreshList.setAdapter(new RefreshAdapter(context, refreshCategories));
-        if (refreshItem == -1) {
-            int index = -1;
-            for (int n = 0; n<refreshCategories.length;n++){
-                if (refreshCategories[n].equals(db.getGeneral("refresh"))){
-                    index = n;
-                }
+
+        //select correct refresh dropdown
+        int index = -1;
+        for (int n = 0; n<refreshCategories.length;n++){
+            if (refreshCategories[n].equals(db.getGeneral("refresh"))){
+                index = n;
             }
-            if (index == -1){
-                index = 1;
-                db.updateRefreshRate(refreshList.getItemAtPosition(index).toString());
-            }
-            refreshList.setItemChecked(index, true);
-            refreshItem = index;
-        }else{
-            refreshList.setItemChecked(refreshItem, true);
         }
+        if (index == -1){
+            db.updateRefreshRate(refreshList.getItemAtPosition(3).toString());
+        }
+        refreshList.setItemChecked(index, true);
+        refreshRate = db.getGeneral("refresh");
 
         //set theme color
         color = Color.parseColor(db.getThemeColor("themeColor"));
@@ -419,7 +417,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton(R.string.rescan_qr_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        gatherData(null);
+                        gatherData(true);
                     }
                 })
                 .setNeutralButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
@@ -520,7 +518,11 @@ public class MainActivity extends AppCompatActivity {
 
             }
             successfulConnection = true;
-            Log.d(TAG, "onReceive: " + intent.getStringExtra("action"));
+
+            //if app has been used before, preserve user selected refresh rate
+            if (refreshRate != null) {
+                db.updateRefreshRate(refreshRate);
+            }
 
             /*based on broadcast message received perform correct action*/
             if (intent.getStringExtra("action").equals("retry")){

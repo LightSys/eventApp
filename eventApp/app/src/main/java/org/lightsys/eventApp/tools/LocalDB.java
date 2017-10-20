@@ -105,7 +105,7 @@ public class LocalDB extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_INFORMATION_PAGE);
 
         String CREATE_TABLE_NOTIFICATIONS = "CREATE TABLE " + TABLE_NOTIFICATIONS + "("
-                + COLUMN_ID + " INTEGER PRIMARY KEY," + COLUMN_HEADER + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_NEW + " INTEGER," + COLUMN_DATE + " TEXT)";
+                + COLUMN_ID + " INTEGER PRIMARY KEY," + COLUMN_HEADER + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_DATE + " TEXT)";
         db.execSQL(CREATE_TABLE_NOTIFICATIONS);
 
         String CREATE_TABLE_HOUSING = "CREATE TABLE " + TABLE_HOUSING + "("
@@ -290,11 +290,10 @@ public class LocalDB extends SQLiteOpenHelper {
     /**
      * adds Notifications info
      */
-    public void addNotification(Info notification, boolean isNew) {
+    public void addNotification(Info notification) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_HEADER, notification.getHeader());
         values.put(COLUMN_INFO, notification.getBody());
-        values.put(COLUMN_NEW, isNew);
         values.put(COLUMN_DATE, notification.getDate());
         values.put(COLUMN_ID, notification.getId());
 
@@ -572,7 +571,7 @@ public class LocalDB extends SQLiteOpenHelper {
             temp.setId(c.getInt(0));
             temp.setHeader(c.getString(1));
             temp.setBody(c.getString(2));
-            temp.setDate(c.getString(4));
+            temp.setDate(c.getString(3));
 
             notifications.add(temp);
         }
@@ -597,12 +596,7 @@ public class LocalDB extends SQLiteOpenHelper {
             temp.setId(c.getInt(0));
             temp.setHeader(c.getString(1));
             temp.setBody(c.getString(2));
-            temp.setDate(c.getString(4));
-
-            if (c.getInt(3)==1) {
-                notifications.add(temp);
-                updateNotification(c.getInt(0));
-            }
+            temp.setDate(c.getString(3));
         }
         c.close();
         db.close();
@@ -677,23 +671,11 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /* ************************* Update Queries ************************* */
-
-    /**
-     * update notifications to indicate they are not new
-     */
-    private void updateNotification(int id){
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_NEW, false);
-
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.update(TABLE_NOTIFICATIONS, values, COLUMN_ID + " = " + id, null);
-        db.close();
-    }
-
     /**
      * update general table to set refresh rate
      */
     public void updateRefreshRate(String rate){
+        //String refresh = "'refresh'";
         ContentValues values = new ContentValues();
         values.put(COLUMN_INFO, rate);
 

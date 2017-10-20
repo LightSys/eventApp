@@ -88,7 +88,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 calExpire.setTime(formatter.parse(db.getGeneral("refresh_expire")));
             }
             if (qrAddress == null){
-                ((MainActivity)dataActivity).gatherData(null);
+                ((MainActivity)dataActivity).gatherData(true);
             }else if(calNow.getTimeInMillis()<= calExpire.getTimeInMillis() || action.equals("new")){
                 DataPull();
             }else{
@@ -233,6 +233,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     loadEventInfo(connectionResult);
                     db.addNavigationTitles("About", "ic_info");
 
+                    if (action.equals("new")){
+                        connection = checkConnection(db.getGeneral("notifications_url"));
+                        loadNotifications(connectionResult);
+                    }
 
                     //add about page
                     db.addInformationPage(new Info("","This app is created by LightSys Technology Services for the use of distributing event information for ministry events."), "About");
@@ -481,22 +485,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                         temp.setBody(notificationObj.getString("body"));
                         temp.setDate(notificationObj.getString("date"));
 
-                        //if notification has already been loaded, set refresh to false
-                        if (currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
-                            db.addNotification(temp, false);
+                        db.addNotification(temp);
 
-                            //if notification is new
-                        } else {
-                            //if refresh is true, reload all app data
-                            if (notificationObj.getBoolean("refresh")) {
-                                loadData = true;
-                            }
-                            //if this is first data import, set reload to false
-                            if (action.equals("new")){
-                                db.addNotification(temp, false);
-                            }else{
-                                db.addNotification(temp, true);
-                            }
+                        //if notification refresh is true, has not already been loaded, and isn't a new event, reload all app data
+                        if (notificationObj.getBoolean("refresh") && !action.equals("new") &&!currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
+                            loadData = true;
                         }
                     }
                 } catch (JSONException e) {
@@ -504,7 +497,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 }
             }
             if(loadData){
-                new DataConnection(dataContext, dataActivity, action, qrAddress, true).execute("");
+                new DataConnection(dataContext, dataActivity, action, db.getGeneral("url"), true).execute("");
 
             }
         }

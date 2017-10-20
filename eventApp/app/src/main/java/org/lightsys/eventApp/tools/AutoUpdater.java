@@ -62,6 +62,7 @@ public class AutoUpdater extends Service {
 
                 //check to see if the time elapsed is greater than the update period
                 if (elapsedTime > updateMillis && updateMillis > 0) {
+                    Log.d("auto-update", "run: " + elapsedTime);
                     getUpdates();
                     prevDate = Calendar.getInstance();
                 }
@@ -82,7 +83,6 @@ public class AutoUpdater extends Service {
 
     @Override
     public IBinder onBind(Intent arg0) {
-        // TODO Auto-generated method stub
         return null;
     }
 

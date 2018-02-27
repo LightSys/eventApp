@@ -244,8 +244,8 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     }
 
                     //add about page
-                    db.addInformationPage(new Info("","This app is created by LightSys Technology Services for the use of distributing event information for ministry events."), "About");
-                    db.addInformationPage(new Info("Open Source","This app includes the following open source libraries"), "About");
+                    db.addInformationPage(new Info("LightSys Events (Android App)","Copyright © 2017-2018 LightSys Technology Services, Inc.  This app was created for the use of distributing event information for ministry events.\n\nThis app's source code is also available under the GPLv3 open-source license at:\nhttps://github.com/LightSys/eventApp"), "About");
+                    db.addInformationPage(new Info("Open Source","This app includes the following open source libraries:"), "About");
                     db.addInformationPage(new Info("Mobile Vision Barcode Scanner","Copyright (c) 2016 Nosakhare Belvi\nLicense: MIT License\nWebsite: https://github.com/KingsMentor/MobileVisionBarcodeScanner"), "About");
                 }else{
                     loadNotifications(connectionResult);

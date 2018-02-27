@@ -13,14 +13,17 @@ public class Info {
     private String header;
     private String body;
     private String date;
+    private boolean is_new;
 
     /* ************************* Construct ************************* */
     public Info() {
+        this.is_new = false;
     }
 
     public Info(String header, String body){
         this.header = header;
         this.body = body;
+        this.is_new = false;
     }
 
     public int getId() {
@@ -54,5 +57,9 @@ public class Info {
     public void setBody(String body) {
         this.body = body;
     }
+
+    public void setNew() { this.is_new = true; }
+
+    public boolean getNew() { return this.is_new; }
 
 }

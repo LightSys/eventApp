@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 public class LocalDB extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 11;
+    private static final int DATABASE_VERSION = 12;
     private static final String DATABASE_NAME = "SBCaT.db";
     //GENERAL INFO TABLE
     private static final String TABLE_GENERAL_INFO = "general_info";
@@ -55,7 +55,7 @@ public class LocalDB extends SQLiteOpenHelper {
     private static final String TABLE_PRAYER_PARTNERS = "prayer_partners";
     //NOTIFICATIONS TABLE
     private static final String  TABLE_NOTIFICATIONS = "notifications";
-    private static final String COLUMN_NEW = "new";
+    private static final String COLUMN_NEW = "isnew";
     private static final String COLUMN_ID = "id";
     //NAVIGATION TITLES TABLE
     private static final String TABLE_NAVIGATION_TITLES = "navigation_titles";
@@ -105,7 +105,7 @@ public class LocalDB extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_INFORMATION_PAGE);
 
         String CREATE_TABLE_NOTIFICATIONS = "CREATE TABLE " + TABLE_NOTIFICATIONS + "("
-                + COLUMN_ID + " INTEGER PRIMARY KEY," + COLUMN_HEADER + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_DATE + " TEXT)";
+                + COLUMN_ID + " INTEGER PRIMARY KEY," + COLUMN_HEADER + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_DATE + " TEXT," + COLUMN_NEW + " INTEGER)";
         db.execSQL(CREATE_TABLE_NOTIFICATIONS);
 
         String CREATE_TABLE_HOUSING = "CREATE TABLE " + TABLE_HOUSING + "("
@@ -296,6 +296,7 @@ public class LocalDB extends SQLiteOpenHelper {
         values.put(COLUMN_INFO, notification.getBody());
         values.put(COLUMN_DATE, notification.getDate());
         values.put(COLUMN_ID, notification.getId());
+        values.put(COLUMN_NEW, notification.getNew()?1:0);
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_NOTIFICATIONS, null, values);
@@ -572,6 +573,8 @@ public class LocalDB extends SQLiteOpenHelper {
             temp.setHeader(c.getString(1));
             temp.setBody(c.getString(2));
             temp.setDate(c.getString(3));
+            if (c.getInt(4) == 1)
+                temp.setNew();
 
             notifications.add(temp);
         }
@@ -597,6 +600,10 @@ public class LocalDB extends SQLiteOpenHelper {
             temp.setHeader(c.getString(1));
             temp.setBody(c.getString(2));
             temp.setDate(c.getString(3));
+            if (c.getInt(4) == 1)
+                temp.setNew();
+            if (temp.getNew())
+                notifications.add(temp);
         }
         c.close();
         db.close();

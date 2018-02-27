@@ -27,7 +27,7 @@ import java.util.Calendar;
  *
  * service class that automatically updates local database with server database
  */
-public class AutoUpdater extends Service {
+public class AutoUpdater extends Service implements CompletionInterface {
 
     //time constants in milliseconds
     private static final int ONE_SECOND     = 1000;
@@ -35,7 +35,6 @@ public class AutoUpdater extends Service {
     private static final int NEVER          = -1;
 
     private final LocalDB db; //local database
-    private int   notificationID = 0; //ID of an update notification
 
     private int      updateMillis = NEVER; //number of milliseconds between updates
     private Calendar prevDate     = Calendar.getInstance();
@@ -86,22 +85,25 @@ public class AutoUpdater extends Service {
         return null;
     }
 
-    private  void getUpdates()
+    // This gets called when the AsyncTask DataConnection completes.
+    public void onCompletion()
     {
-        //updates each account
-           new DataConnection(this.getBaseContext(),null, "auto_update",db.getGeneral("notifications_url"),false).execute("");
-
         //list of new notifications
         ArrayList<Info> notifications = db.getNewNotifications();
 
         //send notifications
         for (Info item : notifications) {
-            notificationID = item.getId();
-            sendNotification(item.getHeader(), item.getBody());
+            sendNotification(item.getId(), item.getHeader(), item.getBody());
         }
     }
 
-    private void sendNotification(String title, String subject){
+    private  void getUpdates()
+    {
+        //updates each account
+        new DataConnection(this.getBaseContext(),null, "auto_update", db.getGeneral("notifications_url"),false, this).execute("");
+    }
+
+    private void sendNotification(int notificationID, String title, String subject){
 
         Context context = this;
         NotificationManager notificationManager = (NotificationManager)

@@ -59,16 +59,18 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     private final boolean loadAll; //specifies whether all info should be reloaded or only notifications
     private boolean connection;
     private String connectionResult;
+    private CompletionInterface callback;
 
     private static final String RELOAD_PAGE = "reload_page";
 
     private static final String Tag = "DPS";
 
-    public DataConnection(Context context, Activity activity, String action, String QR, boolean loadAll) {
+    public DataConnection(Context context, Activity activity, String action, String QR, boolean loadAll, CompletionInterface my_callback) {
         super();
         dataContext = context;
         dataActivity = activity;
         qrAddress = QR;
+        this.callback = my_callback;
         this.loadAll = loadAll;
         this.action = action;
         this.db = new LocalDB(dataContext);
@@ -104,6 +106,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     @Override
     protected void onPostExecute(String params) {
+        if (callback != null)
+            callback.onCompletion();
+
         // Dismiss spinner to show data retrieval is done
         if (dataActivity != null) {
             spinner.dismiss();
@@ -484,6 +489,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                         temp.setHeader(notificationObj.getString("title"));
                         temp.setBody(notificationObj.getString("body"));
                         temp.setDate(notificationObj.getString("date"));
+                        if (!currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
+                            // This one is new
+                            temp.setNew();
+                        }
 
                         db.addNotification(temp);
 
@@ -491,13 +500,14 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                         if (notificationObj.getBoolean("refresh") && !action.equals("new") &&!currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
                             loadData = true;
                         }
+
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
             if(loadData){
-                new DataConnection(dataContext, dataActivity, action, db.getGeneral("url"), true).execute("");
+                new DataConnection(dataContext, dataActivity, action, db.getGeneral("url"), true, null).execute("");
 
             }
         }

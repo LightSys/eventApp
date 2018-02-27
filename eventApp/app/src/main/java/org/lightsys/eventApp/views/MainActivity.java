@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
             String dataURL = data.getStringExtra(QR_DATA_EXTRA);
             db.addGeneral("url",dataURL);
 
-            new DataConnection(context, activity, "new", dataURL, true).execute("");
+            new DataConnection(context, activity, "new", dataURL, true, null).execute("");
         }
     }
 
@@ -190,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         switch (id){
             case R.id.action_refresh:
-                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true).execute("");
+                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null).execute("");
                 break;
             case R.id.action_refresh_dropdown:
                 if (refreshLayout.getVisibility()==View.VISIBLE){
@@ -411,7 +411,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Log.d(TAG, "onClick: " + db.getGeneral("url"));
-                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true).execute("");
+                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null).execute("");
                     }
                 })
                 .setPositiveButton(R.string.rescan_qr_button, new DialogInterface.OnClickListener() {

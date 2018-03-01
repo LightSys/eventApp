@@ -1,5 +1,6 @@
 package org.lightsys.eventApp.tools;
 
+import java.lang.ref.WeakReference;
 import android.app.Activity;
 import android.content.Intent;
 import android.app.ProgressDialog;
@@ -52,8 +53,8 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     private LocalDB db;
     private final String qrAddress;    //location of JSON file
-    private final Context dataContext; // Context that the DataConnection was executed in
-    private final Activity dataActivity;
+    private final WeakReference<Context> dataContext; // Context that the DataConnection was executed in
+    private final WeakReference<Activity> dataActivity;
     private ProgressDialog spinner;
     private String action;
     private final boolean loadAll; //specifies whether all info should be reloaded or only notifications
@@ -67,16 +68,16 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     public DataConnection(Context context, Activity activity, String action, String QR, boolean loadAll, CompletionInterface my_callback) {
         super();
-        dataContext = context;
-        dataActivity = activity;
+        dataContext = new WeakReference<>(context);
+        dataActivity = new WeakReference<>(activity);
         qrAddress = QR;
         this.callback = my_callback;
         this.loadAll = loadAll;
         this.action = action;
-        this.db = new LocalDB(dataContext);
+        this.db = new LocalDB(dataContext.get());
         Log.d(TAG, "DataConnection: " + qrAddress);
         if (activity != null) {
-            spinner = new ProgressDialog(dataContext, R.style.MySpinnerStyle);
+            spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle);
         }
     }
 
@@ -90,7 +91,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 calExpire.setTime(formatter.parse(db.getGeneral("refresh_expire")));
             }
             if (qrAddress == null){
-                ((MainActivity)dataActivity).gatherData(true);
+                ((MainActivity)dataActivity.get()).gatherData(true);
             }else if(calNow.getTimeInMillis()<= calExpire.getTimeInMillis() || action.equals("new")){
                 DataPull();
             }else{
@@ -110,15 +111,15 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             callback.onCompletion();
 
         // Dismiss spinner to show data retrieval is done
-        if (dataActivity != null) {
+        if (dataActivity != null && dataActivity.get() != null) {
             spinner.dismiss();
         }
-        if (dataContext.getClass() == MainActivity.class && connection && !action.equals("auto_update")) {
-            Toast.makeText(dataContext, "data successfully imported", Toast.LENGTH_SHORT).show();
+        if (dataContext != null && dataContext.get().getClass() == MainActivity.class && connection && !action.equals("auto_update")) {
+            Toast.makeText(dataContext.get(), "data successfully imported", Toast.LENGTH_SHORT).show();
             if (action.equals("new")) {
                 try {
                     Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                    Ringtone r = RingtoneManager.getRingtone(dataContext, notification);
+                    Ringtone r = RingtoneManager.getRingtone(dataContext.get(), notification);
                     r.play();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -131,8 +132,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         Log.d(TAG, "onPostExecute: " + action);
         Intent reloadIntent = new Intent(RELOAD_PAGE);
         reloadIntent.putExtra("action", action);
-        LocalBroadcastManager.getInstance(dataContext)
-                .sendBroadcast(reloadIntent);
+        if (dataContext != null) {
+            LocalBroadcastManager.getInstance(dataContext.get())
+                    .sendBroadcast(reloadIntent);
+        }
     }
 
     private boolean checkConnection(String address)  {
@@ -144,35 +147,35 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             // 404 not found signals invalid ID
             // Empty or null signals an incorrect server name
             if (test == null || test.equals("invalid web address")){
-                dataActivity.runOnUiThread(new Runnable() {
+                dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(dataContext, "Server connection failed: invalid web address", Toast.LENGTH_LONG).show();
+                        Toast.makeText(dataContext.get(), "Server connection failed: invalid web address", Toast.LENGTH_LONG).show();
                     }
                 });
                 return false;
             }
             else if (test.equals("") || test.equals("Access Not Permitted")) {
-                dataActivity.runOnUiThread(new Runnable() {
+                dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(dataContext, "Server connection failed", Toast.LENGTH_LONG).show();
+                        Toast.makeText(dataContext.get(), "Server connection failed", Toast.LENGTH_LONG).show();
                     }
                 });
                 return false;
             } else if (test.contains("<H1>Unauthorized</H1>")) {
-                dataActivity.runOnUiThread(new Runnable() {
+                dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(dataContext, "Username/password invalid", Toast.LENGTH_LONG).show();
+                        Toast.makeText(dataContext.get(), "Username/password invalid", Toast.LENGTH_LONG).show();
                     }
                 });
                 return false;
             } else if (test.contains("404 Not Found")) {
-                dataActivity.runOnUiThread(new Runnable() {
+                dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(dataContext, "Invalid User ID", Toast.LENGTH_LONG).show();
+                        Toast.makeText(dataContext.get(), "Invalid User ID", Toast.LENGTH_LONG).show();
                     }
                 });
                 return false;
@@ -180,18 +183,18 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         } catch (Exception e) {
             e.printStackTrace();
             // GET function throws an Exception if server not found
-            if(e.getClass()==SocketTimeoutException.class){
-                dataActivity.runOnUiThread(new Runnable() {
+            if(e.getClass()==SocketTimeoutException.class && dataContext != null && dataActivity != null){
+                dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(dataContext, "Server connection timed out", Toast.LENGTH_LONG).show();
+                        Toast.makeText(dataContext.get(), "Server connection timed out", Toast.LENGTH_LONG).show();
                     }
                 });
-            }else if(e.getClass()!=SSLHandshakeException.class) {
-                dataActivity.runOnUiThread(new Runnable() {
+            }else if(e.getClass()!=SSLHandshakeException.class && dataContext != null && dataActivity != null) {
+                dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(dataContext, "Server connection failed", Toast.LENGTH_LONG).show();
+                        Toast.makeText(dataContext.get(), "Server connection failed", Toast.LENGTH_LONG).show();
                     }
                 });
             }
@@ -205,12 +208,14 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Pulls all event data
      */
     private void DataPull()  {
-        db = new LocalDB(dataContext);
+        if (dataContext == null)
+            return;
+        db = new LocalDB(dataContext.get());
 
         //set spinner as app collects data
-        if (dataActivity != null) {
+        if (dataActivity != null && dataActivity.get() != null) {
             spinner.setMessage("Gathering event info...");
-            dataActivity.runOnUiThread(new Runnable() {
+            dataActivity.get().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     spinner.setIndeterminate(true);
@@ -223,7 +228,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         connection = checkConnection(qrAddress);
 
         //if connection error occurred, cancel spinner
-        if (!connection && dataActivity != null){
+        if (!connection && dataActivity != null && dataActivity.get() != null){
             spinner.dismiss();
         }
 
@@ -253,9 +258,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             } catch (Exception e) {
                 e.printStackTrace();
                 if (e.getClass().equals(SocketTimeoutException.class)) {
-                    Toast.makeText(dataContext, "Server connection timed out", Toast.LENGTH_LONG).show();
+                    Toast.makeText(dataContext.get(), "Server connection timed out", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(dataContext, "Server connection failed", Toast.LENGTH_LONG).show();
+                    Toast.makeText(dataContext.get(), "Server connection failed", Toast.LENGTH_LONG).show();
                 }
                 return;
                 //to here
@@ -506,8 +511,8 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     e.printStackTrace();
                 }
             }
-            if(loadData){
-                new DataConnection(dataContext, dataActivity, action, db.getGeneral("url"), true, null).execute("");
+            if(loadData && dataContext != null && dataActivity != null) {
+                new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null).execute("");
 
             }
         }

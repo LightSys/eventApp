@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -269,6 +270,12 @@ public class MainActivity extends AppCompatActivity {
         return super.dispatchTouchEvent(event);
     }
 
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 2 && grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            gatherData(true);
+        }
+    }
+
     //launches QR scanner
     public void gatherData(boolean launchScanner){
         /*for testing on device w/o camera
@@ -278,11 +285,12 @@ public class MainActivity extends AppCompatActivity {
         new DataConnection(context, activity, "new", "http://192.168.0.23:3000/db", true).execute("");
 */
         if (launchScanner) {
-            while (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != 0) {
+            if (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != PackageManager.PERMISSION_GRANTED) {
                 requestCameraPermission();
+            } else {
+                Intent QR = new Intent(MainActivity.this, launchQRScanner.class);
+                startActivityForResult(QR, QR_RESULT);
             }
-            Intent QR = new Intent(MainActivity.this, launchQRScanner.class);
-            startActivityForResult(QR, QR_RESULT);
         }else{
             setupMenusAndTheme();
             navigationList.setItemChecked(0, true);
@@ -443,59 +451,62 @@ public class MainActivity extends AppCompatActivity {
 
     //sends user to appropriate page
     private void onNavigationItemSelected(View view) {
-        if (previousNavView != null){
-            ((TextView)previousNavView.findViewById(R.id.nav_item)).setTextColor(ContextCompat.getColor(context, R.color.darkGray));
-            ((ImageView)previousNavView.findViewById(R.id.iconView)).setColorFilter(ContextCompat.getColor(context, R.color.darkGray));
-        } else{
-            ((TextView)navigationList.getChildAt(0).findViewById(R.id.nav_item)).setTextColor(ContextCompat.getColor(context, R.color.darkGray));
-            ((ImageView)navigationList.getChildAt(0).findViewById(R.id.iconView)).setColorFilter(ContextCompat.getColor(context, R.color.darkGray));
+        try {
+            if (previousNavView != null) {
+                ((TextView) previousNavView.findViewById(R.id.nav_item)).setTextColor(ContextCompat.getColor(context, R.color.darkGray));
+                ((ImageView) previousNavView.findViewById(R.id.iconView)).setColorFilter(ContextCompat.getColor(context, R.color.darkGray));
+            } else {
+                ((TextView) navigationList.getChildAt(0).findViewById(R.id.nav_item)).setTextColor(ContextCompat.getColor(context, R.color.darkGray));
+                ((ImageView) navigationList.getChildAt(0).findViewById(R.id.iconView)).setColorFilter(ContextCompat.getColor(context, R.color.darkGray));
+            }
+            ((TextView) view.findViewById(R.id.nav_item)).setTextColor(color);
+            ((ImageView) view.findViewById(R.id.iconView)).setColorFilter(color);
+            previousNavView = view;
+
+            String title = ((TextView) view.findViewById(R.id.nav_item)).getText().toString();
+            switch (title) {
+                case "Notifications":
+                    fragment = new WelcomeView();
+                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
+                            .commit();
+                    break;
+                case "Contacts":
+                    fragment = new ContactsView();
+                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "CONTACTS")
+                            .commit();
+                    break;
+                case "Schedule":
+                    fragment = new ScheduleView();
+                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
+                            .commit();
+                    break;
+                case "Housing":
+                    fragment = new HousingView();
+                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "HOUSING")
+                            .commit();
+                    break;
+                case "Prayer Partners":
+                    fragment = new PrayerPartnerView();
+                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "PRAYER_PARTNERS")
+                            .commit();
+                    break;
+                default:
+                    Bundle bundle = new Bundle();
+                    bundle.putString("page", title);
+
+                    fragment = new InformationalPageView();
+                    fragment.setArguments(bundle);
+                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "INFO")
+                            .commit();
+                    break;
+            }
+
+        } catch (Exception e) {
+            // ignore
         }
-        ((TextView) view.findViewById(R.id.nav_item)).setTextColor(color);
-        ((ImageView) view.findViewById(R.id.iconView)).setColorFilter(color);
-        previousNavView = view;
-
-        String title = ((TextView)view.findViewById(R.id.nav_item)).getText().toString();
-        switch(title) {
-            case "Notifications":
-                fragment = new WelcomeView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
-                        .commit();
-                break;
-            case "Contacts":
-                fragment = new ContactsView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "CONTACTS")
-                        .commit();
-                break;
-            case "Schedule":
-                fragment = new ScheduleView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
-                        .commit();
-                break;
-            case "Housing":
-                fragment = new HousingView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "HOUSING")
-                    .commit();
-                break;
-            case "Prayer Partners":
-                fragment = new PrayerPartnerView();
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "PRAYER_PARTNERS")
-                    .commit();
-                break;
-            default:
-                Bundle bundle = new Bundle();
-                bundle.putString("page", title);
-
-                fragment = new InformationalPageView();
-                fragment.setArguments(bundle);
-                fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "INFO")
-                        .commit();
-                break;
-        }
-
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        assert drawer != null;
-        drawer.closeDrawer(GravityCompat.START);
+        if (drawer != null)
+            drawer.closeDrawer(GravityCompat.START);
 
     }
 

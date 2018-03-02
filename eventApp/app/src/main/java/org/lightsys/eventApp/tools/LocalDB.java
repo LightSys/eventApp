@@ -485,7 +485,17 @@ public class LocalDB extends SQLiteOpenHelper {
             if (timeStart == 0 || temp<timeStart){
                 timeStart = temp;
             }
-            int tempE = (c.getInt(1));//-15
+            temp = timeStart;
+            int countMins = (c.getInt(1));
+            temp += (countMins / 60)*100;
+            temp += countMins%60;
+            if (temp%100 >= 60)
+                temp += (100 - 60);
+            if (timeEnd < temp) {
+                timeEnd = temp;
+            }
+
+            /*int tempE = (c.getInt(1));//-15
             int x;
             if (tempE>=60){
                 x = tempE/60;
@@ -495,7 +505,7 @@ public class LocalDB extends SQLiteOpenHelper {
             }
             if (timeEnd<temp+x){
                 timeEnd = temp + x;
-            }
+            }*/
         }
         times.add(timeStart);
         times.add(timeEnd);

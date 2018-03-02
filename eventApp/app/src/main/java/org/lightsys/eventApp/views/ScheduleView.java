@@ -35,7 +35,9 @@ import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.R;
 
 import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -56,6 +58,9 @@ public class ScheduleView extends Fragment {
     private String today = "";
     private float density, screenWidth, screenHeight;
     private Calendar calNow;
+    private int schedHeight;
+    private ArrayList<Integer> heights;
+    private ArrayList<Integer> times;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -66,11 +71,11 @@ public class ScheduleView extends Fragment {
         ScrollH = v.findViewById(R.id.HeaderScroll);
         ScrollB = v.findViewById(R.id.bodyScroll);
 
-        //sets constants for schedule display (density changes values based on screen
+        //sets constants for schedule display (density changes values based on screen)
         density = (getResources().getDisplayMetrics().density)/2;
         db = new LocalDB(getContext());
         ArrayList<String> days = db.getDays();
-        textSizeHeader = 30;
+        textSizeHeader = 22;
         textSizeContent = 14;
         paddingLg = Math.round(20*density);
         padding = Math.round(5*density);
@@ -84,12 +89,27 @@ public class ScheduleView extends Fragment {
 
         CreateHeader(days,v);
 
-        //create time column
-        ArrayList<Integer> times = db.getScheduleTimeRange();
+        // Get the event times
+        heights = new ArrayList<Integer>();
+        times = db.getScheduleTimeRange();
         int startTime = times.get(0);
         int endTime = times.get(1);
+        for (String d : days) {
+            ArrayList<ScheduleInfo> one_day = db.getScheduleByDay(d);
+            for (ScheduleInfo one_item : one_day) {
+                int oneItemStart = one_item.getTimeStart();
+                int oneItemEnd = one_item.getTimeEnd();
+                if (!times.contains(oneItemStart))
+                    times.add(oneItemStart);
+                if (!times.contains(oneItemEnd))
+                    times.add(oneItemEnd);
+            }
+        }
+        Collections.sort(times);
 
-        for (int time = startTime; time < endTime; time+=15) {
+            //create time column
+
+        /*for (int time = startTime; time < endTime; time+=15) {
 
             if ((time%100) == 60){
                 time+=40;
@@ -102,29 +122,56 @@ public class ScheduleView extends Fragment {
                 }
                 times.set(1,time);
             }
-        }
+        }*/
 
-        CreateTimeCol(times,v);
+        CreateTimeCol(v);
 
-        //creates schedule column for each day
+        //creates schedule column for each day, filling in blank spots.
         for (String d : days) {
             ArrayList<ScheduleInfo> schedule = db.getScheduleByDay(d);
 
-            int timeLengthMin = minutesBetweenTimes(times.get(0), times.get(1));
+            int currentTime = startTime;
+            int i = 0;
+            while (currentTime < endTime) {
+                if (i >= schedule.size()){
+                    schedule.add(i, new ScheduleInfo(
+                            currentTime,
+                            minutesBetweenTimes(currentTime, endTime),
+                            "schedule_blank"
+                    ));
+                } else if (currentTime != schedule.get(i).getTimeStart()) {
+                    schedule.add(i, new ScheduleInfo(
+                            currentTime,
+                            minutesBetweenTimes(currentTime, schedule.get(i).getTimeStart()),
+                            "schedule_blank"
+                    ));
+                }
+                currentTime = schedule.get(i).getTimeEnd();
+                i++;
+            }
+
+            /*int timeLengthMin = minutesBetweenTimes(times.get(0), times.get(1));
             int currentTime = 0;
             int i = 0;
             while(timeLengthMin > currentTime) {
                 if (i >= schedule.size()) {
-                    schedule.add(i, new ScheduleInfo(timeLengthMin - currentTime, "schedule_blank"));
+                    schedule.add(i, new ScheduleInfo(
+                            timeLengthMin - currentTime,
+                            "schedule_blank"
+                    ));
                     currentTime = timeLengthMin;
                 }else if (currentTime != minutesBetweenTimes(startTime, schedule.get(i).getTimeStart())) {
-                    schedule.add(i, new ScheduleInfo(minutesBetweenTimes(startTime,schedule.get(i).getTimeStart())-currentTime, "schedule_blank"));
+                    schedule.add(i, new ScheduleInfo(
+                            startTime,
+                            minutesBetweenTimes(startTime,schedule.get(i).getTimeStart())-currentTime,
+                            "schedule_blank"
+                    ));
                     currentTime = minutesBetweenTimes(startTime,schedule.get(i+1).getTimeStart());
                 } else {
                     currentTime += schedule.get(i).getTimeLength();
                 }
                 i++;
-            }
+            }*/
             CreateColumn(schedule, today.equals(d));
         }
 
@@ -205,10 +252,10 @@ public class ScheduleView extends Fragment {
         //create Time header
         LinearLayout.LayoutParams headerParams = new LinearLayout.LayoutParams(width + padding + paddingLg+extraW, width + (2 * paddingLg));
         TextView header = new TextView(context);
-        header.setText(" ");
+        header.setText("Event\nTime:");
         header.setTypeface(null, Typeface.BOLD);
-        header.setTextSize(textSizeHeader);
-        header.setGravity(Gravity.CENTER_HORIZONTAL);
+        header.setTextSize(textSizeContent);
+        header.setGravity(Gravity.CENTER);
         header.setLayoutParams(headerParams);
 
         //divider between each day header
@@ -249,7 +296,11 @@ public class ScheduleView extends Fragment {
             //create day header
             headerParams = new LinearLayout.LayoutParams(4*width+padding + paddingLg +extraW, width+(2*paddingLg));
             header = new TextView(context);
-            header.setText(dayIntToString(cal.get(Calendar.DAY_OF_WEEK)));
+            //header.setText(dayIntToString(cal.get(Calendar.DAY_OF_WEEK)));
+            header.setText(
+                    cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()) + "\n" +
+                            DateFormat.getDateInstance(DateFormat.MEDIUM).format(cal.getTime())
+            );
             header.setTypeface(null, Typeface.BOLD);
             header.setTextSize(textSizeHeader);
             header.setGravity(Gravity.CENTER);
@@ -290,21 +341,49 @@ public class ScheduleView extends Fragment {
         }
     }
 
-    private void CreateTimeCol(ArrayList<Integer> times, View v){
+    private void CreateTimeCol(View v) {
+
+        // compute the overall schedule height
+        schedHeight = width + (2*paddingLg) + divider*5;
+        for(int i=0; i < times.size()-1; i++) {
+            // We're using pow() as a transfer function so that longer time slots are longer,
+            // but not proportionately longer, so we don't eat up too much screen real estate with
+            // really long time slots.  With transferPower = 1.0, it is proportional.  With
+            // it less than 1.0, compression happens > 15 min and expansion happens < 15 min.
+            double transferPower = 0.5;
+            int oneHeight = (int)Math.ceil(Math.pow(minutesBetweenTimes(times.get(i), times.get(i+1))/15.0, transferPower)*(height + (2*paddingLg)));
+            heights.add(i, oneHeight);
+            schedHeight += (oneHeight + divider);
+        }
+
+        // Adjust height as needed.
+        extraH = ((int)screenHeight) - schedHeight;
+        int extraHRemaining = extraH;
+        if (extraH > 0 && times.size() > 1) {
+            for(int i=0; i < times.size()-1; i++) {
+                int oneExtra = extraH / (times.size()-1);
+                if (i == times.size() - 2)
+                    oneExtra = extraHRemaining;
+                heights.set(i, heights.get(i) + oneExtra);
+                extraHRemaining -= oneExtra;
+            }
+        }
+
 
         //check if schedule height is too small for screen
-        screenHeight = (int)Math.ceil(screenHeight - (width + (2 * paddingLg) + divider*5 + divider*(times.size()-2) + (height+(2*paddingLg))*(times.size()-2)));
-        extraH = screenHeight>0? (int)Math.ceil(screenHeight/(times.size()-2)):0;
+        //screenHeight = (int)Math.ceil(screenHeight - (width + (2 * paddingLg) + divider*5 + divider*(times.size()-2) + (height+(2*paddingLg))*(times.size()-2)));
+        //extraH = screenHeight>0? (int)Math.ceil(screenHeight/(times.size()-2)):0;
 
         LinearLayout timeLayout = v.findViewById(R.id.time);
-        LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(width+paddingLg+padding+extraW, height+(2*paddingLg)+extraH);
+        //LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(width+paddingLg+padding+extraW, height+(2*paddingLg)+extraH);
 
         //create time header for each time (exclude 1st 2 times which are start and end times)
-        for (int i=2; i<times.size();i++) {
+        for (int i=0; i<times.size()-1;i++) {
             int t = times.get(i);
+            int h = heights.get(i) - divider;
 
             TextView time = new TextView(context);
-            time.setGravity(Gravity.CENTER);
+            time.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
             String timeStr;
             //set time format to ####
             if (t<1000) {
@@ -315,6 +394,7 @@ public class ScheduleView extends Fragment {
 
             time.setText(timeStr);
             time.setPadding(paddingLg, paddingLg, padding, paddingLg);
+            LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(width+paddingLg+padding+extraW, h);
             time.setLayoutParams(timeParams);
             time.setTextSize(textSizeContent);
 
@@ -351,8 +431,15 @@ public class ScheduleView extends Fragment {
             int color = Color.parseColor("#d6d4d4");
 
             if (sch != null) {
-                heightCol = heightCol * sch.getTimeLength() + divider*(Math.round(sch.getTimeLength()/15)-1);
-                heightCol = sch.getTimeLength()%15!=0?heightCol + 0.5 *divider:heightCol;
+                int timesIndex = times.indexOf(sch.getTimeStart());
+                heightCol = 0;
+                while(times.get(timesIndex) < sch.getTimeEnd()) {
+                    heightCol += heights.get(timesIndex);
+                    timesIndex++;
+                }
+                heightCol -= divider;
+                //heightCol = heightCol * sch.getTimeLength() + divider*(Math.round(sch.getTimeLength()/15)-1);
+                //heightCol = sch.getTimeLength()%15!=0?heightCol + 0.5 *divider:heightCol;
 
                 event.setText(sch.getDesc());
 
@@ -421,7 +508,7 @@ public class ScheduleView extends Fragment {
 
                 long timeDif = calNow.getTimeInMillis()-cal.getTimeInMillis();
 
-                if (timeDif>=0 && timeDif<=sch.getTimeLength()*60000){
+                /*if (timeDif>=0 && timeDif<=sch.getTimeLength()*60000){
 
                     event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_item));
                     iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.current_event));
@@ -438,11 +525,11 @@ public class ScheduleView extends Fragment {
                     redLine.setBackgroundColor(ContextCompat.getColor(context, R.color.red));
                     iconsLayout.addView(redLine);
 
-                }else{
+                }else{*/
                     event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
                     iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.transparent));
                     event.setTypeface(event.getTypeface(), Typeface.NORMAL);
-                }
+                /*}*/
 
             }
 
@@ -552,30 +639,7 @@ public class ScheduleView extends Fragment {
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .show();
         }
-
     }
-
-    //converts day number to day name
-    private String dayIntToString(int day){
-        switch(day){
-            case 1:
-                return "Sunday";
-            case 2:
-                return "Monday";
-            case 3:
-                return "Tuesday";
-            case 4:
-                return "Wednesday";
-            case 5:
-                return "Thursday";
-            case 6:
-                return "Friday";
-            case 7:
-                return "Saturday";
-        }
-        return " ";
-    }
-
 }
 
 

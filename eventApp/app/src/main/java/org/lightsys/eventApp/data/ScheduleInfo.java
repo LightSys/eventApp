@@ -24,6 +24,12 @@ public class ScheduleInfo {
         this.timeLength = timeLength;
         this.category = category;
     }
+
+    public ScheduleInfo (int timeStart, int timeLength, String category){
+        this.timeStart = timeStart;
+        this.timeLength = timeLength;
+        this.category = category;
+    }
     public String getDay() {
         return day;
     }
@@ -48,7 +54,6 @@ public class ScheduleInfo {
         this.locationName = locationName;
     }
 
-
     public int getTimeStart() {
         return timeStart;
     }
@@ -56,8 +61,20 @@ public class ScheduleInfo {
     public void setTimeStart(int timeStart) {
         this.timeStart = timeStart;
     }
+
     public int getTimeLength() {
         return timeLength;
+    }
+
+    public int getTimeEnd() {
+        int endTime = timeStart;
+        int countMins = timeLength;
+        endTime += (countMins / 60)*100;
+        countMins = countMins%60;
+        endTime += countMins;
+        if (endTime%100 >= 60)
+            endTime += (100 - 60);
+        return endTime;
     }
 
     public void setTimeLength(int timeEnd) {

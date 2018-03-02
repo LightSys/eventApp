@@ -86,10 +86,12 @@ public class AutoUpdater extends Service implements CompletionInterface {
 
         Log.d("AutoUpdater", "onStartCommand()");
 
-        String once = intent.getStringExtra("checkOnce");
-        if (once != null && once.equals("true")) {
-            Log.d("AutoUpdater", "checking updates via onStartCommand()");
-            checkForUpdatesPM();
+        if (intent != null) {
+            String once = intent.getStringExtra("checkOnce");
+            if (once != null && once.equals("true")) {
+                Log.d("AutoUpdater", "checking updates via onStartCommand()");
+                checkForUpdatesPM();
+            }
         }
 
         //keeps service running after app is shut down

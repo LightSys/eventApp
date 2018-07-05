@@ -302,7 +302,7 @@ public class MainActivity extends AppCompatActivity {
                     .commit();
         }
     }
-    
+
     //if app does not have camera permission, ask user for permission
     private void requestCameraPermission() {
         Log.w("Barcode-reader", "Camera permission is not granted. Requesting permission");

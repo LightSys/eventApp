@@ -1,6 +1,7 @@
 package org.lightsys.eventApp.tools;
 
 import android.content.Context;
+import android.text.Spannable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SimpleAdapter;

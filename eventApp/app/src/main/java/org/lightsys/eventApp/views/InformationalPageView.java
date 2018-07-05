@@ -1,12 +1,19 @@
 package org.lightsys.eventApp.views;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.Info;
@@ -53,7 +60,6 @@ public class InformationalPageView extends Fragment {
     private ArrayList<HashMap<String, String>> generateListItems() {
         ArrayList<HashMap<String, String>> aList = new ArrayList<>();
         String oldHeader = null;
-
         for (Info hq : InfoPage) {
             HashMap<String, String> hm = new HashMap<>();
 
@@ -63,6 +69,7 @@ public class InformationalPageView extends Fragment {
             } else {
                 hm.put("header", null);
             }
+
             hm.put("text", hq.getBody().replace("~", getResources().getString(R.string.bullet_custom)));
 
             aList.add(hm);

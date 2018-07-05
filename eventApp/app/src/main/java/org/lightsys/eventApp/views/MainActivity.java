@@ -258,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer != null && drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -302,21 +302,12 @@ public class MainActivity extends AppCompatActivity {
                     .commit();
         }
     }
-
-    //TODO: ANALYZE AND STUDY CAMERA PERMISSIONS HERE, FIND WAY FOR REPEAT REQUESTS. (session id could be problem)
+    
     //if app does not have camera permission, ask user for permission
     private void requestCameraPermission() {
         Log.w("Barcode-reader", "Camera permission is not granted. Requesting permission");
         final String[] permissions = new String[]{"android.permission.CAMERA"};
-        if(!ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
-            ActivityCompat.requestPermissions(this, permissions, 2);
-        } else {
-            new View.OnClickListener() {
-                public void onClick(View view) {
-                    ActivityCompat.requestPermissions(MainActivity.this, permissions, 2);
-                }
-            };
-        }
+        ActivityCompat.requestPermissions(this, permissions, 2);
     }
 
     //navigation, theme, refresh menu setup

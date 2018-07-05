@@ -11,6 +11,9 @@ import org.lightsys.eventApp.R;
 
 /**
  * Created by otter57 on 4/5/17.
+ * Modified by Littlesnowman88 on 1 June 2018
+ * Made Useless by Littlesnowman88 on 7 June 2018
+ * (originally in tools, now in tools/SettingsAdapters
  *
  * adapter for refresh dropdown view
  */
@@ -28,7 +31,7 @@ public class RefreshAdapter extends ArrayAdapter<String> {
     @Override
     public View getView(int position, View v, @NonNull ViewGroup parent) {
         View mView = super.getView(position, v, parent);
-        TextView textView = mView.findViewById(R.id.headerText);
+        TextView textView = mView.findViewById(R.id.headerText); //refresh_item.xml
 
         int time = Integer.parseInt(data[position]);
         String displayText;

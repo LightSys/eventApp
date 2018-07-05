@@ -2,7 +2,7 @@ package org.lightsys.eventApp.data;
 
 /**
  * Created by otter57 on 3/30/17.
- *
+ * Modified by Littlesnowman88 on 14 June 2018
  * Object for general info object
  */
 
@@ -13,6 +13,7 @@ public class Info {
     private String header;
     private String body;
     private String date;
+    private String id_name;
     private boolean is_new;
 
     /* ************************* Construct ************************* */
@@ -54,9 +55,11 @@ public class Info {
         return body;
     }
 
-    public void setBody(String body) {
-        this.body = body;
-    }
+    public void setBody(String body) { this.body = body;  }
+
+    public String getName() { return id_name; }
+
+    public void setName(String name) { this.id_name = name; }
 
     public void setNew() { this.is_new = true; }
 

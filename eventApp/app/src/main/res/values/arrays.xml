@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="refresh_pref_button_labels">
+        <item>@string/refresh_1_min</item>
+        <item>@string/refresh_5_min</item>
+        <item>@string/refresh_10_min</item>
+        <item>@string/refresh_15_min</item>
+        <item>@string/refresh_30_min</item>
+        <item>@string/refresh_60_min</item>
+        <item>@string/refresh_never</item>
+        <item>@string/refresh_auto</item>
+        <item>@string/refresh_default</item>
+    </array>
+
+
+    <array name="refresh_pref_button_values">
+        <item>@string/refresh_val_1_min</item>
+        <item>@string/refresh_val_5_min</item>
+        <item>@string/refresh_val_10_min</item>
+        <item>@string/refresh_val_15_min</item>
+        <item>@string/refresh_val_30_min</item>
+        <item>@string/refresh_val_60_min</item>
+        <item>@string/refresh_val_never</item>
+        <item>@string/refresh_val_auto</item>
+        <item>@string/refresh_val_default</item>
+    </array>
+
+
+</resources>

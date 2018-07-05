@@ -4,16 +4,10 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <!--Main Activity menu resource-->
+    <string name="settings_portal">Settings</string>
+
     <!--Refresh Resources-->
-    <string-array name="refresh_options">
-        <item>-1</item>
-        <item>1</item>
-        <item>5</item>
-        <item>15</item>
-        <item>30</item>
-        <item>60</item>
-    </string-array>
-    <string name="refresh_title">Set Refresh rate</string>
     <string name="refresh">refresh</string>
     <string name="rescan">rescan</string>
     <string name="refresh_dropdown">refresh dropdown</string>
@@ -31,6 +25,9 @@
 
     <!--Schedule resources-->
     <string name="contact_button">Contact Button</string>
+    <string name="event_location_button">On-Site</string>
+    <string name="my_remote_location_button">My Location</string>
+    <string name="custom_location_button">Custom Time Zone</string>
 
     <!--Connection resources-->
     <string name="retry_connection_button">Retry Connection?</string>
@@ -40,5 +37,49 @@
     <string name="bullet_custom">&#9654;</string>
 
     <string name="msg_default_status">Scan a QR code to import event data.</string>
+
+    <!--Settings Activity resources-->
+    <string name="settings_title">Settings</string>
+    <string name="time_zone_item">Time Zone</string>
+
+    <!--REFRESH RESOURCES-->
+    <string name="refresh_settings_title">Notifications Refresh Rate</string>
+    <string name="refresh_rate_title">Notifications Refresh Rate</string>
+    <string name="refresh_rate_setting" translatable="false">refresh_rate</string>
+
+    <!--refresh preferences labels-->
+    <string name="refresh_1_min">1 minute</string>
+    <string name="refresh_5_min">5 minutes</string>
+    <string name="refresh_10_min">10 minutes</string>
+    <string name="refresh_15_min">15 minutes</string>
+    <string name="refresh_30_min">30 minutes</string>
+    <string name="refresh_60_min">60 minutes</string>
+    <string name="refresh_never">never</string>
+    <string name="refresh_auto">auto</string>
+    <string name="refresh_default">event default</string>
+
+    <!--refresh preferences values-->
+    <string name="refresh_val_1_min" translatable="false">1</string>
+    <string name="refresh_val_5_min" translatable="false">5</string>
+    <string name="refresh_val_10_min" translatable="false">10</string>
+    <string name="refresh_val_15_min" translatable="false">15</string>
+    <string name="refresh_val_30_min" translatable="false">30</string>
+    <string name="refresh_val_60_min" translatable="false">60</string>
+    <string name="refresh_val_never" translatable="false">never</string>
+    <string name="refresh_val_auto" translatable="false">auto</string>
+    <string name="refresh_val_default" translatable="false">default</string>
+
+    <!--TIME ZONE SETTINGS-->
+    <string name="time_settings_title">Time Zone Settings</string>
+    <string name="time_zone_setting" translatable = "false">time_zone</string>
+    <string name="fetch_error">Error occurred while fetching locations. Please try again.</string>
+    <string name="selected_time_zone">Selected time zone is: </string>
+    <string name="no_zone_error">No location or time zone has been selected!</string>
+    <string name="remote_zone">My Location</string>
+    <string name="recycler_view_hint">Please press one of the following items or press the button again to cancel.</string>
+
+    <string name="on_site_pref" translatable="false">on-site</string>
+    <string name="my_location_pref" translatable="false">my_location"</string>
+    <string name="custom_zone_pref" translatable="false">custom_zone</string>
 
 </resources>

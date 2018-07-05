@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,7 +29,6 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -45,8 +43,8 @@ import org.lightsys.eventApp.tools.AutoUpdater;
 import org.lightsys.eventApp.tools.DataConnection;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.NavigationAdapter;
-import org.lightsys.eventApp.tools.RefreshAdapter;
 import org.lightsys.eventApp.tools.qr.launchQRScanner;
+import org.lightsys.eventApp.views.SettingsViews.SettingsActivity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,6 +53,7 @@ import static android.content.ContentValues.TAG;
 
 /**
  * Created by otter57 on 3/29/17.
+ * Modified by Littlesnowman88 on 4 June 2018.
  *
  * creates theme, navigation menu, and options menu
  * base activity for app fragment views
@@ -65,22 +64,23 @@ public class MainActivity extends AppCompatActivity {
     static private final String QR_DATA_EXTRA = "qr_data";
     static private final int QR_RESULT = 1;
     private static final String RELOAD_PAGE = "reload_page";
+    private static final int BLACK = Color.parseColor("#000000");
+    private static final int WHITE = Color.parseColor("#ffffff");
 
 
     private Fragment fragment;
     private final FragmentManager fragmentManager = getSupportFragmentManager();
     private Context context;
     private Activity activity;
+    private Intent main_to_settings, updateIntent;
     private LocalDB db;
     private AlertDialog alert;
     private Toolbar toolbar;
-    private ListView refreshList;
-    private LinearLayout refreshLayout;
     private View previousNavView;
-    private String [] refreshCategories;
     private ListView navigationList;
-    private int color;
-    private String refreshRate = null;
+    private int color, black_or_white;
+    ActionBarDrawerToggle toggle;
+
     private boolean successfulConnection = true;
 
     //stuff to automatically refresh the current fragment
@@ -99,9 +99,10 @@ public class MainActivity extends AppCompatActivity {
         db = new LocalDB(this);
         context = this;
         activity = this;
+        main_to_settings = new Intent(MainActivity.this, SettingsActivity.class);
 
         /*set up auto updater*/
-        Intent updateIntent = new Intent(getBaseContext(), AutoUpdater.class);
+        updateIntent = new Intent(getBaseContext(), AutoUpdater.class);
         startService(updateIntent);
         refreshHandler.postDelayed(refreshRunnable, 1000);
 
@@ -109,9 +110,13 @@ public class MainActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        //set theme color
+        color = Color.parseColor(db.getThemeColor("themeColor"));
+        determineBlackOrWhite(color);
+
         /*set up drawer*/
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         assert drawer != null;
         drawer.addDrawerListener(toggle);
@@ -169,15 +174,55 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //modified by Littlesnowman88 on 22 June 2018
+    //now corrects menu icons for best color (black or white)
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        //set menu item colors
+        toolbar.setTitleTextColor(black_or_white);
+        toggle.getDrawerArrowDrawable().setColor(black_or_white);
+        MenuItem qr = menu.findItem(R.id.action_rescan);
+        MenuItem refresh = menu.findItem(R.id.action_refresh);
+        MenuItem settings = menu.findItem(R.id.open_settings_gear);
+        if (black_or_white == WHITE) {
+            qr.setIcon(R.drawable.ic_qr);
+            refresh.setIcon(R.drawable.ic_refresh);
+            settings.setIcon(R.drawable.ic_settings_24dp);
+//            toggle.setHomeAsUpIndicator(getResources().getDrawable(R.drawable.ic_nav_menu));
+        }
+        else {
+            qr.setIcon(R.drawable.ic_qr_black);
+            refresh.setIcon(R.drawable.ic_refresh_black);
+            settings.setIcon(R.drawable.ic_settings_black_24dp);
+//            toggle.setHomeAsUpIndicator(getResources().getDrawable(R.drawable.ic_nav_menu_black));
+        }
         if (!successfulConnection) {
-            menu.getItem(1).setIcon(R.drawable.ic_refresh_error);
+            if (black_or_white == WHITE) {
+                menu.getItem(1).setIcon(R.drawable.ic_refresh_error);
+            } else {
+                menu.getItem(1).setIcon(R.drawable.ic_refresh_error_black);
+            }
         }
         invalidateOptionsMenu();
+
         return super.onCreateOptionsMenu(menu);
+    }
+
+    /**
+     * converts the given hex_color into grayscale and determines whether toolbar items should be black or white
+     * Created by Littlesnowman88 on 22 June 2018
+     * @param theme_color, the integer color to be analyzed and contrasted against
+     * Postcondition: black_or_white = #000000 if black, ffffff if white, whatever will show better given hex_color
+     */
+    private void determineBlackOrWhite(int theme_color) {
+        int r = Color.red(theme_color); // 0 < r < 255
+        int g = Color.green(theme_color); // 0 < g < 255
+        int b = Color.blue(theme_color); // 0 < b < 255
+        int average_intensity = (r + g + b) / 3;
+        if (average_intensity >= 120) {black_or_white = BLACK; }
+        else {black_or_white = WHITE; }
     }
 
     //options menu (refresh, refresh frequency, rescan QR)
@@ -190,30 +235,17 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         switch (id){
-            case R.id.action_refresh:
-                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null).execute("");
-                break;
-            case R.id.action_refresh_dropdown:
-                if (refreshLayout.getVisibility()==View.VISIBLE){
-                    closeRefresh();
-                }else{
-                    openRefresh();
-                    refreshList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-                            //highlight new selection and set refresh rate
-                            refreshList.setItemChecked(i, true);
-                            db.updateRefreshRate(refreshCategories[i]);
-                            refreshRate = db.getGeneral("refresh");
-                            closeRefresh();
-                        }
-                    });
-                }
-                break;
             case R.id.action_rescan:
                 gatherData(true);
                 break;
+            case R.id.action_refresh:
+                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null).execute("");
+                stopService(updateIntent); //"refresh" (restart) the auto updater
+                startService(updateIntent);
+                break;
+            case R.id.open_settings_gear:
+                startActivity(main_to_settings);
+                onPause();
         }
 
         return super.onOptionsItemSelected(item);
@@ -222,7 +254,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
     }
 
     @Override
@@ -240,34 +271,6 @@ public class MainActivity extends AppCompatActivity {
         // Unregister since the activity is not visible
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
         super.onStop();
-    }
-
-    //if refresh dropdown is open and click occurs outside dropdown, dropdown closes
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            View content = findViewById(R.id.refresh_layout);
-            int[] contentLocation = new int[2];
-            content.getLocationOnScreen(contentLocation);
-            Rect refreshRect = new Rect(contentLocation[0],
-                    contentLocation[1],
-                    contentLocation[0] + content.getWidth(),
-                    contentLocation[1] + content.getHeight());
-
-            content = findViewById(R.id.toolbar);
-            contentLocation = new int[2];
-            content.getLocationOnScreen(contentLocation);
-            Rect toolBarRect = new Rect(contentLocation[0],
-                    contentLocation[1],
-                    contentLocation[0] + content.getWidth(),
-                    contentLocation[1] + content.getHeight());
-
-            if (!(refreshRect.contains((int) event.getX(), (int) event.getY())) && !(toolBarRect.contains((int) event.getX(), (int) event.getY())) && refreshLayout.getVisibility() == View.VISIBLE) {
-                closeRefresh();
-            }
-        }
-        return super.dispatchTouchEvent(event);
     }
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -300,6 +303,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //TODO: ANALYZE AND STUDY CAMERA PERMISSIONS HERE, FIND WAY FOR REPEAT REQUESTS. (session id could be problem)
     //if app does not have camera permission, ask user for permission
     private void requestCameraPermission() {
         Log.w("Barcode-reader", "Camera permission is not granted. Requesting permission");
@@ -320,28 +324,6 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Info> menu = db.getNavigationTitles();
 
         navigationList = (ListView) findViewById(R.id.nav_list);
-
-        //set up refresh menu
-        refreshLayout = (LinearLayout) findViewById(R.id.refresh_layout);
-        refreshList = (ListView) findViewById(R.id.refresh_list);
-        refreshCategories = getResources().getStringArray(R.array.refresh_options);
-        refreshList.setAdapter(new RefreshAdapter(context, refreshCategories));
-
-        //select correct refresh dropdown
-        int index = -1;
-        for (int n = 0; n<refreshCategories.length;n++){
-            if (refreshCategories[n].equals(db.getGeneral("refresh"))){
-                index = n;
-            }
-        }
-        if (index == -1){
-            db.updateRefreshRate(refreshList.getItemAtPosition(3).toString());
-        }
-        refreshList.setItemChecked(index, true);
-        refreshRate = db.getGeneral("refresh");
-
-        //set theme color
-        color = Color.parseColor(db.getThemeColor("themeColor"));
 
         //Navigation Header Color
         int colors [] = {Color.parseColor(db.getThemeColor("theme1"))==0? Color.parseColor(db.getThemeColor("theme1")): Color.parseColor(db.getThemeColor("themeDark")),
@@ -382,14 +364,6 @@ public class MainActivity extends AppCompatActivity {
             getWindow().setStatusBarColor(Color.parseColor(db.getThemeColor("themeDark")));
         }
 
-    }
-
-    private void closeRefresh(){
-        refreshLayout.setVisibility(View.GONE);
-    }
-
-    private void openRefresh(){
-        refreshLayout.setVisibility(View.VISIBLE);
     }
 
     //generate items for navigation menu
@@ -450,6 +424,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //sends user to appropriate page
+    //modified by Littlesnowman88 to recognize custom-titled navigation items
     private void onNavigationItemSelected(View view) {
         try {
             if (previousNavView != null) {
@@ -464,7 +439,18 @@ public class MainActivity extends AppCompatActivity {
             previousNavView = view;
 
             String title = ((TextView) view.findViewById(R.id.nav_item)).getText().toString();
-            switch (title) {
+            String nav_id = "";
+            ArrayList<Info> titles_table = db.getNavigationTitles();
+            ArrayList<String> titles = new ArrayList<>();
+
+            for (Info info_item : titles_table) {
+                titles.add(info_item.getName());
+                if (title.equals(info_item.getHeader())) {
+                    nav_id = info_item.getName();
+                }
+            }
+
+            switch (nav_id) {
                 case "Notifications":
                     fragment = new WelcomeView();
                     fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
@@ -516,24 +502,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             // Extract data included in the Intent
-
-            //set Refresh dropdown select
-            if (refreshList.getCheckedItemPosition() == -1) {
-                int child = 0;
-                for (int i = 0; i < refreshCategories.length; i++) {
-                    if (refreshCategories[i].equals(db.getGeneral("refresh"))) {
-                        child = i;
-                    }
-                }
-                refreshList.setItemChecked(child, true);
-
-            }
-            successfulConnection = true;
-
-            //if app has been used before, preserve user selected refresh rate
-            if (refreshRate != null) {
-                db.updateRefreshRate(refreshRate);
-            }
 
             /*based on broadcast message received perform correct action*/
             if (intent.getStringExtra("action").equals("retry")){

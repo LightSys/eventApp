@@ -22,7 +22,6 @@ import java.util.Locale;
 
 /**
  * Created by otter57 on 3/29/17.
- *
  * Welcomes user to event
  */
 
@@ -81,6 +80,7 @@ public class WelcomeView extends Fragment {
             hm.put("content", event.getBody());
             String date = null;
             try{
+                //TODO: POTENTIALLY TURN THIS INTO A DATE/TIME FORMATTER, AS YOU DID IN SCHEDULE.
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(formatter.parse(event.getDate()));
                 date = getDatePrintOut(calendar);

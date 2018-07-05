@@ -5,21 +5,23 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
@@ -29,52 +31,68 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.ContactInfo;
+import org.lightsys.eventApp.data.LocationInfo;
 import org.lightsys.eventApp.data.ScheduleInfo;
 import org.lightsys.eventApp.tools.LocalDB;
-import org.lightsys.eventApp.R;
 
 import java.text.SimpleDateFormat;
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
 /**
  * Created by otter57 on 3/28/17.
+ * Modified by Littlesnowman88 in summer 2018
  *
- * Displays event's schedules
+ * Displays event's schedules, taking time zones into account
  */
 
-public class ScheduleView extends Fragment {
+public class ScheduleView extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private LinearLayout mainLayout;
+    private LinearLayout mainLayout, Box;
+    private View v;
     private HorizontalScrollView ScrollH, ScrollB;
     private LocalDB db;
     private Context context;
     private int width, height, textSizeHeader, paddingLg, padding, divider, textSizeContent, iconSize, initScrollX, extraW, extraH;
     private String today = "";
-    private float density, screenWidth, screenHeight;
+    private float screenWidth, screenHeight;
     private Calendar calNow;
-    private int schedHeight;
     private ArrayList<Integer> heights;
     private ArrayList<Integer> times;
 
+    /* accessing shared preferences set by the settings activity */
+    private SharedPreferences sharedPreferences;
+    private String[] eventLocations;
+    private TimeZone selectedTimeZone;
+
+
+    //TODO: MAKE THIS RECREATE UPON CHANGING SHARED PREFERENCES.
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.schedule_layout, container, false);
+        v = inflater.inflate(R.layout.schedule_layout, container, false);
         getActivity().setTitle("Schedule");
         context = this.getContext();
+        db = new LocalDB(getContext());
+
         mainLayout = v.findViewById(R.id.main_layout);
         ScrollH = v.findViewById(R.id.HeaderScroll);
         ScrollB = v.findViewById(R.id.bodyScroll);
 
+        /* allow Schedule View to access shared preferences for time zone information */
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getContext());
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        eventLocations = LocationInfo.getEventLocations(db);
+        selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", eventLocations[0] ));
+
+
         //sets constants for schedule display (density changes values based on screen)
-        density = (getResources().getDisplayMetrics().density)/2;
-        db = new LocalDB(getContext());
-        ArrayList<String> days = db.getDays();
+        float density = (getResources().getDisplayMetrics().density)/2;
         textSizeHeader = 22;
         textSizeContent = 14;
         paddingLg = Math.round(20*density);
@@ -87,94 +105,108 @@ public class ScheduleView extends Fragment {
         screenWidth = getResources().getDisplayMetrics().widthPixels;
         screenHeight = getResources().getDisplayMetrics().heightPixels - getActionBarHeight();
 
+        buildSchedule();
+        return v;
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        if (s.equals("selected_time_setting")) {
+            selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", eventLocations[0]));
+            removeViews();
+            buildSchedule();
+        }
+    }
+
+    private void removeViews() {
+        LinearLayout dayLayout = v.findViewById(R.id.day_layout);
+        int dayLayoutNumChildren = dayLayout.getChildCount();
+        for (int child=0; child < dayLayoutNumChildren; child++) {
+            dayLayout.removeView(dayLayout.getChildAt(0));
+        }
+        int boxNumChildren = Box.getChildCount() - 1;
+        for (int child=0; child < boxNumChildren; child++) { //DOES NOT DELETE ScrollH!!
+            Box.removeView(Box.getChildAt(0));
+        }
+        int mainLayoutNumChildren = mainLayout.getChildCount();
+        for (int child=0; child < mainLayoutNumChildren; child++) {
+            mainLayout.removeView(mainLayout.getChildAt(0));
+        }
+        LinearLayout timeBar = v.findViewById(R.id.time);
+        int timeNumChildren = timeBar.getChildCount();
+        for (int child=0; child < timeNumChildren; child++) {
+            timeBar.removeView(timeBar.getChildAt(0));
+        }
+    }
+
+    //OnCreateView part II, also called by OnSharedPreferenceChangedListener
+    private void buildSchedule() {
+        //create the schedule for the event, and also get the days and time range (edges)
+        db.setSharedPreferences(sharedPreferences);
+        ArrayList<ScheduleInfo> schedule = db.getFullSchedule();
+        ArrayList<String> days = db.getDays();
+        times = db.getScheduleTimeRange();
+
         CreateHeader(days,v);
 
-        // Get the event times
-        heights = new ArrayList<Integer>();
-        times = db.getScheduleTimeRange();
+        //the earliest event start time and the latest event end time
         int startTime = times.get(0);
         int endTime = times.get(1);
-        for (String d : days) {
-            ArrayList<ScheduleInfo> one_day = db.getScheduleByDay(d);
-            for (ScheduleInfo one_item : one_day) {
-                int oneItemStart = one_item.getTimeStart();
-                int oneItemEnd = one_item.getTimeEnd();
-                if (!times.contains(oneItemStart))
-                    times.add(oneItemStart);
-                if (!times.contains(oneItemEnd))
-                    times.add(oneItemEnd);
-            }
+
+        //insert other event start and end time into the times ArrayList
+        int oneItemStart, oneItemEnd;
+        //TODO: add event end into Schedule Info item to save on computation here?
+        for (ScheduleInfo event : schedule) {
+            oneItemStart = event.getTimeStart();
+            oneItemEnd = event.getTimeEnd();
+            if (!times.contains(oneItemStart))
+                times.add(oneItemStart);
+            if (!times.contains(oneItemEnd))
+                times.add(oneItemEnd);
         }
+
         Collections.sort(times);
 
-            //create time column
-
-        /*for (int time = startTime; time < endTime; time+=15) {
-
-            if ((time%100) == 60){
-                time+=40;
-            }
-            times.add(time);
-            if (time+15>times.get(1)){
-                time +=15;
-                if ((time%100) == 60){
-                    time+=40;
-                }
-                times.set(1,time);
-            }
-        }*/
-
+        heights = new ArrayList<>();
         CreateTimeCol(v);
 
         //creates schedule column for each day, filling in blank spots.
-        for (String d : days) {
-            ArrayList<ScheduleInfo> schedule = db.getScheduleByDay(d);
-
-            int currentTime = startTime;
-            int i = 0;
+        ArrayList< ArrayList<ScheduleInfo> > scheduleByDay = getScheduleDays(days, schedule);
+        ArrayList<ScheduleInfo> oneDay;
+        int currentTime, numEvents;
+        int scheduleByDaySize = scheduleByDay.size();
+        for (int d = 0; d < scheduleByDaySize; d++) {
+            oneDay = scheduleByDay.get(d);
+            currentTime = startTime;
+            numEvents = 0;
+            //while not at the end of a day
             while (currentTime < endTime) {
-                if (i >= schedule.size()){
-                    schedule.add(i, new ScheduleInfo(
+                //if there are no more scheduled events left in the day, fill the ending blank space
+                if (numEvents >= oneDay.size()) {
+                    oneDay.add(numEvents, new ScheduleInfo(
                             currentTime,
                             minutesBetweenTimes(currentTime, endTime),
                             "schedule_blank"
                     ));
-                } else if (currentTime != schedule.get(i).getTimeStart()) {
-                    schedule.add(i, new ScheduleInfo(
+                    //else if the current time is not at an event start time (so a blank won't override an event)
+                    //add a blank space between the current time and the next event's start time
+                } else if (currentTime != oneDay.get(numEvents).getTimeStart()) {
+                    oneDay.add(numEvents, new ScheduleInfo(
                             currentTime,
-                            minutesBetweenTimes(currentTime, schedule.get(i).getTimeStart()),
+                            minutesBetweenTimes(currentTime, oneDay.get(numEvents).getTimeStart()),
                             "schedule_blank"
                     ));
                 }
-                currentTime = schedule.get(i).getTimeEnd();
-                i++;
+                //put the current time at the current event's end time
+                currentTime = oneDay.get(numEvents).getTimeEnd();
+                //increment the number of events
+                numEvents++;
             }
 
-            /*int timeLengthMin = minutesBetweenTimes(times.get(0), times.get(1));
-            int currentTime = 0;
-            int i = 0;
-            while(timeLengthMin > currentTime) {
-                if (i >= schedule.size()) {
-                    schedule.add(i, new ScheduleInfo(
-                            timeLengthMin - currentTime,
-                            "schedule_blank"
-                    ));
-                    currentTime = timeLengthMin;
-                }else if (currentTime != minutesBetweenTimes(startTime, schedule.get(i).getTimeStart())) {
-                    schedule.add(i, new ScheduleInfo(
-                            startTime,
-                            minutesBetweenTimes(startTime,schedule.get(i).getTimeStart())-currentTime,
-                            "schedule_blank"
-                    ));
-                    currentTime = minutesBetweenTimes(startTime,schedule.get(i+1).getTimeStart());
-                } else {
-                    currentTime += schedule.get(i).getTimeLength();
-                }
-                i++;
-            }*/
-            CreateColumn(schedule, today.equals(d));
+            CreateColumn(oneDay, today.equals(oneDay.get(0).getDay()));
         }
 
+        //TODO: HORIZONTAL SCROLLING RELATED. ANALYZE and RETHINK?
         //synchronize scroll header and scroll body
         ScrollB.setOnTouchListener(new View.OnTouchListener(){
 
@@ -187,22 +219,21 @@ public class ScheduleView extends Fragment {
                 ScrollH.scrollTo(scrollX, scrollY);
                 return false;
             }
-
         });
 
         ScrollH.setOnTouchListener(new View.OnTouchListener(){
 
-            @Override
-            public boolean onTouch(View view, MotionEvent event) {
+                                       @Override
+                                       public boolean onTouch(View view, MotionEvent event) {
 
-                int scrollX = view.getScrollX();
-                int scrollY = view.getScrollY();
+                                           int scrollX = view.getScrollX();
+                                           int scrollY = view.getScrollY();
 
-                ScrollB.scrollTo(scrollX, scrollY);
-                return false;
-            }
-
-        });
+                                           ScrollB.scrollTo(scrollX, scrollY);
+                                           return false;
+                                       }
+                                   }
+        );
 
         //set Scroll to current day
         Handler h = new Handler();
@@ -213,8 +244,12 @@ public class ScheduleView extends Fragment {
                 ScrollH.setScrollX(initScrollX);
             }
         }, 250);
+    }
 
-        return v;
+    @Override
+    public void onDestroy() {
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        super.onDestroy();
     }
 
     //gets the number of minutes between two clock times
@@ -240,8 +275,8 @@ public class ScheduleView extends Fragment {
     }
 
     private void CreateHeader(ArrayList<String> days, View v){
+        Box = v.findViewById(R.id.topLeftBox);
         LinearLayout dayLayout = v.findViewById(R.id.day_layout);
-        LinearLayout Box = v.findViewById(R.id.topLeftBox);
 
         int scrollWidth = 0;
 
@@ -279,16 +314,25 @@ public class ScheduleView extends Fragment {
         Box.addView(dividerHorizontal,1);
 
         //prep to convert date to day of week for schedule display
-        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-        Calendar cal = Calendar.getInstance();
-        calNow = Calendar.getInstance();
-        calNow.setTimeZone(TimeZone.getDefault());
-        cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone")));
+        //TODO: Change this function call to receive from shared preferences?
+        Log.d("Selected_Time_Zone ", selectedTimeZone.toString());
+        TimeZone calTimeZone = selectedTimeZone;
+        Calendar cal = Calendar.getInstance(calTimeZone, Locale.getDefault());
+        Log.d("Time_Zone_Verify", cal.getTimeZone().toString());
+        calNow = Calendar.getInstance(TimeZone.getDefault());
 
+        SimpleDateFormat inputFormatter = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
+        SimpleDateFormat dayOutputFormatter = new SimpleDateFormat("EEEE", Locale.getDefault());
+        SimpleDateFormat dateOutputFormatter = new SimpleDateFormat("MMMM dd yyyy", Locale.getDefault());
+        inputFormatter.setTimeZone(calTimeZone); dayOutputFormatter.setTimeZone(calTimeZone); dateOutputFormatter.setTimeZone(calTimeZone);
+
+        //TODO: cal.setTime(storedDate) could still be problematic; it still uses the phone's default time zone! TEST with present day event.
         //create headers for each day
+        Date storedDate = null;
         for (String d:days) {
             try{
-                cal.setTime(formatter.parse(d));
+                storedDate = inputFormatter.parse(d);
+                cal.setTime(storedDate);
             }catch(Exception e){
                 e.printStackTrace();
             }
@@ -296,10 +340,9 @@ public class ScheduleView extends Fragment {
             //create day header
             headerParams = new LinearLayout.LayoutParams(4*width+padding + paddingLg +extraW, width+(2*paddingLg));
             header = new TextView(context);
-            //header.setText(dayIntToString(cal.get(Calendar.DAY_OF_WEEK)));
             header.setText(
-                    cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault()) + "\n" +
-                            DateFormat.getDateInstance(DateFormat.MEDIUM).format(cal.getTime())
+                    (dayOutputFormatter.format(storedDate) + "\n" +
+                            dateOutputFormatter.format(storedDate))
             );
             header.setTypeface(null, Typeface.BOLD);
             header.setTextSize(textSizeHeader);
@@ -323,11 +366,13 @@ public class ScheduleView extends Fragment {
             //add header and divider
             headerBox.addView(header);
             headerBox.addView(dividerVertical);
+
             dayLayout.addView(dividerHorizontal);
             dayLayout.addView(headerBox);
 
+            //TODO: this is where the today's color change will get set. Why no use isToday?
             //if day is today, highlight
-            if (formatter.format(calNow.getTime()).equals(formatter.format(cal.getTime()))){
+            if (dateOutputFormatter.format(calNow.getTime()).equals(dateOutputFormatter.format(cal.getTime()))){
                 today = d;
                 initScrollX=scrollWidth;
                 header.setTextColor(ContextCompat.getColor(context, R.color.color_blue));
@@ -344,7 +389,7 @@ public class ScheduleView extends Fragment {
     private void CreateTimeCol(View v) {
 
         // compute the overall schedule height
-        schedHeight = width + (2*paddingLg) + divider*5;
+        int schedHeight = width + (2*paddingLg) + divider*5;
         for(int i=0; i < times.size()-1; i++) {
             // We're using pow() as a transfer function so that longer time slots are longer,
             // but not proportionately longer, so we don't eat up too much screen real estate with
@@ -369,13 +414,7 @@ public class ScheduleView extends Fragment {
             }
         }
 
-
-        //check if schedule height is too small for screen
-        //screenHeight = (int)Math.ceil(screenHeight - (width + (2 * paddingLg) + divider*5 + divider*(times.size()-2) + (height+(2*paddingLg))*(times.size()-2)));
-        //extraH = screenHeight>0? (int)Math.ceil(screenHeight/(times.size()-2)):0;
-
         LinearLayout timeLayout = v.findViewById(R.id.time);
-        //LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(width+paddingLg+padding+extraW, height+(2*paddingLg)+extraH);
 
         //create time header for each time (exclude 1st 2 times which are start and end times)
         for (int i=0; i<times.size()-1;i++) {
@@ -408,6 +447,36 @@ public class ScheduleView extends Fragment {
         }
     }
 
+    /**
+     * getScheduleDays splits up the Schedule into a 2-dimensional array, days x events per day
+     * @param scheduleDays, the string MM/dd/yyyy names of the dates within the schedule
+     * @param schedule, the schedule to be split up
+     * @return: a 2 dimensional array, days x events per day
+     */
+    private ArrayList< ArrayList<ScheduleInfo> > getScheduleDays(ArrayList<String> scheduleDays, ArrayList<ScheduleInfo> schedule) {
+        ArrayList< ArrayList<ScheduleInfo> > scheduleByDay = new ArrayList <>();
+        ArrayList<ScheduleInfo> oneDay;
+        String day;
+        int activityIndex = 0;
+        int scheduleSize = schedule.size();
+        int scheduleDaysSize = scheduleDays.size();
+        if ((scheduleDaysSize > 0) && (scheduleSize > 0))
+        for (int d = 0; d < scheduleDaysSize; d++) {
+            day = scheduleDays.get(d);
+            oneDay = new ArrayList<>();
+            //while still on day d, add activities into "oneDay"
+            while (schedule.get(activityIndex).getDay().equals(day)) {
+                oneDay.add(schedule.get(activityIndex));
+                activityIndex++;
+                if (activityIndex == scheduleSize) {break;}
+            }
+            scheduleByDay.add(d, oneDay);
+
+        }
+        return scheduleByDay;
+    }
+
+
     //create day column for schedule
     private void CreateColumn(ArrayList<ScheduleInfo> schedule, boolean isToday){
 
@@ -415,7 +484,7 @@ public class ScheduleView extends Fragment {
         LinearLayout columnLayout = new LinearLayout(context);
         columnLayout.setLayoutParams(new LinearLayout.LayoutParams(width*4+padding + paddingLg+extraW, LinearLayout.LayoutParams.MATCH_PARENT));
         columnLayout.setOrientation(LinearLayout.VERTICAL);
-
+        //TODO: this is where the today's color change will get set
         if (isToday){
             columnLayout.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_right));
         }
@@ -489,48 +558,31 @@ public class ScheduleView extends Fragment {
                 heightCol = heightCol*15 + 2* paddingLg;
             }
 
+
+            //TODO: ALSO SET THE EVENT'S COLOR TO BRIGHT YELLOW
+
             //if column is current day, add red line at current time
             if (isToday){
                 Calendar cal = Calendar.getInstance();
                 String[]timeStr=new String[2];
                 assert sch != null;
                 String time = Integer.toString(sch.getTimeStart());
+                // converts something like 3:45 -> 03:45. (technically 345->0345)
                 while (time.length()<4){
                     time = "0" + time;
                 }
-                timeStr[0] = time.substring(0,2);
-                timeStr[1] = time.substring(2,4);
+                timeStr[0] = time.substring(0,2);   //hour
+                timeStr[1] = time.substring(2,4);   //minute
+
 
                 //adjust for time zone difference if device time zone is different from event time zone
+                cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone"))); //TODO: THIS IS DANGEROUS
                 cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStr[0]));
                 cal.set(Calendar.MINUTE, Integer.parseInt(timeStr[1]));
-                cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone")));
 
-                long timeDif = calNow.getTimeInMillis()-cal.getTimeInMillis();
-
-                /*if (timeDif>=0 && timeDif<=sch.getTimeLength()*60000){
-
-                    event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_item));
-                    iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.current_event));
-                    event.setTypeface(event.getTypeface(), Typeface.BOLD);
-
-                    View redLine = new View(context);
-                    RelativeLayout.LayoutParams redLineLP = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 4);
-
-                    //math to figure out where red line should be located
-                    int redYLoc = (int)((timeDif/60000)*(Math.round(heightCol))/(sch.getTimeLength()));
-
-                    redLineLP.setMargins(Math.round(5*density), redYLoc, Math.round(5*density), 0);
-                    redLine.setLayoutParams(redLineLP);
-                    redLine.setBackgroundColor(ContextCompat.getColor(context, R.color.red));
-                    iconsLayout.addView(redLine);
-
-                }else{*/
-                    event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
-                    iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.transparent));
-                    event.setTypeface(event.getTypeface(), Typeface.NORMAL);
-                /*}*/
-
+                event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
+                iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.transparent));
+                event.setTypeface(event.getTypeface(), Typeface.NORMAL);
             }
 
             //gradient background to show event types

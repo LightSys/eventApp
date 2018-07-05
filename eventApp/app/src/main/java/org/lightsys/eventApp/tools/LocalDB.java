@@ -2,21 +2,25 @@ package org.lightsys.eventApp.tools;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
-import org.lightsys.eventApp.data.Info;
 import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.HousingInfo;
+import org.lightsys.eventApp.data.Info;
 import org.lightsys.eventApp.data.ScheduleInfo;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by otter57 on 3/30/17.
- *
+ * Modified by Littlesnowman88 7 June 2018
  * SQLite Database to store event information
  */
 
@@ -42,6 +46,11 @@ public class LocalDB extends SQLiteOpenHelper {
     private static final String COLUMN_TIME_LENGTH = "sch_time_length";
     private static final String COLUMN_DESC = "sch_desc";
     private static final String COLUMN_CATEGORY = "sch_category";
+    //SCHEDULE VARIABLES
+    private static ArrayList<String> allDays;
+    private static ArrayList<Integer> scheduleTimeRange;
+    //SCHEDULE PREFERENCES
+    private SharedPreferences sharedPreferences;
     //INFORMATION PAGE TABLE
     private static final String TABLE_INFORMATION_PAGE = "information_page";
     private static final String COLUMN_HEADER = "header";
@@ -60,6 +69,7 @@ public class LocalDB extends SQLiteOpenHelper {
     //NAVIGATION TITLES TABLE
     private static final String TABLE_NAVIGATION_TITLES = "navigation_titles";
     private static final String COLUMN_ICON = "icon";
+    private static final String COLUMN_NAV_ID = "nav_id";
     //COLOR TABLE
     private static final String TABLE_THEME = "theme";
     private static final String COLUMN_HEX_CODE = "hex_code";
@@ -117,7 +127,7 @@ public class LocalDB extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_PRAYER_PARTNERS);
 
         String CREATE_TABLE_NAVIGATION_TITLES = "CREATE TABLE " + TABLE_NAVIGATION_TITLES + "("
-                + COLUMN_NAME + " TEXT," + COLUMN_ICON + " TEXT)";
+                + COLUMN_NAME + " TEXT," + COLUMN_ICON + " TEXT," + COLUMN_NAV_ID + " TEXT)";
         db.execSQL(CREATE_TABLE_NAVIGATION_TITLES);
 
         String CREATE_TABLE_THEME = "CREATE TABLE " + TABLE_THEME + "("
@@ -230,10 +240,11 @@ public class LocalDB extends SQLiteOpenHelper {
      * @param title, navigation name
      * @param icon, name of icon
      */
-    public void addNavigationTitles(String title, String icon) {
+    public void addNavigationTitles(String title, String icon, String navID) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAME, title);
         values.put(COLUMN_ICON, icon);
+        values.put(COLUMN_NAV_ID, navID);
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_NAVIGATION_TITLES, null, values);
@@ -333,16 +344,17 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      * get general info
+     * modified by Littlesnowman88 to protect against special characters causing problems
      * @param type, title under which info is stored
      * @return general info (year, url, logo, etc.)
      */
     public String getGeneral(String type) {
         String general=null;
         String queryString = "SELECT " + COLUMN_INFO + " FROM " + TABLE_GENERAL_INFO + " WHERE "
-                + COLUMN_TYPE + " = \'" + type + "\'";
-
+                + COLUMN_TYPE + " = " + "?";
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor c = db.rawQuery(queryString, null);
+        String[] selectionArgs = {type};
+        Cursor c = db.rawQuery(queryString, selectionArgs);
 
         while (c.moveToNext()) {
             general = c.getString(0);
@@ -355,14 +367,16 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      * @return color
+     * modified by Littlesnowman88 to protect against special characters causing problems
      */
     public String getThemeColor(String name) {
         String color="#000000";
         String queryString = "SELECT " + COLUMN_HEX_CODE + " FROM " + TABLE_THEME + " WHERE "
-                + COLUMN_NAME + " = \'" + name + "\'";
+                + COLUMN_NAME + " = " + "?";
 
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor c = db.rawQuery(queryString, null);
+        String[] selectionArgs = {name};
+        Cursor c = db.rawQuery(queryString, selectionArgs);
 
         while (c.moveToNext()) {
             color = c.getString(0);
@@ -388,7 +402,8 @@ public class LocalDB extends SQLiteOpenHelper {
 
             temp.setHeader(c.getString(0));
             temp.setBody(c.getString(1));
-            Log.d("HERE", "getNavigationTitles: " + temp.getBody() + temp.getHeader());
+            temp.setName(c.getString(2));
+//            Log.d("HERE", "getNavigationTitles: " + temp.getBody() + temp.getHeader() + temp.getName());
             titles.add(temp);
 
         }
@@ -400,13 +415,14 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      * @return Contacts
+     * modified by Littlesnowman88 to protect against special characters causing problems
      */
     public ContactInfo getContactByName(String name) {
         ContactInfo contact = new ContactInfo();
-        String queryString = "SELECT * FROM " + TABLE_CONTACTS + " WHERE " + COLUMN_NAME + " = '" + name + "'";
-
+        String queryString = "SELECT * FROM " + TABLE_CONTACTS + " WHERE " + COLUMN_NAME + " = " + "?";
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor c = db.rawQuery(queryString, null);
+        String[] selectionArgs = {name};
+        Cursor c = db.rawQuery(queryString, selectionArgs);
 
         while (c.moveToNext()) {
             contact.setName(c.getString(0));
@@ -418,39 +434,291 @@ public class LocalDB extends SQLiteOpenHelper {
         db.close();
         return contact;
     }
-    /**
-     * @return schedule info
+
+    /** a setter method for shared preferences. Used by ScheduleView.java
+     * Created by Littlesnowman88
+     * shared preferences used when reading schedule info getFullSchedule
      */
-    public ArrayList<ScheduleInfo> getScheduleByDay(String day) {
-        ArrayList<ScheduleInfo> schedule = new ArrayList<>();
-        String queryString = "SELECT * FROM " + TABLE_SCHEDULE + " WHERE " + COLUMN_DAY
-                + " LIKE \"%" + day + "%\"" + " ORDER BY " + COLUMN_TIME_START;
-
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor c = db.rawQuery(queryString, null);
-
-        while (c.moveToNext()) {
-            ScheduleInfo temp = new ScheduleInfo();
-            temp.setDay(c.getString(0));
-            temp.setTimeStart(c.getInt(1));
-            temp.setTimeLength(c.getInt(2));
-            temp.setDesc(c.getString(3));
-            temp.setLocationName(c.getString(4));
-            temp.setCategory(c.getString(5));
-
-            schedule.add(temp);
-        }
-        c.close();
-        db.close();
-        return schedule;
+    public void setSharedPreferences(SharedPreferences sharedPrefs) {
+        sharedPreferences = sharedPrefs;
     }
 
     /**
-     * @return different days in schedule
+     * getFullSchedule assembles an ArrayList with a properly ordered schedule, taking time zone adjustment into account
+     * Created by Littlesnowman88 19 June 2018
+     * @return: fullSchedule, an ArrayList<ScheduleInfo> of chronologically ordered activities, taking time zone adjustment into account.
      */
-    public ArrayList<String> getDays() {
+    /** IMPORTANT NOTE BY LITTLESNOWMAN88:
+     *  getFullSchedule and its subsequently called methods DO NOT HANDLE Schedule item lengths
+     *  greater than 24 hours as of this version.
+     */
+    public ArrayList<ScheduleInfo> getFullSchedule() {
+        ArrayList<String> days = getJSONDays();
+        ArrayList<ScheduleInfo> schedule;
+        if (sharedPreferences.getString("selected_time_setting", "").equals("on-site")) {
+            schedule = getDailySchedule(days);
+        } else {
+            schedule = getAdjustedDailySchedule(days);
+        }
+        allDays = days;
+        scheduleTimeRange = getScheduleEdges(schedule);
+        return schedule;
+    }
+
+    /** getDailySchedule returns daily schedule info for an on-site timezone
+     * * Now creates a schedule for the entire event, not just one day.
+     * Created/Refactored by Littlesnowman88 19 June 2018
+     * Created by: Littlesnowman88 20 June 2018
+
+     * @param days, an array of string dates--formatted MM/dd/yyyy
+     * @return a chronologically ordered ArrayList with ScheduleInfo items (events) in it.
+     */
+    private ArrayList<ScheduleInfo> getDailySchedule(ArrayList<String> days) {
+        ArrayList<ScheduleInfo> schedule = new ArrayList<>();
+        SQLiteDatabase db;
+        String queryString;
+        String today, tomorrow;
+        int timeStart, length, timeEnd;
+        Cursor c;
+        //make a deep copy of days so that queryString indexing does not get messed up as days changes below.
+        ArrayList<String> daysCopy = new ArrayList<>();
+        for (String day : days) {
+            daysCopy.add(day);
+        }
+        int daysCopySize = daysCopy.size();
+        for (int d=0; d < daysCopySize; d++) {
+            db = this.getReadableDatabase();
+            queryString = "SELECT * FROM " + TABLE_SCHEDULE + " WHERE " + COLUMN_DAY
+                    + " LIKE \"%" + daysCopy.get(d) + "%\"" + " ORDER BY " + COLUMN_TIME_START;
+            c = db.rawQuery(queryString, null);
+            while (c.moveToNext()) {
+                today = c.getString(0);
+                timeStart = c.getInt(1);
+                length = c.getInt(2);
+                timeEnd = TimeAdjuster.addTimes(TimeAdjuster.minutesToTime(length), timeStart); //can result in < 0 or > 2359
+                if (timeEnd > 2400) { //if length causes overlap with next day
+                    //save today's "leftover" portion (> 0 minutes in length)
+                    int today_length = TimeAdjuster.timeToMinutes(TimeAdjuster.addTimes(2400, -1 * timeStart)); //today_length = 2400 - time start
+                    saveScheduleItem(c, schedule, c.getString(0), timeStart, today_length);
+                    int tomorrow_length = length - today_length;
+                    // if today is not the final day, use the next day
+                    if (days.contains(today) && (!today.equals(days.get(days.size() - 1)))) {
+                        //save the tomorrow part
+                        tomorrow = days.get(days.indexOf(today) + 1);
+                        saveScheduleItem(c, schedule, tomorrow, 0, tomorrow_length);
+                    } else if (today.equals(days.get(days.size() - 1))) { //otherwise, if today is the last day, create and use tomorrow.
+                        //save the tomorrow part
+                        tomorrow = createTomorrow(today);
+                        days.add(tomorrow);
+                        saveScheduleItem(c, schedule, tomorrow, 0, tomorrow_length);
+                    }
+                }
+                /* else if there is no day shift */
+                 else { // if the time zone adjustment is still contained within the same day as the event
+                saveScheduleItem(c, schedule, today, timeStart, length);
+                }
+            }
+            c.close();
+            db.close();
+        }
+        return schedule;
+    }
+
+    /** getAdjustedDailySchedule returns daily schedule for remote and custom-zone timezones
+     * Created by Littlesnowman88 12 June 2018
+     * Last Modified: 19 June 2018 (by Littlesnowman88)
+     * @param days, an ArrayList<String> of string dates--formatted MM/dd/yyyy
+     * @return an ArrayList with ScheduleInfo items (event) in it
+     */
+    private ArrayList<ScheduleInfo> getAdjustedDailySchedule(ArrayList<String> days) {
+        ArrayList<ScheduleInfo> schedule = new ArrayList<>();
+        int timeStart, timeLength, adjustedTimeStart, adjustedTimeEnd, time_zone_difference;
+        TimeZone on_site_time_zone = TimeZone.getTimeZone(getGeneral("time_zone")); //TODO: taking away from getGeneral and to chosen location.
+        TimeZone selected_time_zone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", getGeneral("time_zone"))); //TODO: taking away from getGeneral and to chosen location.
+        String today, yesterday, tomorrow;
+        SQLiteDatabase db;
+        String queryString;
+        Cursor c;
+        int daysSize = days.size();
+
+        //make a deep copy of days so that queryString indexing does not get messed up as days changes below.
+        ArrayList<String> daysCopy = new ArrayList<>();
+        for (String day : days) {
+            daysCopy.add(day);
+        }
+
+        for (int i = 0; i < daysSize; i++) {
+            db = this.getReadableDatabase();
+            queryString = "SELECT * FROM " + TABLE_SCHEDULE + " WHERE " + COLUMN_DAY
+                    + " LIKE \"%" + daysCopy.get(i) + "%\"" + " ORDER BY " + COLUMN_TIME_START;
+            c = db.rawQuery(queryString, null);
+
+            while(c.moveToNext()) {
+                today = c.getString(0);
+                timeStart = c.getInt(1);
+                timeLength = c.getInt(2);
+
+                time_zone_difference = TimeAdjuster.getTimeZoneDifference(on_site_time_zone, selected_time_zone, today);
+
+                adjustedTimeStart = TimeAdjuster.addTimes(timeStart, time_zone_difference); //can result in < 0 or > 2359
+                adjustedTimeEnd = TimeAdjuster.addTimes(TimeAdjuster.minutesToTime(timeLength), adjustedTimeStart); //can result in < 0 or > 2359
+
+                /* adjust events with the time zone difference, taking into account potential day shifts */
+
+                /* if there is a previous_day shift */
+                if (adjustedTimeStart < 0) { //if the time zone adjustment causes overlap with previous day
+                    if (adjustedTimeEnd > 0) { // if the event overlaps midnight on both sides (midnight exclusive)
+                        //First save yesterday's portion
+                        int today_length = TimeAdjuster.timeToMinutes(adjustedTimeEnd); //today_length = 0 + time_end
+                        int yesterday_length = timeLength - today_length;
+                        // if today is not the first day, use the previous day
+                        if (days.contains(today) && (! today.equals(days.get(0)))) {
+                            //save the yesterday part
+                            yesterday = days.get(days.indexOf(today) - 1);
+                            saveScheduleItem(c, schedule, yesterday, TimeAdjuster.addTimes(2400, adjustedTimeStart), yesterday_length); //ends at 2400
+                        } else if (today.equals(days.get(0))) { //otherwise, if today is the first day, create and use yesterday.
+                            //save the yesterday part
+                            yesterday = createYesterday(today);
+                            days.add(0, yesterday);
+                            saveScheduleItem(c, schedule, yesterday, TimeAdjuster.addTimes(2400, adjustedTimeStart), yesterday_length); //ends at 2400
+                        }
+                        //then save today's portion (> 0 minutes in length)
+                        saveScheduleItem(c, schedule, c.getString(0), 0, today_length);
+
+                    } else { //if the time zone adjustment moves an event completely into another day (midnight inclusive)
+                        //if today is not the first day, use the previous day
+                        if (days.contains(today) && ( ! today.equals(days.get(0)))) {
+                            //save the event in yesterday's date
+                            yesterday = days.get(days.indexOf(today) - 1);
+                            saveScheduleItem(c, schedule, yesterday, TimeAdjuster.adjustTime(adjustedTimeStart, 0), timeLength);
+                        } else if (today.equals(days.get(0))) {
+                            //save the yesterday part
+                            yesterday = createYesterday(today);
+                            days.add(0, yesterday);
+                            saveScheduleItem(c, schedule, yesterday, TimeAdjuster.adjustTime(adjustedTimeStart, 0), timeLength);
+                        }
+                    }
+                }
+                /* else if there is a next_day shift */
+                else if (adjustedTimeEnd > 2400) { //else if time zone adjustment causes overlap with next day)
+                    if (adjustedTimeStart < 2400) { // if the event overlaps midnight on both sides (midnight exclusive)
+                        //save today's "leftover" portion (> 0 minutes in length)
+                        int today_length = TimeAdjuster.timeToMinutes(TimeAdjuster.addTimes(2400, -1 * adjustedTimeStart)); //today_length = 2400 - time start
+                        saveScheduleItem(c, schedule, c.getString(0), adjustedTimeStart, today_length);
+                        int tomorrow_length = timeLength - today_length;
+                        // if today is not the final day, use the next day
+                        if (days.contains(today) && (! today.equals(days.get(days.size() - 1)))) {
+                            //save the tomorrow part
+                            tomorrow = days.get(days.indexOf(today) + 1);
+                            saveScheduleItem(c, schedule, tomorrow, 0, tomorrow_length);
+                        } else if (today.equals(days.get(days.size() - 1))) { //otherwise, if today is the last day, create and use tomorrow.
+                            //save the tomorrow part
+                            tomorrow = createTomorrow(today);
+                            days.add(tomorrow);
+                            saveScheduleItem(c, schedule, tomorrow, 0, tomorrow_length);
+                        }
+                    } else { //if the time zone adjustment moves an event completely into another day (and not midnight of "tomorrow")
+                        // if today is not the final day, use the next day
+                        if (days.contains(today) && (! today.equals(days.get(days.size() - 1)))) {
+                            //save the event in tomorrow's date
+                            tomorrow = days.get(days.indexOf(today) + 1);
+                            saveScheduleItem(c, schedule, tomorrow, TimeAdjuster.adjustTime(adjustedTimeStart, 0), timeLength);
+                        } else if (today.equals( days.get(days.size() - 1))) { //otherwise, if today is the last day, create and use tomorrow.
+                            //save the tomorrow part
+                            tomorrow = createTomorrow(today);
+                            days.add(tomorrow);
+                            saveScheduleItem(c, schedule, tomorrow, TimeAdjuster.adjustTime(adjustedTimeStart, 0), timeLength);
+                        }
+                    }
+                    /* else if there is no day shift */
+                } else { // if the time zone adjustment is still contained within the same day as the event
+                    saveScheduleItem(c, schedule, today, adjustedTimeStart, timeLength);
+                }
+            }
+            c.close();
+            db.close();
+        }
+        return schedule;
+    }
+
+    /** saveScheduleItem saves a custom schedule into a given schedule
+     *  Created by: Littlesnowman88
+     *  schedule-saving order/algorithm based on otter57's ordering
+     *  @param cursor, a Cursor for navigating the local database information
+     *         schedule, an ArrayList<ScheduleInfo> to put event items into.
+     *         day, a String MM/dd/yyyy for saving the event's day
+     *         startTime, the event's integer-formatted (hhmm) start time
+     *         length, the event's integer length (in minutes)
+     *  Precondition: for an event to be added, event length must be > 0
+     *  Postconditions: an event is added into the provided schedule.
+     *                  Cursor will remain at its given position
+     */
+    private void saveScheduleItem(Cursor cursor, ArrayList<ScheduleInfo> schedule, String day, int startTime, int eventLength) {
+        if (0 < eventLength) {
+            ScheduleInfo event = new ScheduleInfo();
+            event.setDay(day);
+            event.setTimeStart(startTime);
+            event.setTimeLength(eventLength);
+            event.setDesc(cursor.getString(3));
+            event.setLocationName(cursor.getString(4));
+            event.setCategory(cursor.getString(5));
+            schedule.add(event);
+        }
+    }
+
+    /** createYesterday receives a string date and returns the previous string date
+     *  Created by: Littlesnowman88
+     *  Based on: Nicholas Presa on Stack Overflow,
+     *      https://stackoverflow.com/questions/38573810/subtract-one-day-from-date-with-format-as-mm-dd-yyyy
+     *  @param currentDay, a String formatted date MM/dd/yyyy
+     *  @return previous_day, a String formatted date MM/dd/yyyy (takes leap years and month-transitions into account)
+     */
+    private String createYesterday(String currentDay) {
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+        String previous_day = "";
+        try {
+            Date currentDayCopy = formatter.parse(currentDay);
+            Calendar subtractionCalendar = Calendar.getInstance();
+            subtractionCalendar.setTime(currentDayCopy);
+            subtractionCalendar.add(Calendar.DATE, -1);
+            Date yesterday = subtractionCalendar.getTime();
+            previous_day = formatter.format(yesterday);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return previous_day;
+    }
+
+    /** createTomorrow receives a string date and returns the next string date
+     *  Created by: Littlesnowman88
+     *  Based on: Nicholas Presa on Stack Overflow,
+     *      https://stackoverflow.com/questions/38573810/subtract-one-day-from-date-with-format-as-mm-dd-yyyy
+     *  @param currentDay, a String formatted date MM/dd/yyyy
+     *  @return next_day a String formatted date MM/dd/yyyy (takes leap years and month-transitions into account)
+     */
+    private String createTomorrow(String currentDay) {
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+        String next_day = "";
+        try {
+            Date currentDayCopy = formatter.parse(currentDay);
+            Calendar additionCalendar = Calendar.getInstance();
+            additionCalendar.setTime(currentDayCopy);
+            additionCalendar.add(Calendar.DATE,1);
+            Date yesterday = additionCalendar.getTime();
+            next_day = formatter.format(yesterday);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return next_day;
+    }
+
+    /**
+     * @return all of the days listed in the JSON schedule
+     */
+    private ArrayList<String> getJSONDays() {
         ArrayList<String> days = new ArrayList<>();
-        String queryString = "SELECT DISTINCT " + COLUMN_DAY + " FROM " + TABLE_SCHEDULE;
+        String queryString = "SELECT DISTINCT " + COLUMN_DAY + " " +
+                "FROM " + TABLE_SCHEDULE + " ORDER BY " + COLUMN_DAY + " ASC";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(queryString, null);
@@ -468,53 +736,54 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * @return time range of schedule
+     * @return allDays, all the days of the event after time zone adjustments are taken into account
+     *  (getFullSchedule must be called before this can happen);
      */
-    public ArrayList<Integer> getScheduleTimeRange() {
+    public ArrayList<String> getDays() { return allDays; }
+
+    /**
+     * @param schedule, an ArrayList<ScheduleInfo> with activities in it
+     * @return an ArrayList<Integer> with the earliest start and latest end time in the schedule.
+     * Specifically, returns an ArrayList containing the schedule's earliest event start time
+     *       and the schedule's latest event start time.
+     * Modified by Littlesnowman88 on 19 June 2018
+     * Now adjusts header to align with the app's selected time zone.
+     * Called once the schedule is built by getFullSchedule()
+     */
+    private ArrayList<Integer> getScheduleEdges(ArrayList<ScheduleInfo> schedule) {
         ArrayList<Integer> times = new ArrayList<>();
-        int timeStart = 0;
+        int timeStart = 2400;
+        int eventStart;
         int timeEnd = 0;
-        String queryString = "SELECT DISTINCT " + COLUMN_TIME_START + ", "
-                + COLUMN_TIME_LENGTH + " FROM " + TABLE_SCHEDULE;
+        int comparison_time;
 
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor c = db.rawQuery(queryString, null);
+        for (ScheduleInfo activity : schedule) {
+            eventStart = activity.getTimeStart();
+            if (eventStart < timeStart) {
+                timeStart = eventStart;
+                comparison_time = timeStart;
+            } else {comparison_time = eventStart; }
 
-        while (c.moveToNext()) {
-            int temp = c.getInt(0);
-            if (timeStart == 0 || temp<timeStart){
-                timeStart = temp;
+            int countMins = activity.getTimeLength();
+            comparison_time += (countMins / 60)*100;
+            comparison_time += countMins%60;
+            if (comparison_time%100 >= 60)
+                comparison_time += (100 - 60);
+            if (timeEnd < comparison_time) {
+                timeEnd = Math.min(comparison_time, 2400);
             }
-            temp = timeStart;
-            int countMins = (c.getInt(1));
-            temp += (countMins / 60)*100;
-            temp += countMins%60;
-            if (temp%100 >= 60)
-                temp += (100 - 60);
-            if (timeEnd < temp) {
-                timeEnd = temp;
-            }
-
-            /*int tempE = (c.getInt(1));//-15
-            int x;
-            if (tempE>=60){
-                x = tempE/60;
-                x= (tempE-(x*60))+(x*100);
-            }else{
-                x=tempE;
-            }
-            if (timeEnd<temp+x){
-                timeEnd = temp + x;
-            }*/
         }
         times.add(timeStart);
         times.add(timeEnd);
 
-        c.close();
-        db.close();
         return times;
     }
 
+    /**
+     * returns the size 2 ArrayList<Integer> of the earliest and start times in the schedule
+     * getFullSchedule must be called first.
+     */
+    public ArrayList<Integer> getScheduleTimeRange() { return scheduleTimeRange; }
 
     /**
      * returns Informational page data
@@ -687,19 +956,20 @@ public class LocalDB extends SQLiteOpenHelper {
         return students;
     }
 
-    /* ************************* Update Queries ************************* */
-    /**
-     * update general table to set refresh rate
-     */
-    public void updateRefreshRate(String rate){
-        //String refresh = "'refresh'";
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_INFO, rate);
-
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.update(TABLE_GENERAL_INFO, values, COLUMN_TYPE + " = 'refresh'", null);
-        db.close();
-    }
+    //REMOVED BY LITTLESNOEMAN88, 7 June 2018
+//    /* ************************* Update Queries ************************* */
+//    /**
+//     * update general table to set refresh rate
+//     */
+//    public void updateRefreshRate(String rate){
+//        //String refresh = "'refresh'";
+//        ContentValues values = new ContentValues();
+//        values.put(COLUMN_INFO, rate);
+//
+//        SQLiteDatabase db = this.getWritableDatabase();
+//        db.update(TABLE_GENERAL_INFO, values, COLUMN_TYPE + " = 'refresh'", null);
+//        db.close();
+//    }
 
 
 }

@@ -5,8 +5,8 @@
 
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> -->
+    <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> -->
     <uses-permission android:name="android.permission.ACTION_SENDTO"/>
@@ -26,6 +26,7 @@
         android:theme="@style/AppTheme"
 
         android:fullBackupContent="@xml/backup_descriptor">
+
         <activity
             android:name="org.lightsys.eventApp.views.MainActivity"
             android:configChanges="orientation|screenSize"
@@ -39,6 +40,26 @@
             </intent-filter>
 
         </activity>
+
+        <activity
+            android:name="org.lightsys.eventApp.views.SettingsViews.SettingsActivity"
+            android:label="@string/settings_title"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName = ".views.MainActivity"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".views.SettingsViews.SettingsActivity" />
+        </activity>
+
+        <activity
+            android:name="org.lightsys.eventApp.views.SettingsViews.SettingsRecycleView"
+            android:label = "@string/time_settings_title"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName=".views.SettingsViews.SettingsActivity"
+            >
+        </activity>
+
 
         <activity
             android:name="org.lightsys.eventApp.tools.qr.launchQRScanner"

@@ -2,7 +2,6 @@ package org.lightsys.eventApp.data;
 
 /**
  * Created by otter57 on 3/30/17.
- *
  * Object for Schedule Info
  */
 
@@ -66,7 +65,7 @@ public class ScheduleInfo {
         return timeLength;
     }
 
-    public int getTimeEnd() {
+    public final int getTimeEnd() {
         int endTime = timeStart;
         int countMins = timeLength;
         endTime += (countMins / 60)*100;

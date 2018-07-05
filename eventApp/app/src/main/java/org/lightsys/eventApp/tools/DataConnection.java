@@ -1,10 +1,9 @@
 package org.lightsys.eventApp.tools;
 
-import java.lang.ref.WeakReference;
 import android.app.Activity;
-import android.content.Intent;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -16,18 +15,19 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.lightsys.eventApp.data.Info;
-import org.lightsys.eventApp.views.MainActivity;
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.HousingInfo;
+import org.lightsys.eventApp.data.Info;
 import org.lightsys.eventApp.data.ScheduleInfo;
+import org.lightsys.eventApp.views.MainActivity;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -206,6 +206,8 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     /**
      * Pulls all event data
+     * Modified by Littlesnowman88 on 15 June 2018
+     * Now imports custom Notifications nav title
      */
     private void DataPull()  {
         if (dataContext == null)
@@ -238,21 +240,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             try {
                 if(loadAll) {
                     db.clear();
-                    db.addGeneral("url",qrAddress);
-                    db.addNavigationTitles("Notifications", "ic_bell");
-                    loadEventInfo(connectionResult);
-                    db.addNavigationTitles("About", "ic_info");
-
-                    if (action.equals("new")){
-                        connection = checkConnection(db.getGeneral("notifications_url"));
-                        loadNotifications(connectionResult);
-                    }
-
-                    //add about page
-                    db.addInformationPage(new Info("LightSys Events (Android App)","Copyright © 2017-2018 LightSys Technology Services, Inc.  This app was created for the use of distributing event information for ministry events.\n\nThis app's source code is also available under the GPLv3 open-source license at:\nhttps://github.com/LightSys/eventApp"), "About");
-                    db.addInformationPage(new Info("Open Source","This app includes the following open source libraries:"), "About");
-                    db.addInformationPage(new Info("Mobile Vision Barcode Scanner","Copyright (c) 2016 Nosakhare Belvi\nLicense: MIT License\nWebsite: https://github.com/KingsMentor/MobileVisionBarcodeScanner"), "About");
-                }else{
+                    db.addGeneral("url", qrAddress);
+                    loadInfoAndNavTitles();
+                } else{
+                    connection = checkConnection(db.getGeneral("notifications_url"));
                     loadNotifications(connectionResult);
                 }
             } catch (Exception e) {
@@ -273,9 +264,80 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
     }
 
+    /** loads event information into the database and sets navigation titles
+     *  A refactor created by Littlesnowman88 on 15 June 2018
+     */
+    private void loadInfoAndNavTitles() {
+        readGeneralInfo(connectionResult);
+        String notification_url = db.getGeneral("notifications_url");
+        connection = checkConnection(notification_url);
+        addNotificationTitle(connectionResult);
+        connection = checkConnection(qrAddress);
+        loadEventInfo(connectionResult);
+        db.addNavigationTitles("About", "ic_info", "About");
+
+        if (action.equals("new")){
+            connection = checkConnection(notification_url);
+            loadNotifications(connectionResult);
+        }
+
+        //add about page
+        db.addInformationPage(new Info("LightSys Events (Android App)","Copyright © 2017-2018 LightSys Technology Services, Inc.  This app was created for the use of distributing event information for ministry events.\n\nThis app's source code is also available under the GPLv3 open-source license at:\nhttps://github.com/LightSys/eventApp"), "About");
+        db.addInformationPage(new Info("Open Source","This app includes the following open source libraries:"), "About");
+        db.addInformationPage(new Info("Mobile Vision Barcode Scanner","Copyright (c) 2016 Nosakhare Belvi\nLicense: MIT License\nWebsite: https://github.com/KingsMentor/MobileVisionBarcodeScanner"), "About");
+        db.addInformationPage(new Info("The Android Open Source Project", "Copyright (c) 2016 The Android Open Source Project\nLicense: Apache License 2.0\nWebsite:https://classroom.udacity.com/courses/ud851"), "About");
+    }
+
+    /** Loads General Info
+     *  A refactor created by Littlesnowman88 on 15 June 2015
+     */
+    private void readGeneralInfo(String result) {
+        JSONObject json = null;
+        if (result != null) {
+            try {
+                json = new JSONObject(result);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (json == null) {
+                return;
+            }
+            try {
+                loadGeneralInfo(json.getJSONObject("general"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /** acesses the notifications json and sets the notifications nav title
+     *  Created by: Littlesnowman88 on 15 June 2018
+     */
+    private void addNotificationTitle(String result) {
+        if (result != null) {
+            try {
+                JSONObject json = null;
+                json = new JSONObject(result).getJSONObject("notifications");
+                if (json != null) {
+                    db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Notifications");
+                } else {
+                    db.addNavigationTitles("Notifications", "ic_bell", "Notifications");
+                }
+            } catch (JSONException e1) {
+                e1.printStackTrace();
+                db.addNavigationTitles("Notifications", "ic_bell", "Notifications");
+            }
+        } else {
+            db.addNavigationTitles("Notifications", "ic_bell", "Notifications");
+        }
+
+    }
+
     /**
      * Loads Event info
      * @param result, result of the API query for the contact info
+     * Slightly refactored by Littlesnowman88 on June 15 2018
+     * loadGeneralInfo function call moved into readGeneralInfo;
      */
     private void loadEventInfo(String result) {
         JSONObject json = null;
@@ -295,7 +357,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 loadHousing(json.getJSONObject("housing"));
                 loadPrayerPartners(json.getJSONArray("prayer_partners"));
                 loadInformationalPage(json.getJSONObject("information_page"));
-                loadGeneralInfo(json.getJSONObject("general"));
                 loadTheme(json.getJSONArray("theme"));
                 loadContacts(json.getJSONObject("contacts"));
 
@@ -356,7 +417,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             if (json.getString("nav").equals("null")) {
                 return;
             }
-            db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
+            db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Contacts");
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -397,7 +458,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             if (json.getString("nav").equals("null")) {
                 return;
             }
-            db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
+            db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Schedule");
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -501,6 +562,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
                         db.addNotification(temp);
 
+                        //TODO: SERIAL NUMBER IMPLEMENTATION
                         //if notification refresh is true, has not already been loaded, and isn't a new event, reload all app data
                         if (notificationObj.getBoolean("refresh") && !action.equals("new") &&!currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
                             loadData = true;
@@ -533,7 +595,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             if (json.getString("nav").equals("null")) {
                 return;
             }
-            db.addNavigationTitles(json.getString("nav"), json.getString("icon"));
+            db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Housing");
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -576,7 +638,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             if (json.getJSONObject(0).getString("nav").equals("null")) {
                 return;
             }
-            db.addNavigationTitles(json.getJSONObject(0).getString("nav"), json.getJSONObject(0).getString("icon"));
+            db.addNavigationTitles(json.getJSONObject(0).getString("nav"), json.getJSONObject(0).getString("icon"), "Prayer Partners");
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -600,7 +662,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * @param json, result of API query for theme
      */
     private void loadTheme(JSONArray json) {
-
+        //TODO: FIX THIS HARDCODED FUNCTION
         if (json == null) {
             return;
         }
@@ -650,7 +712,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
                     String title = InfoArray.getJSONObject(0).getString("nav");
 
-                    db.addNavigationTitles(title, InfoArray.getJSONObject(0).getString("icon"));
+                    db.addNavigationTitles(title, InfoArray.getJSONObject(0).getString("icon"), title);
 
                     for (int n = 1; n < InfoArray.length(); n++) {
 

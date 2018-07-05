@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key = "base_prefs_screen">
+
+    <PreferenceCategory
+        android:key = "refresh_prefs_category"
+        android:title="@string/refresh_rate_title">
+
+        <ListPreference
+            android:defaultValue="@string/refresh_val_default"
+            android:entries="@array/refresh_pref_button_labels"
+            android:entryValues="@array/refresh_pref_button_values"
+            android:key="@string/refresh_rate_setting"
+            android:title="@string/refresh_rate_title"
+            >
+        </ListPreference>
+    </PreferenceCategory>
+
+    <!--default value set in java code, onCreatePreferences in SettingsFragment.java-->
+    <PreferenceCategory
+        android:key="time_prefs_category"
+        android:title="@string/time_settings_title"
+        >
+
+        <CheckBoxPreference
+            android:key="@string/on_site_pref"
+            android:onClick="onEventZoneClicked"
+            android:title="@string/event_location_button"
+            android:textSize="18sp"
+            >
+        </CheckBoxPreference>
+
+
+        <CheckBoxPreference
+            android:key="@string/my_location_pref"
+            android:onClick="onMyRemoteZoneClicked"
+            android:title="@string/my_remote_location_button"
+            android:textSize="18sp"
+
+            >
+        </CheckBoxPreference>
+
+        <CheckBoxPreference
+            android:key="@string/custom_zone_pref"
+            android:onClick="onCustomZoneClicked"
+            android:title="@string/custom_location_button"
+            android:textSize="18sp"
+            >
+        </CheckBoxPreference>
+
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

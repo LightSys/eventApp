@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- REFRESH RATE SETTINGS -->
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        >
+
+        <TextView
+            android:layout_width = "wrap_content"
+            android:layout_height = "wrap_content"
+            android:text="@string/refresh_rate_title"
+            android:textSize = "21sp"
+            android:fontFamily="monospace"
+            android:textColor="@color/black"
+            >
+        </TextView>
+
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/refresh_rate_buttons"
+            android:layout_gravity="center_horizontal"
+            android:orientation="vertical"
+            >
+
+            <RadioButton
+                android:id="@+id/refresh_1_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onRefreshClicked"
+                android:text="@string/refresh_1_min"
+                android:textSize="18sp"
+                />
+            <RadioButton
+                android:id="@+id/refresh_5_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onRefreshClicked"
+                android:text="@string/refresh_5_min"
+                android:textSize="18sp"
+                />
+            <RadioButton
+                android:id="@+id/refresh_10_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onRefreshClicked"
+                android:text="@string/refresh_10_min"
+                android:textSize="18sp"
+                />
+            <RadioButton
+                android:id="@+id/refresh_15_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onRefreshClicked"
+                android:text="@string/refresh_15_min"
+                android:textSize="18sp"
+                />
+            <RadioButton
+                android:id="@+id/refresh_30_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onRefreshClicked"
+                android:text="@string/refresh_30_min"
+                android:textSize="18sp"
+                />
+            <RadioButton
+                android:id="@+id/refresh_60_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onRefreshClicked"
+                android:text="@string/refresh_60_min"
+                android:textSize="18sp"
+                />
+            <RadioButton
+                android:id="@+id/refresh_never_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onRefreshClicked"
+                android:text="@string/refresh_never"
+                android:textSize="18sp"
+                />
+            <RadioButton
+                android:id="@+id/refresh_auto_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onRefreshClicked"
+                android:text="@string/refresh_auto"
+                android:textSize="18sp"
+                />
+        </RadioGroup>
+
+    </LinearLayout>
+
+</ScrollView>

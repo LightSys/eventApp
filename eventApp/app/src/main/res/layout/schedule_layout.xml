@@ -2,8 +2,10 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical" android:layout_width="match_parent"
-              android:layout_height="match_parent">
+              android:layout_height="match_parent"
+              android:id="@+id/scheduleMasterLayout">
 
+    <!--"Event Time:" box -->
     <LinearLayout
         android:id="@+id/topLeftBox"
         android:layout_width="wrap_content"
@@ -12,11 +14,12 @@
 
 
     <!--Table Head Container-->
+    <!--TODO: MAKE THIS FLINGABLE!-->
     <org.lightsys.eventApp.tools.HorizontalScrollNoFling
         android:id="@+id/HeaderScroll"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="none">
+        android:scrollbars="none" >
         <!--Right Col Labels-->
 
         <LinearLayout
@@ -55,6 +58,7 @@
             </View>
 
             <!--Events Columns-->
+            <!--TODO: MAKE THIS FLINGABLE-->
             <org.lightsys.eventApp.tools.HorizontalScrollNoFling
                 android:id="@+id/bodyScroll"
                 android:layout_width="fill_parent"

@@ -10,6 +10,7 @@
         <item name="popupMenuStyle">@style/popupTheme</item>
         <item name="android:textAppearanceLargePopupMenu">@style/myPopupMenuTextAppearanceLarge</item>
         <item name="android:textAppearanceSmallPopupMenu">@style/myPopupMenuTextAppearanceSmall</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
     <style name="myPopupMenuTextAppearanceSmall" parent="@style/TextAppearance.AppCompat.Light.Widget.PopupMenu.Small">
@@ -67,6 +68,10 @@
     <style name="list_view_no_divider" parent="@android:style/Widget.ListView">
         <item name="android:divider">@null</item>
         <item name="android:dividerHeight">0dip</item>
+    </style>
+
+    <style name="settingsActionBar" parent="@android:style/Widget.ActionBar">
+        <item name="android:background">?attr/colorPrimary</item>
     </style>
 
 </resources>

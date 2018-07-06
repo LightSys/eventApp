@@ -24,6 +24,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.util.Log;
@@ -43,6 +45,7 @@ import org.lightsys.eventApp.tools.AutoUpdater;
 import org.lightsys.eventApp.tools.DataConnection;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.NavigationAdapter;
+import org.lightsys.eventApp.tools.ScannedEventsAdapter;
 import org.lightsys.eventApp.tools.qr.launchQRScanner;
 import org.lightsys.eventApp.views.SettingsViews.SettingsActivity;
 
@@ -60,7 +63,7 @@ import static android.content.ContentValues.TAG;
  *
  */
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ScannedEventsAdapter.ScannedEventsAdapterOnClickHandler{
     static private final String QR_DATA_EXTRA = "qr_data";
     static private final int QR_RESULT = 1;
     private static final String RELOAD_PAGE = "reload_page";
@@ -78,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private View previousNavView;
     private ListView navigationList;
+    private RecyclerView scannedEventsView;
+    private ScannedEventsAdapter scannedEventsAdapter;
     private int color, black_or_white;
     ActionBarDrawerToggle toggle;
 
@@ -109,6 +114,16 @@ public class MainActivity extends AppCompatActivity {
         /*set up toolbar*/
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        /*set up scanned events recycler view*/
+        scannedEventsView = findViewById(R.id.scanned_events_recyclerview);
+        scannedEventsView.setVisibility(View.GONE);
+        scannedEventsView.setEnabled(false);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this,
+                LinearLayoutManager.VERTICAL, false);
+        scannedEventsView.setLayoutManager(layoutManager);
+        scannedEventsAdapter = ScannedEventsAdapter.getInstance(this, getResources());
+        scannedEventsView.setAdapter(scannedEventsAdapter);
 
         //set theme color
         color = Color.parseColor(db.getThemeColor("themeColor"));
@@ -236,7 +251,8 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         switch (id){
             case R.id.action_rescan:
-                gatherData(true);
+                toggleVisibility();
+                //gatherData(true);
                 break;
             case R.id.action_refresh:
                 new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null).execute("");
@@ -279,6 +295,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Overriding the scanned events recycler view
+    @Override
+    public void onClick(String scanned_url) {
+        toggleVisibility();
+        if(scanned_url.equals(getResources().getString(R.string.scan_new_qr))){
+            gatherData(true);
+        }
+        else {
+            new DataConnection(context, activity, "new", scanned_url, true, null).execute("");
+        }
+    }
+
+    //toggles the visibility of the scanned events recycler view
+    private void toggleVisibility() {
+        if(scannedEventsView.getVisibility()==View.VISIBLE){
+            scannedEventsView.setEnabled(false);
+            scannedEventsView.setVisibility(View.GONE);
+        }
+        else{
+            scannedEventsView.setVisibility(View.VISIBLE);
+            scannedEventsView.setEnabled(true);
+        }
+    }
+
     //launches QR scanner
     public void gatherData(boolean launchScanner){
         /*for testing on device w/o camera
@@ -286,7 +326,8 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "gatherData: http://192.168.0.23:3000/db");
 
         new DataConnection(context, activity, "new", "http://192.168.0.23:3000/db", true).execute("");
-*/
+        */
+
         if (launchScanner) {
             if (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != PackageManager.PERMISSION_GRANTED) {
                 requestCameraPermission();

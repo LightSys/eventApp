@@ -6,6 +6,7 @@
 
     <!--Main Activity menu resource-->
     <string name="settings_portal">Settings</string>
+    <string name="scan_new_qr">Scan QR</string>
 
     <!--Refresh Resources-->
     <string name="refresh">refresh</string>

@@ -269,6 +269,13 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      */
     private void loadInfoAndNavTitles() {
         readGeneralInfo(connectionResult);
+        ScannedEventsAdapter scannedEventsAdapter = ScannedEventsAdapter.getInstance();
+        if(scannedEventsAdapter != null){
+            //TODO: we need to get the event name from the JSON
+            //TODO: Not notifications_url, but the config json url
+            String[] scannedEvent = {db.getGeneral("time_zone"), qrAddress};
+            scannedEventsAdapter.addScannedEvent(scannedEvent);
+        }
         String notification_url = db.getGeneral("notifications_url");
         connection = checkConnection(notification_url);
         addNotificationTitle(connectionResult);
@@ -282,7 +289,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
 
         //add about page
-        db.addInformationPage(new Info("Google Link", "Website: http://www.google.com"), "About");
         db.addInformationPage(new Info("LightSys Events (Android App)","Copyright © 2017-2018 LightSys Technology Services, Inc.  This app was created for the use of distributing event information for ministry events.\n\nThis app's source code is also available under the GPLv3 open-source license at:\nhttps://github.com/LightSys/eventApp"), "About");
         db.addInformationPage(new Info("Open Source","This app includes the following open source libraries:"), "About");
         db.addInformationPage(new Info("Mobile Vision Barcode Scanner","Copyright (c) 2016 Nosakhare Belvi\nLicense: MIT License\nWebsite: https://github.com/KingsMentor/MobileVisionBarcodeScanner"), "About");

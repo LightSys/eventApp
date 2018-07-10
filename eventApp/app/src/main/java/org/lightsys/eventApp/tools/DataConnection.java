@@ -61,12 +61,13 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     private boolean connection;
     private String connectionResult;
     private CompletionInterface callback;
+    private Runnable mainActivityRunnable;
 
     private static final String RELOAD_PAGE = "reload_page";
 
     private static final String Tag = "DPS";
 
-    public DataConnection(Context context, Activity activity, String action, String QR, boolean loadAll, CompletionInterface my_callback) {
+    public DataConnection(Context context, Activity activity, String action, String QR, boolean loadAll, CompletionInterface my_callback,Runnable runnable) {
         super();
         dataContext = new WeakReference<>(context);
         dataActivity = new WeakReference<>(activity);
@@ -79,6 +80,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         if (activity != null) {
             spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle);
         }
+        mainActivityRunnable = runnable;
     }
 
     @Override
@@ -136,6 +138,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             LocalBroadcastManager.getInstance(dataContext.get())
                     .sendBroadcast(reloadIntent);
         }
+        if(mainActivityRunnable != null){
+            mainActivityRunnable.run();
+        }
+
     }
 
     private boolean checkConnection(String address)  {
@@ -575,7 +581,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 }
             }
             if(loadData && dataContext != null && dataActivity != null) {
-                new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null).execute("");
+                new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null,null).execute("");
 
             }
         }
@@ -779,4 +785,5 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
         return sb.toString();
     }
+
 }

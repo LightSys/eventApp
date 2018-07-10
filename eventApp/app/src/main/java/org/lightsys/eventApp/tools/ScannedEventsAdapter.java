@@ -31,8 +31,9 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
     }
 
     /** Constructor **/
-    public ScannedEventsAdapter(ScannedEventsAdapterOnClickHandler clikHandlr) {
-        scannedEvents = new ArrayList<>();
+    public ScannedEventsAdapter(ScannedEventsAdapterOnClickHandler clikHandlr,ArrayList list) {
+        scannedEvents = list;
+        numRecyclerViewItems = list.size();
         clickHandler = clikHandlr;
     }
 
@@ -60,6 +61,9 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
             String scanned_url = scanned_item[1];
             clickHandler.onClick(scanned_url);
         }
+        public void bind(String name){
+            eventsTextView.setText(name);
+        }
     }
 
     /** called when each ViewHolder in the RecycleView is created.
@@ -81,8 +85,8 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
 
     @Override
     public void onBindViewHolder(ScannedEventsAdapterViewHolder seavh, int pos) {
-            String scanned_event = scannedEvents.get(pos)[0];
-            seavh.eventsTextView.setText(scanned_event);
+        String scanned_event = scannedEvents.get(pos)[0];
+        seavh.bind(scanned_event);
     }
 
 
@@ -91,18 +95,5 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
         if (null == scannedEvents) return 0;
         return numRecyclerViewItems;
         //return scannedEvents.size();
-    }
-
-    public void setItemCount(int size) {
-        if(size >= 1 && size <= 6) {
-            numRecyclerViewItems = size;
-        }
-    }
-
-    public void setAdapterData(ArrayList<String[]> new_data){
-        scannedEvents.clear();
-        for(String[] item: new_data){
-            scannedEvents.add(item);
-        }
     }
 }

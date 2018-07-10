@@ -281,7 +281,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     }
 
     private void getUpdates()
-    { new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("notifications_url"), false, this).execute(""); }
+    { new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("notifications_url"), false, this,null).execute(""); }
 
     /** checks the system preferences (or defaults to the database's general refresh rate)
      *  and sets the notifications refresh rate. Takes device's sleep state into account.

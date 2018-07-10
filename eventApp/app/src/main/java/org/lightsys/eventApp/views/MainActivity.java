@@ -127,9 +127,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         LinearLayoutManager layoutManager = new LinearLayoutManager(this,
                 LinearLayoutManager.VERTICAL, false);
         scannedEventsView.setLayoutManager(layoutManager);
-        scannedEventsAdapter = new ScannedEventsAdapter(this);
-        scannedEventsAdapter.setAdapterData(scannedEvents);
-        scannedEventsAdapter.setItemCount(scannedEvents.size());
+        scannedEventsAdapter = new ScannedEventsAdapter(this,scannedEvents);
         scannedEventsView.setAdapter(scannedEventsAdapter);
 
         //set theme color
@@ -189,13 +187,19 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == QR_RESULT && resultCode == RESULT_OK && data != null) {
-            String dataURL = data.getStringExtra(QR_DATA_EXTRA);
+            final String dataURL = data.getStringExtra(QR_DATA_EXTRA);
             db.addGeneral("url",dataURL);
+            Runnable updateEventList = new Runnable() {
+                @Override
+                public void run() {
+                    resetScannedEventsAdapter(dataURL);
+                }
+            };
+            new DataConnection(context, activity, "new", dataURL, true, null,updateEventList).execute("");
 
-            new DataConnection(context, activity, "new", dataURL, true, null).execute("");
-            resetScannedEventsAdapter(dataURL);
         }
     }
+
 
     //modified by Littlesnowman88 on 22 June 2018
     //now corrects menu icons for best color (black or white)
@@ -263,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 //gatherData(true);
                 break;
             case R.id.action_refresh:
-                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null).execute("");
+                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null,null).execute("");
                 stopService(updateIntent); //"refresh" (restart) the auto updater
                 startService(updateIntent);
                 break;
@@ -305,13 +309,19 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
     //Overriding the scanned events recycler view
     @Override
-    public void onClick(String scanned_url) {
+    public void onClick(final String scanned_url) {
         toggleVisibility();
         if(scanned_url.equals(getResources().getString(R.string.scan_new_qr))){
             gatherData(true);
         }
         else {
-            new DataConnection(context, activity, "new", scanned_url, true, null).execute("");
+            Runnable updateList = new Runnable() {
+                @Override
+                public void run() {
+                    resetScannedEventsAdapter(scanned_url);
+                }
+            };
+            new DataConnection(context, activity, "new", scanned_url, true, null,updateList).execute("");
             resetScannedEventsAdapter(scanned_url);
         }
     }
@@ -319,9 +329,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     private void resetScannedEventsAdapter(String scanned_url){
         String[] name_and_url = {db.getGeneral("time_zone"), scanned_url};
         addScannedEvent(name_and_url);
-        scannedEventsAdapter = new ScannedEventsAdapter(this);
-        scannedEventsAdapter.setAdapterData(scannedEvents);
-        scannedEventsAdapter.setItemCount(scannedEvents.size());
+        scannedEventsAdapter = new ScannedEventsAdapter(this,scannedEvents);
         scannedEventsView.setAdapter(scannedEventsAdapter);
     }
 
@@ -342,9 +350,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             scannedEvents.add(0,name_and_url);
             if(scannedEvents.size() > 6) {
                 scannedEvents.remove(5);
-            }
-            else {
-                //TODO: Incrementer for size is needed in ScannedEventsAdapter
             }
         }
         else {
@@ -479,7 +484,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Log.d(TAG, "onClick: " + db.getGeneral("url"));
-                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null).execute("");
+                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null,null).execute("");
                     }
                 })
                 .setPositiveButton(R.string.rescan_qr_button, new DialogInterface.OnClickListener() {

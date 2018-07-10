@@ -269,13 +269,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      */
     private void loadInfoAndNavTitles() {
         readGeneralInfo(connectionResult);
-        ScannedEventsAdapter scannedEventsAdapter = ScannedEventsAdapter.getInstance();
-        if(scannedEventsAdapter != null){
-            //TODO: we need to get the event name from the JSON
-            //TODO: Not notifications_url, but the config json url
-            String[] scannedEvent = {db.getGeneral("time_zone"), qrAddress};
-            scannedEventsAdapter.addScannedEvent(scannedEvent);
-        }
         String notification_url = db.getGeneral("notifications_url");
         connection = checkConnection(notification_url);
         addNotificationTitle(connectionResult);

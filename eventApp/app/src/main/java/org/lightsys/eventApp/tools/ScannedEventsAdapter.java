@@ -10,19 +10,18 @@ import android.widget.TextView;
 
 import org.lightsys.eventApp.R;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdapter.ScannedEventsAdapterViewHolder>{
-
-    private volatile static ScannedEventsAdapter uniqueAdapterInstance;
 
     private ArrayList<String[]> scannedEvents;
 
     private final ScannedEventsAdapterOnClickHandler clickHandler;
 
-    private Resources system_resources;
-
     private ScannedEventsAdapterViewHolder seaVH;
+
+    private int numRecyclerViewItems;
 
     /**
      * The interface that receives onClick messages.
@@ -31,27 +30,10 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
         void onClick(String scanned_event);
     }
 
-    /** unique instance enforcer (singleton pattern) **/
-    public static ScannedEventsAdapter getInstance(ScannedEventsAdapterOnClickHandler clikHandlr, Resources resources) {
-        if (uniqueAdapterInstance == null) {
-            synchronized (ScannedEventsAdapter.class) {
-                if (uniqueAdapterInstance == null) {
-                    uniqueAdapterInstance = new ScannedEventsAdapter(clikHandlr, resources);
-                }
-            }
-        }
-        return uniqueAdapterInstance;
-    }
-
     /** Constructor **/
-    private ScannedEventsAdapter(ScannedEventsAdapterOnClickHandler clikHandlr, Resources resources) {
-        clickHandler = clikHandlr;
+    public ScannedEventsAdapter(ScannedEventsAdapterOnClickHandler clikHandlr) {
         scannedEvents = new ArrayList<>();
-        system_resources = resources;
-        String scan_qr = system_resources.getString(R.string.scan_new_qr);
-        String[] scanQR = {scan_qr,scan_qr};
-        scannedEvents.add(scanQR);
-
+        clickHandler = clikHandlr;
     }
 
     /**
@@ -76,9 +58,6 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
         public void onClick(View v) {
             String[] scanned_item = scannedEvents.get(getAdapterPosition());
             String scanned_url = scanned_item[1];
-            if(!scanned_url.equals(system_resources.getString(R.string.scan_new_qr))) {
-                addScannedEvent(scanned_item);
-            }
             clickHandler.onClick(scanned_url);
         }
     }
@@ -102,43 +81,28 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
 
     @Override
     public void onBindViewHolder(ScannedEventsAdapterViewHolder seavh, int pos) {
-        String scanned_event = scannedEvents.get(pos)[0];
-        seavh.eventsTextView.setText(scanned_event);
+            String scanned_event = scannedEvents.get(pos)[0];
+            seavh.eventsTextView.setText(scanned_event);
     }
 
 
     @Override
     public int getItemCount() {
         if (null == scannedEvents) return 0;
-        return scannedEvents.size();
+        return numRecyclerViewItems;
+        //return scannedEvents.size();
     }
 
-    public void addScannedEvent(String[] name_and_url) {
-        if(!hasNameAndUrl(name_and_url)) {
-            scannedEvents.add(0,name_and_url);
-            if(scannedEvents.size() > 6) {
-                scannedEvents.remove(5);
-            }
-            onBindViewHolder(seaVH,0);
-            //notifyDataSetChanged(); //buggy; fixes only upon app minimize and opening back up
+    public void setItemCount(int size) {
+        if(size >= 1 && size <= 6) {
+            numRecyclerViewItems = size;
         }
-        else {
-            int event_position = scannedEvents.indexOf(name_and_url);
-            //Data Connection should add the event in.
-        }
-
     }
 
-    private boolean hasNameAndUrl(String[] scanned_event){
-        for(String[] item: scannedEvents){
-            if(scanned_event[1].equals(item[1])){
-                return true;
-            }
+    public void setAdapterData(ArrayList<String[]> new_data){
+        scannedEvents.clear();
+        for(String[] item: new_data){
+            scannedEvents.add(item);
         }
-        return false;
-    }
-
-    public static ScannedEventsAdapter getInstance() {
-        return uniqueAdapterInstance;
     }
 }

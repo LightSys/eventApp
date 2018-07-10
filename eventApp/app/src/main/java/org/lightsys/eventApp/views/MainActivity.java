@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     private ListView navigationList;
     private RecyclerView scannedEventsView;
     private ScannedEventsAdapter scannedEventsAdapter;
+    private ArrayList<String[]> scannedEvents;
     private int color, black_or_white;
     ActionBarDrawerToggle toggle;
 
@@ -116,13 +117,19 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         setSupportActionBar(toolbar);
 
         /*set up scanned events recycler view*/
+        scannedEvents = new ArrayList<>();
+        String scan_qr = getResources().getString(R.string.scan_new_qr);
+        String[] scanQR = {scan_qr,scan_qr};
+        scannedEvents.add(scanQR);
         scannedEventsView = findViewById(R.id.scanned_events_recyclerview);
         scannedEventsView.setVisibility(View.GONE);
         scannedEventsView.setEnabled(false);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this,
                 LinearLayoutManager.VERTICAL, false);
         scannedEventsView.setLayoutManager(layoutManager);
-        scannedEventsAdapter = ScannedEventsAdapter.getInstance(this, getResources());
+        scannedEventsAdapter = new ScannedEventsAdapter(this);
+        scannedEventsAdapter.setAdapterData(scannedEvents);
+        scannedEventsAdapter.setItemCount(scannedEvents.size());
         scannedEventsView.setAdapter(scannedEventsAdapter);
 
         //set theme color
@@ -186,6 +193,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             db.addGeneral("url",dataURL);
 
             new DataConnection(context, activity, "new", dataURL, true, null).execute("");
+            resetScannedEventsAdapter(dataURL);
         }
     }
 
@@ -304,7 +312,17 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         }
         else {
             new DataConnection(context, activity, "new", scanned_url, true, null).execute("");
+            resetScannedEventsAdapter(scanned_url);
         }
+    }
+
+    private void resetScannedEventsAdapter(String scanned_url){
+        String[] name_and_url = {db.getGeneral("time_zone"), scanned_url};
+        addScannedEvent(name_and_url);
+        scannedEventsAdapter = new ScannedEventsAdapter(this);
+        scannedEventsAdapter.setAdapterData(scannedEvents);
+        scannedEventsAdapter.setItemCount(scannedEvents.size());
+        scannedEventsView.setAdapter(scannedEventsAdapter);
     }
 
     //toggles the visibility of the scanned events recycler view
@@ -317,6 +335,42 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             scannedEventsView.setVisibility(View.VISIBLE);
             scannedEventsView.setEnabled(true);
         }
+    }
+
+    public void addScannedEvent(String[] name_and_url) {
+        if(!hasNameAndUrl(name_and_url)) {
+            scannedEvents.add(0,name_and_url);
+            if(scannedEvents.size() > 6) {
+                scannedEvents.remove(5);
+            }
+            else {
+                //TODO: Incrementer for size is needed in ScannedEventsAdapter
+            }
+        }
+        else {
+            int event_position = findIndexOfUrl(name_and_url);
+            scannedEvents.remove(event_position);
+            scannedEvents.add(0,name_and_url);
+        }
+    }
+
+    private int findIndexOfUrl(String[] name_and_url){
+        int size = scannedEvents.size();
+        for(int i = 0; i < size; i++){
+            if(scannedEvents.get(i)[1].equals(name_and_url[1])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private boolean hasNameAndUrl(String[] scanned_event){
+        for(String[] item: scannedEvents){
+            if(scanned_event[1].equals(item[1])){
+                return true;
+            }
+        }
+        return false;
     }
 
     //launches QR scanner

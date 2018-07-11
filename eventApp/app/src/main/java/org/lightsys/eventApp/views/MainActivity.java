@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -149,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         //if no data, import data
         gatherData(db.getGeneral("refresh_expire") == null);
         if(scannedEvents.size() == 1){
-            noScannedEvent();
+            handleNoScannedEvent();
         }
     }
 
@@ -316,12 +317,15 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         }
     }
 
-    //For when there is no scanned event
-    public void noScannedEvent(){
+    //Handles what happens when no events have been scanned. It enables the settings, about page, notifications page, and welcome message.
+    public void handleNoScannedEvent(){
         //Set welcome message
         String no_event_message = getString(R.string.no_event_welcome);
         db.addGeneral("welcome_message",no_event_message);
         gatherData(false);
+
+        DataConnection.addNotificationTitle(null, db, this);
+        DataConnection.setupAboutPage(db, this);
 
         //Set refresh rate
         db.addGeneral("refresh",getString(R.string.refresh_val_never));
@@ -330,6 +334,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         db.addGeneral("time_zone", TimeZone.getDefault().getID());
         db.addGeneral("remote_viewing","0");
         db.addGeneral("custom_time_zone","0");
+
+        setupMenusAndTheme();
     }
 
     //Overriding the scanned events recycler view

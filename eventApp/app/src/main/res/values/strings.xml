@@ -17,10 +17,12 @@
 
     <!--Navigation Resources-->
     <string name="nav_logo">eventApp Logo</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="about_title">About</string>
 
     <!--Welcome resources-->
     <string name="notifications_header">Notifications</string>
-    <string name="no_event_welcome">No event has been scanned.</string>
+    <string name="no_event_welcome">No event has been scanned.\nPress the camera icon to scan an event.</string>
     <string name="default_welcome">Welcome!</string>
 
     <!--Housing resources-->

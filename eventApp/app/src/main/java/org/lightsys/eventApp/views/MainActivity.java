@@ -302,6 +302,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == 2 && grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             gatherData(true);
+        } else {
+            if (! ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
+                Toast.makeText(context, R.string.disabled_camera_permissions, Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(context, R.string.denied_camera_permissions, Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -410,9 +416,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         Log.w("Barcode-reader", "Camera permission is not granted. Requesting permission");
         final String[] permissions = new String[]{"android.permission.CAMERA"};
         ActivityCompat.requestPermissions(this, permissions, 2);
-        if (! ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
-            Toast.makeText(context, R.string.disabled_camera_permissions, Toast.LENGTH_LONG).show();
-        }
     }
 
     //navigation, theme, refresh menu setup

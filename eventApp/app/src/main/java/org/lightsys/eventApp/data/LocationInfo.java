@@ -15,12 +15,5 @@ public class LocationInfo {
      */
     public static String[] getEventLocations(LocalDB database) {
         return new String[] {database.getGeneral("time_zone")};
-//        return new String[] {
-//                "Chapel Hills, Colorado Springs",
-//                "Calvin College, Grand Rapids",
-//                "Cedarville University, Ohio",
-//                "Latourneau University, Texas"
-//        };
-
     }
 }

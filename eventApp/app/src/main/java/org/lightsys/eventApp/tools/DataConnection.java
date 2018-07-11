@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -274,13 +275,13 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      *  A refactor created by Littlesnowman88 on 15 June 2018
      */
     private void loadInfoAndNavTitles() {
+        Activity main_activity = (MainActivity)dataActivity.get();
         readGeneralInfo(connectionResult);
         String notification_url = db.getGeneral("notifications_url");
         connection = checkConnection(notification_url);
-        addNotificationTitle(connectionResult);
+        addNotificationTitle(connectionResult, db, main_activity);
         connection = checkConnection(qrAddress);
         loadEventInfo(connectionResult);
-        db.addNavigationTitles("About", "ic_info", "About");
 
         if (action.equals("new")){
             connection = checkConnection(notification_url);
@@ -288,10 +289,29 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
 
         //add about page
+        setupAboutPage(db, main_activity);
+    }
+
+    /**
+     * Sets up the about page
+     * @param db
+     * @param activity
+     *
+     * Must be called by MainActivity's handleNoScannedEvent, thus this function is static.
+     */
+    public static void setupAboutPage(LocalDB db, Activity activity){
         db.addInformationPage(new Info("LightSys Events (Android App)","Copyright © 2017-2018 LightSys Technology Services, Inc.  This app was created for the use of distributing event information for ministry events.\n\nThis app's source code is also available under the GPLv3 open-source license at:\nhttps://github.com/LightSys/eventApp"), "About");
         db.addInformationPage(new Info("Open Source","This app includes the following open source libraries:"), "About");
         db.addInformationPage(new Info("Mobile Vision Barcode Scanner","Copyright (c) 2016 Nosakhare Belvi\nLicense: MIT License\nWebsite: https://github.com/KingsMentor/MobileVisionBarcodeScanner"), "About");
         db.addInformationPage(new Info("The Android Open Source Project", "Copyright (c) 2016 The Android Open Source Project\nLicense: Apache License 2.0\nWebsite: https://classroom.udacity.com/courses/ud851"), "About");
+        ArrayList<Info> nav_titles = db.getNavigationTitles();
+        String about_title = activity.getString(R.string.about_title);
+        for (Info item : nav_titles) {
+            if (item.getHeader().equals(about_title)) {
+                return;
+            }
+        }
+        db.addNavigationTitles(activity.getString(R.string.about_title), "ic_info", "About");
 
     }
 
@@ -319,8 +339,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     /** acesses the notifications json and sets the notifications nav title
      *  Created by: Littlesnowman88 on 15 June 2018
+     *
+     *  Must be called by MainActivity's handleNoScannedEvent, thus this function is public static.
      */
-    private void addNotificationTitle(String result) {
+    public static void addNotificationTitle(String result, LocalDB db, Activity activity) {
+        String notifications_title = activity.getString(R.string.notifications_title);
         if (result != null) {
             try {
                 JSONObject json = null;
@@ -328,16 +351,34 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 if (json != null) {
                     db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Notifications");
                 } else {
-                    db.addNavigationTitles("Notifications", "ic_bell", "Notifications");
+                    preventRepeatTitle(notifications_title, db);
                 }
             } catch (JSONException e1) {
                 e1.printStackTrace();
-                db.addNavigationTitles("Notifications", "ic_bell", "Notifications");
+                preventRepeatTitle(notifications_title, db);
             }
         } else {
-            db.addNavigationTitles("Notifications", "ic_bell", "Notifications");
+            preventRepeatTitle(notifications_title, db);
         }
 
+    }
+
+    /**
+     * Used to prevent navigation titles from repeating
+     * @param notifications_title
+     * @param db
+     *
+     * Static because it is called from static addNotificationTitle, also this function exists to reduce
+     * code duplication within addNotificationTitle
+     */
+    private static void preventRepeatTitle(String notifications_title, LocalDB db){
+        ArrayList<Info> nav_titles = db.getNavigationTitles();
+        for (Info item : nav_titles) {
+            if (item.getHeader().equals(notifications_title)) {
+                return;
+            }
+        }
+        db.addNavigationTitles(notifications_title, "ic_bell", "Notifications");
     }
 
     /**
@@ -364,7 +405,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 loadSchedule(json.getJSONObject("schedule"));
                 loadHousing(json.getJSONObject("housing"));
                 loadPrayerPartners(json.getJSONArray("prayer_partners"));
-                loadInformationalPage(json.getJSONObject("information_page"));
+                loadInformationalPage(json.getJSONObject("information_page"),db);
                 loadContacts(json.getJSONObject("contacts"));
 
             } catch (JSONException e) {
@@ -704,7 +745,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Loads Information pages
      * @param json, result of API query for information pages
      */
-    private void loadInformationalPage(JSONObject json) {
+    public static void loadInformationalPage(JSONObject json, LocalDB db) {
         if (json == null) {
             return;
         }

@@ -114,8 +114,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
     }
 
     private void hideIllegalTimeZoneButtons() {
-        int remote_zone_allowed = Integer.parseInt(db.getGeneral("remote_viewing"));
-        int custom_zone_allowed = Integer.parseInt(db.getGeneral("custom_time_zone"));
+        int remote_zone_allowed = Integer.parseInt(
+                db.getGeneral("remote_viewing")!=null?db.getGeneral("remote_viewing"):"0");
+        int custom_zone_allowed = Integer.parseInt(
+                db.getGeneral("custom_time_zone")!=null?db.getGeneral("custom_time_zone"):"0");
         if (remote_zone_allowed == 0) {
             my_remote_zone_button.setVisible(false);
             if (my_remote_zone_button.isChecked()) {

@@ -50,7 +50,7 @@ public class WelcomeView extends Fragment {
         }
 
         //set up welcome message
-        String welcomeMessage = db.getGeneral("welcome_message")!=null?db.getGeneral("welcome_message"):"Welcome!";
+        String welcomeMessage = db.getGeneral("welcome_message")!=null?db.getGeneral("welcome_message"):getString(R.string.default_welcome);
         ((TextView) v.findViewById(R.id.welcomeHeader)).setText(welcomeMessage);
 
         ArrayList<HashMap<String,String>> itemList = generateListItems();

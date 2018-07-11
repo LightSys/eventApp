@@ -52,6 +52,8 @@ import org.lightsys.eventApp.views.SettingsViews.SettingsActivity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TimeZone;
+import java.util.zip.Inflater;
 
 import static android.content.ContentValues.TAG;
 
@@ -146,6 +148,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
         //if no data, import data
         gatherData(db.getGeneral("refresh_expire") == null);
+        if(scannedEvents.size() == 1){
+            noScannedEvent();
+        }
     }
 
     /**
@@ -309,6 +314,22 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 Toast.makeText(context, R.string.denied_camera_permissions, Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    //For when there is no scanned event
+    public void noScannedEvent(){
+        //Set welcome message
+        String no_event_message = getString(R.string.no_event_welcome);
+        db.addGeneral("welcome_message",no_event_message);
+        gatherData(false);
+
+        //Set refresh rate
+        db.addGeneral("refresh",getString(R.string.refresh_val_never));
+
+        //Set time zone
+        db.addGeneral("time_zone", TimeZone.getDefault().getID());
+        db.addGeneral("remote_viewing","0");
+        db.addGeneral("custom_time_zone","0");
     }
 
     //Overriding the scanned events recycler view

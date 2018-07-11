@@ -20,6 +20,8 @@
 
     <!--Welcome resources-->
     <string name="notifications_header">Notifications</string>
+    <string name="no_event_welcome">No event has been scanned.</string>
+    <string name="default_welcome">Welcome!</string>
 
     <!--Housing resources-->
     <string name="map_button">Get directions</string>

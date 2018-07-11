@@ -264,7 +264,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         switch (id){
             case R.id.action_rescan:
                 toggleVisibility();
-                //gatherData(true);
                 break;
             case R.id.action_refresh:
                 new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null,null).execute("");
@@ -380,13 +379,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
     //launches QR scanner
     public void gatherData(boolean launchScanner){
-        /*for testing on device w/o camera
-        db.addGeneral("url","http://192.168.0.23:3000/db");
-        Log.d(TAG, "gatherData: http://192.168.0.23:3000/db");
-
-        new DataConnection(context, activity, "new", "http://192.168.0.23:3000/db", true).execute("");
-        */
-
         if (launchScanner) {
             if (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != PackageManager.PERMISSION_GRANTED) {
                 requestCameraPermission();

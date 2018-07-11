@@ -28,6 +28,10 @@ public class LocalDB extends SQLiteOpenHelper {
 
     private static final int DATABASE_VERSION = 12;
     private static final String DATABASE_NAME = "SBCaT.db";
+    //SCANNED EVENTS TABLE
+    private static final String TABLE_SCANNED_EVENTS = "scanned_events";
+    private static final String COLUMN_URL = "url";
+    private static final String COLUMN_EVENT_NAME = "event_name";
     //GENERAL INFO TABLE
     private static final String TABLE_GENERAL_INFO = "general_info";
     private static final String COLUMN_TYPE = "info_type";
@@ -92,6 +96,10 @@ public class LocalDB extends SQLiteOpenHelper {
      */
     @Override
     public void onCreate(SQLiteDatabase db) {
+
+        String CREATE_TABLE_SCANNED_EVENTS = "CREATE TABLE " + TABLE_SCANNED_EVENTS + "("
+                + COLUMN_URL + " TEXT," + COLUMN_EVENT_NAME + " TEXT)";
+        db.execSQL(CREATE_TABLE_SCANNED_EVENTS);
 
         String CREATE_TABLE_GENERAL_INFO = "CREATE TABLE " + TABLE_GENERAL_INFO + "("
                 + COLUMN_TYPE + " TEXT," + COLUMN_INFO + " TEXT)";
@@ -221,6 +229,21 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
+     * Created by EasonMahone on 7/11/2018
+     * @param url, the url of the event
+     * @param name, the name of the event
+     */
+    public void addEvent (String url, String name){
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_URL, url);
+        values.put(COLUMN_EVENT_NAME, name);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.insert(TABLE_SCANNED_EVENTS, null, values);
+        db.close();
+    }
+
+    /**
      * @param type, name information is stored under
      * @param content, information to be stored
      * adds code-a-thon general info (url, refresh rate, refresh expire, time zone, welcome message, notification url, logo)
@@ -341,6 +364,46 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
 	/* ************************* Get Queries ************************* */
+
+    /**
+     * get scanned event
+     * Created by EasonMahone on 7/11/2018
+     * @param url, title under which the name is stored
+     * @return event name
+     */
+    public String getEvent(String url){
+        String event=null;
+        String queryString = "SELECT " + COLUMN_EVENT_NAME + " FROM " + TABLE_SCANNED_EVENTS
+                +" WHERE " + COLUMN_URL + " = " + "?";
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] selectionArgs = {url};
+        Cursor c = db.rawQuery(queryString, selectionArgs);
+
+        while (c.moveToNext()) {
+            event = c.getString(0);
+
+        }
+        c.close();
+        db.close();
+        return event;
+    }
+
+    /**
+     * Created by EasonMahone on 7/11/2018
+     * @return returns and ArrayList with the name and url of all events in the database
+     */
+    public ArrayList<String[]> getAllEvents() {
+        ArrayList<String[]> allEvents = new ArrayList<>();
+        String urlQuery = "SELECT * FROM " + TABLE_SCANNED_EVENTS;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(urlQuery,null);
+
+        while (c.moveToNext()) {
+            String[] values = {c.getString(c.getColumnIndex(COLUMN_EVENT_NAME)),c.getString(c.getColumnIndex(COLUMN_URL))};
+            allEvents.add(0,values);
+        }
+        return allEvents;
+    }
 
     /**
      * get general info
@@ -954,6 +1017,34 @@ public class LocalDB extends SQLiteOpenHelper {
         c.close();
         db.close();
         return students;
+    }
+
+    /* ************************* Delete queries ************************* */
+
+    /**
+     *
+     * @param url, the url of the event to be removed
+     */
+    public void removeEvent (String url) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String whereClause = COLUMN_URL + " = " + "?";
+        String[] whereArgs = {url};
+        db.delete(TABLE_SCANNED_EVENTS, whereClause, whereArgs);
+        db.close();
+    }
+
+    /* ************************* Replace Queries ************************* */
+
+    /**
+     * A function to replace an event by using the removeEvent and addEvent functions
+     * Created by EasonMahone
+     * @param remove_url, the url of the event to be removed
+     * @param add_url, the url of the event to be added
+     * @param add_name, the name of the event to be added
+     */
+    public void replaceEvent (String remove_url, String add_url, String add_name){
+        removeEvent(remove_url);
+        addEvent(add_url,add_name);
     }
 
     //REMOVED BY LITTLESNOEMAN88, 7 June 2018

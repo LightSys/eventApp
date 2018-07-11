@@ -118,10 +118,11 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         setSupportActionBar(toolbar);
 
         /*set up scanned events recycler view*/
-        scannedEvents = new ArrayList<>();
         String scan_qr = getResources().getString(R.string.scan_new_qr);
-        String[] scanQR = {scan_qr,scan_qr};
-        scannedEvents.add(scanQR);
+        if(db.getEvent(scan_qr) == null){
+            db.addEvent(scan_qr,scan_qr);
+        }
+        scannedEvents = db.getAllEvents();
         scannedEventsView = findViewById(R.id.scanned_events_recyclerview);
         scannedEventsView.setVisibility(View.GONE);
         scannedEventsView.setEnabled(false);
@@ -351,13 +352,18 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         if(!hasNameAndUrl(name_and_url)) {
             scannedEvents.add(0,name_and_url);
             if(scannedEvents.size() > 6) {
+                db.replaceEvent(scannedEvents.get(5)[1], name_and_url[1], name_and_url[0]);
                 scannedEvents.remove(5);
+            }
+            else {
+                db.addEvent(name_and_url[1], name_and_url[0]);
             }
         }
         else {
             int event_position = findIndexOfUrl(name_and_url);
             scannedEvents.remove(event_position);
             scannedEvents.add(0,name_and_url);
+            db.replaceEvent(name_and_url[1],name_and_url[1],name_and_url[0]);
         }
     }
 

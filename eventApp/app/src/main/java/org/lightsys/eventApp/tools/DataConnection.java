@@ -359,12 +359,12 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             }
             try {
                 //separate JSON object and get individual parts to be stored in Local Database
+                loadTheme(json.getJSONArray("theme"));
                 loadContactPage(json.getJSONObject("contact_page"));
                 loadSchedule(json.getJSONObject("schedule"));
                 loadHousing(json.getJSONObject("housing"));
                 loadPrayerPartners(json.getJSONArray("prayer_partners"));
                 loadInformationalPage(json.getJSONObject("information_page"));
-                loadTheme(json.getJSONArray("theme"));
                 loadContacts(json.getJSONObject("contacts"));
 
             } catch (JSONException e) {
@@ -669,7 +669,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * @param json, result of API query for theme
      */
     private void loadTheme(JSONArray json) {
-        //TODO: FIX THIS HARDCODED FUNCTION
         if (json == null) {
             return;
         }

@@ -24,6 +24,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.menu.MenuBuilder;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -196,7 +197,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 }
             };
             new DataConnection(context, activity, "new", dataURL, true, null,updateEventList).execute("");
-
         }
     }
 
@@ -217,13 +217,11 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             qr.setIcon(R.drawable.ic_qr);
             refresh.setIcon(R.drawable.ic_refresh);
             settings.setIcon(R.drawable.ic_settings_24dp);
-//            toggle.setHomeAsUpIndicator(getResources().getDrawable(R.drawable.ic_nav_menu));
         }
         else {
             qr.setIcon(R.drawable.ic_qr_black);
             refresh.setIcon(R.drawable.ic_refresh_black);
             settings.setIcon(R.drawable.ic_settings_black_24dp);
-//            toggle.setHomeAsUpIndicator(getResources().getDrawable(R.drawable.ic_nav_menu_black));
         }
         if (!successfulConnection) {
             if (black_or_white == WHITE) {
@@ -320,8 +318,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     resetScannedEventsAdapter(scanned_url);
                 }
             };
-            new DataConnection(context, activity, "new", scanned_url, true, null,updateList).execute("");
-            resetScannedEventsAdapter(scanned_url);
+            new DataConnection(context, activity, "new", scanned_url, true, null, updateList).execute("");
         }
     }
 
@@ -330,6 +327,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         addScannedEvent(name_and_url);
         scannedEventsAdapter = new ScannedEventsAdapter(this,scannedEvents);
         scannedEventsView.setAdapter(scannedEventsAdapter);
+        //setupMenusAndTheme() is called here because it needs to happen AFTER a new DataConnection is created,
+        //   and new data connections are created after a scanned event is clicked AND after the QR is received.
+        //   DataConnection calls this after it has built the database, so the themes will now load properly.
+        color = Color.parseColor(db.getThemeColor("themeColor"));
+        determineBlackOrWhite(color);
+        setupMenusAndTheme();
     }
 
     //toggles the visibility of the scanned events recycler view
@@ -396,10 +399,14 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     }
 
     //if app does not have camera permission, ask user for permission
+    //modified by Littlesnowman88 11 July 2018
     private void requestCameraPermission() {
         Log.w("Barcode-reader", "Camera permission is not granted. Requesting permission");
         final String[] permissions = new String[]{"android.permission.CAMERA"};
         ActivityCompat.requestPermissions(this, permissions, 2);
+        if (! ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
+            Toast.makeText(context, R.string.disabled_camera_permissions, Toast.LENGTH_LONG).show();
+        }
     }
 
     //navigation, theme, refresh menu setup

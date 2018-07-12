@@ -357,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     }
 
     private void resetScannedEventsAdapter(String scanned_url){
-        String[] name_and_url = {db.getGeneral("time_zone"), scanned_url};
+        String[] name_and_url = {getValidEventName(), scanned_url};
         addScannedEvent(name_and_url);
         scannedEventsAdapter = new ScannedEventsAdapter(this,scannedEvents);
         scannedEventsView.setAdapter(scannedEventsAdapter);
@@ -367,6 +367,15 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         color = Color.parseColor(db.getThemeColor("themeColor"));
         determineBlackOrWhite(color);
         setupMenusAndTheme();
+    }
+
+    //Returns "No Name" if invalid
+    private String getValidEventName(){
+        String name = null;
+        String event_name = db.getGeneral("event_name");
+        if (event_name != null){ name = event_name.trim();}
+        if (name == null || name.equals("")) { name = getString(R.string.no_event_name); }
+        return name;
     }
 
     //toggles the visibility of the scanned events recycler view

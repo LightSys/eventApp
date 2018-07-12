@@ -7,6 +7,7 @@
     <!--Main Activity menu resource-->
     <string name="settings_portal">Settings</string>
     <string name="scan_new_qr">Scan QR</string>
+    <string name="no_event_name">No Name</string>
     <string name="disabled_camera_permissions">Camera permissions are disabled. Permissions must be enabled from system settings before scanning a QR.</string>
     <string name="denied_camera_permissions">Camera permissions were denied. Unable to scan QR.</string>
 

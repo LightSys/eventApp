@@ -229,7 +229,7 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * Created by EasonMahone on 7/11/2018
+     *
      * @param url, the url of the event
      * @param name, the name of the event
      */
@@ -367,7 +367,7 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      * get scanned event
-     * Created by EasonMahone on 7/11/2018
+     *
      * @param url, title under which the name is stored
      * @return event name
      */
@@ -389,7 +389,7 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * Created by EasonMahone on 7/11/2018
+     *
      * @return returns and ArrayList with the name and url of all events in the database
      */
     public ArrayList<String[]> getAllEvents() {
@@ -1037,7 +1037,7 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      * A function to replace an event by using the removeEvent and addEvent functions
-     * Created by EasonMahone
+     * Created by TFMoo
      * @param remove_url, the url of the event to be removed
      * @param add_url, the url of the event to be added
      * @param add_name, the name of the event to be added

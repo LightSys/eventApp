@@ -47,12 +47,14 @@ import org.lightsys.eventApp.tools.AutoUpdater;
 import org.lightsys.eventApp.tools.DataConnection;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.NavigationAdapter;
+import org.lightsys.eventApp.tools.RefreshPressedHelper;
 import org.lightsys.eventApp.tools.ScannedEventsAdapter;
 import org.lightsys.eventApp.tools.qr.launchQRScanner;
 import org.lightsys.eventApp.views.SettingsViews.SettingsActivity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Observable;
 import java.util.TimeZone;
 import java.util.zip.Inflater;
 
@@ -74,7 +76,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     private static final int BLACK = Color.parseColor("#000000");
     private static final int WHITE = Color.parseColor("#ffffff");
 
-
     private Fragment fragment;
     private final FragmentManager fragmentManager = getSupportFragmentManager();
     private Context context;
@@ -92,6 +93,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     ActionBarDrawerToggle toggle;
 
     private boolean successfulConnection = true;
+
+    private RefreshPressedHelper refresh_pressed_helper;
 
     //stuff to automatically refresh the current fragment
     private final android.os.Handler refreshHandler = new android.os.Handler();
@@ -160,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
      */
     @Override
     public void onPostCreate(Bundle savedInstanceState){
-
+        refresh_pressed_helper = RefreshPressedHelper.getInstance();
         super.onPostCreate(savedInstanceState);
     }
 
@@ -270,6 +273,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 toggleVisibility();
                 break;
             case R.id.action_refresh:
+                refresh_pressed_helper.setRefreshPressed(this);
                 final String current_url = db.getGeneral("url");
                 Runnable refresh_ui = new Runnable() {
                     @Override

@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  * @author Judah Sistrunk
@@ -41,7 +43,7 @@ import java.util.Locale;
  *  SharedPreferences updates.
  *  Update frequency while device is asleep.
  */
-public class AutoUpdater extends Service implements CompletionInterface, SharedPreferences.OnSharedPreferenceChangeListener {
+public class AutoUpdater extends Service implements CompletionInterface, Observer, SharedPreferences.OnSharedPreferenceChangeListener {
 
     //time constants in milliseconds
     private static final int ONE_SECOND     = 1000;
@@ -64,6 +66,9 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
 
     //a flag to record if the refresh button in MainActivity has been pressed.
     private boolean refresh_pressed = false;
+
+    //mediator between AutoUpdater and MainActivity to see if refresh is pressed
+    private RefreshPressedHelper refresh_pressed_listener;
 
     private PowerManager powerManager = null;
     private PowerManager.WakeLock wakeLock = null;
@@ -108,6 +113,9 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         Log.d("AutoUpdater", "onStartCommand()");
+
+        refresh_pressed_listener = RefreshPressedHelper.getInstance();
+        refresh_pressed_listener.addObserver(this);
 
         if (intent != null) {
             String once = intent.getStringExtra("checkOnce");
@@ -283,6 +291,16 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     private void getUpdates()
     { new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("notifications_url"), false, this,null).execute(""); }
 
+    @Override
+    public void update(Observable observable, Object o) {
+        refresh_pressed = true;
+        String refresh_setting = sharedPreferences.getString("refresh_rate", db.getGeneral("refresh_rate").trim());
+        if (refresh_setting.equals("auto")) {
+            setAutoRefresh();
+        }
+        refresh_pressed = false;
+    }
+
     /** checks the system preferences (or defaults to the database's general refresh rate)
      *  and sets the notifications refresh rate. Takes device's sleep state into account.
      *  "auto" takes wifi and cellular connection into account, too.
@@ -315,7 +333,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
      *  If on wifi, check for updates every five minutes
      *  If on Cellular:
      *      check every 5 minutes or JSON refresh rate # mins if update or refresh in past hour
-     *      increase to 10, 15, 30, and 60 minutes for every additional passed hour, otherwise.
+     *      increase to next increment of 10, 15, 30, or 60 minutes for every additional passed hour, otherwise.
      * @author: Littlesnowman88
      */
     private void setAutoRefresh() {
@@ -323,19 +341,28 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
             updateMillis = 5 * ONE_MINUTE;
         } else { //if connected via cellular network
             //if refresh has been pressed or if an update has happened in the last hour.
-            if ((elapsedTime < (ONE_HOUR))) { //NEED TO ADD: REFRESHES CAUSING UPDATE.
-                updateMillis = Math.max(5, Integer.parseInt(db.getGeneral("refresh_rate").trim()));
+            if ((elapsedTime < (ONE_HOUR)) || refresh_pressed) {
+                updateMillis = chooseMaxTime(5);
             } else if (elapsedTime < (2 * ONE_HOUR)) {
-                updateMillis = 10 * ONE_MINUTE;
+                updateMillis = chooseMaxTime(10);
             } else if (elapsedTime < (3 * ONE_HOUR)) {
-                updateMillis = 15 * ONE_MINUTE;
+                updateMillis = chooseMaxTime(15);
             } else if (elapsedTime < (4 * ONE_HOUR)) {
-                updateMillis = 20 * ONE_MINUTE;
-            } else if (elapsedTime < (5 * ONE_HOUR)) {
-                updateMillis = 30 * ONE_MINUTE;
+                updateMillis = chooseMaxTime(30);
             } else {
                 updateMillis = ONE_HOUR;
             }
+        }
+    }
+
+    //helper function of setAutoRefresh to protect against parsing an integer from an invalid string.
+    //Created by Littlesnowman88
+    private int chooseMaxTime(int time) {
+        try {
+            return Math.max(time, Integer.parseInt(db.getGeneral("refresh_rate").trim())) * ONE_MINUTE;
+        } catch (Exception e) {
+            //if default_rate is null (shouldn't be, but...), never, or auto, choose the passed in value.
+            return time * ONE_MINUTE;
         }
     }
 

@@ -29,7 +29,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
     private CheckBoxPreference event_zone_button, my_remote_zone_button, custom_zone_button;
     private PreferenceCategory time_zone_preferences;
     private String selectedStringTimeZone, selectedAdapter;
-    private String[] eventLocations, customTimeZones;
+    private String[] eventLocations;
     private int saved_time_zone_button, current_time_zone_button;
 
     @Override
@@ -52,7 +52,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
 
         db = new LocalDB(this.getContext());
         eventLocations = LocationInfo.getEventLocations(db);
-        customTimeZones = TimeZoneInfo.getAllTimeZones();
         selectedAdapter = "none";
         initializeIntent();
 
@@ -232,25 +231,11 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
     public void onCustomZoneClicked() {
         /*take note of the button press and prep the adapter */
         current_time_zone_button = 2;
-
-        int itemCount = customTimeZones.length;
         fragment_to_recycleview.removeExtra("adapter");
         fragment_to_recycleview.putExtra("adapter", "TimeZoneAdapter");
-        if (itemCount > 1) {
-            waitToCheckButton();
-            //start time zone recycler view activity, passing along a string with time zone adapter
-            startActivityForResult(fragment_to_recycleview, 1);
-        } else if (itemCount==1) {
-            custom_zone_button.setChecked(true); //functioning similar to a radio button
-            event_zone_button.setChecked(false);
-            my_remote_zone_button.setChecked(false);
-            selectedStringTimeZone = customTimeZones[0];
-            selectedAdapter = "TimeZoneAdapter";
-            updateTimeZonePreferences();
-            setPreferenceSummary(custom_zone_button, selectedStringTimeZone);
-        } else {
-            throw new RuntimeException("ERROR: in SettingsFragment, onCustomZoneClicked(), there were no provided time zones!");
-        }
+        waitToCheckButton();
+        //start time zone recycler view activity, passing along a string with time zone adapter
+        startActivityForResult(fragment_to_recycleview, 1);
     }
 
     //keep the previous radio button selected until a legitimate location/time zone is actually selected.

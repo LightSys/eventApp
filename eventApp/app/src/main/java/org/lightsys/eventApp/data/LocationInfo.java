@@ -8,7 +8,7 @@ import org.lightsys.eventApp.tools.LocalDB;
  * Object for getting an event's locations
  */
 
-public class LocationInfo {
+public final class LocationInfo {
 
     /* returns an array of string event locations
      * TODO: change this method to access multiple event locations from the JSON file.

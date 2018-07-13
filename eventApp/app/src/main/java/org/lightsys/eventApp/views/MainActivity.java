@@ -49,6 +49,7 @@ import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.NavigationAdapter;
 import org.lightsys.eventApp.tools.RefreshPressedHelper;
 import org.lightsys.eventApp.tools.ScannedEventsAdapter;
+import org.lightsys.eventApp.tools.SettingsAdapters.ColorContrastHelper;
 import org.lightsys.eventApp.tools.qr.launchQRScanner;
 import org.lightsys.eventApp.views.SettingsViews.SettingsActivity;
 
@@ -140,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
         //set theme color
         color = Color.parseColor(db.getThemeColor("themeColor"));
-        determineBlackOrWhite(color);
+        black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
 
         /*set up drawer*/
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -244,21 +245,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         return super.onCreateOptionsMenu(menu);
     }
 
-    /**
-     * converts the given hex_color into grayscale and determines whether toolbar items should be black or white
-     * Created by Littlesnowman88 on 22 June 2018
-     * @param theme_color, the integer color to be analyzed and contrasted against
-     * Postcondition: black_or_white = #000000 if black, ffffff if white, whatever will show better given hex_color
-     */
-    private void determineBlackOrWhite(int theme_color) {
-        int r = Color.red(theme_color); // 0 < r < 255
-        int g = Color.green(theme_color); // 0 < g < 255
-        int b = Color.blue(theme_color); // 0 < b < 255
-        int average_intensity = (r + g + b) / 3;
-        if (average_intensity >= 120) {black_or_white = BLACK; }
-        else {black_or_white = WHITE; }
-    }
-
     //options menu (refresh, refresh frequency, rescan QR)
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -279,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     @Override
                     public void run() {
                         color = Color.parseColor(db.getThemeColor("themeColor"));
-                        determineBlackOrWhite(color);
+                        black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
                         setupMenusAndTheme();
                     }
                 };
@@ -380,7 +366,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         //   and new data connections are created after a scanned event is clicked AND after the QR is received.
         //   DataConnection calls this after it has built the database, so the themes will now load properly.
         color = Color.parseColor(db.getThemeColor("themeColor"));
-        determineBlackOrWhite(color);
+        black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
         setupMenusAndTheme();
     }
 

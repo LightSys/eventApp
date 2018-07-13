@@ -602,7 +602,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 //@id signals a new object, but contains no information on that line
                 if (!tempGeneral.getString(i).equals("@id")) {
                     //only loads refresh rate into database if rate is not already specified by the user
-                    if (!tempGeneral.getString(i).equals("refresh") || db.getGeneral("refresh_rate") == null) {
+                    if (!tempGeneral.getString(i).equals("refresh_rate") || db.getGeneral("refresh_rate") == null) {
                         db.addGeneral(tempGeneral.getString(i), qrJSON.getString(tempGeneral.getString(i)));
                     }
                 }

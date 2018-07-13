@@ -220,12 +220,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         MenuItem refresh = menu.findItem(R.id.action_refresh);
         MenuItem settings = menu.findItem(R.id.open_settings_gear);
         if (black_or_white == WHITE) {
-            qr.setIcon(R.drawable.ic_qr);
+            qr.setIcon(R.drawable.ic_event_list);
             refresh.setIcon(R.drawable.ic_refresh);
             settings.setIcon(R.drawable.ic_settings_24dp);
         }
         else {
-            qr.setIcon(R.drawable.ic_qr_black);
+            qr.setIcon(R.drawable.ic_event_list_black);
             refresh.setIcon(R.drawable.ic_refresh_black);
             settings.setIcon(R.drawable.ic_settings_black_24dp);
         }

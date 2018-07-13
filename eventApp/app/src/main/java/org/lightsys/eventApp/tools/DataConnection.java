@@ -246,8 +246,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
             try {
                 if(loadAll) {
-                    db.clear();
-                    db.addGeneral("url", qrAddress);
                     loadInfoAndNavTitles();
                 } else{
                     connection = checkConnection(db.getGeneral("notifications_url"));
@@ -273,21 +271,19 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     /** loads event information into the database and sets navigation titles
      *  A refactor created by Littlesnowman88 on 15 June 2018
+     * IMPORTANT: If the refresh button is ever deleted and updates become completely automatic,
+     *            The if statement structure in this function will need to be deleted.
+     *            readGeneralInfo and loadGeneralInfo will need to become void.
      */
     private void loadInfoAndNavTitles() {
         Activity main_activity = (MainActivity)dataActivity.get();
-        readGeneralInfo(connectionResult);
-        String notification_url = db.getGeneral("notifications_url");
-        connection = checkConnection(notification_url);
-        addNotificationTitle(connectionResult, db, main_activity);
-        connection = checkConnection(qrAddress);
-        loadEventInfo(connectionResult);
-
-        if (action.equals("new")){
+        if (readGeneralInfo(connectionResult)) {
+            String notification_url = db.getGeneral("notifications_url");
             connection = checkConnection(notification_url);
-            loadNotifications(connectionResult);
+            addNotificationTitle(connectionResult, db, main_activity);
+            connection = checkConnection(qrAddress);
+            loadEventInfo(connectionResult);
         }
-
         //add about page
         setupAboutPage(db, main_activity);
     }
@@ -300,10 +296,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Must be called by MainActivity's handleNoScannedEvent, thus this function is static.
      */
     public static void setupAboutPage(LocalDB db, Activity activity){
-        db.addInformationPage(new Info("LightSys Events (Android App)","Copyright © 2017-2018 LightSys Technology Services, Inc.  This app was created for the use of distributing event information for ministry events.\n\nThis app's source code is also available under the GPLv3 open-source license at:\nhttps://github.com/LightSys/eventApp"), "About");
-        db.addInformationPage(new Info("Open Source","This app includes the following open source libraries:"), "About");
-        db.addInformationPage(new Info("Mobile Vision Barcode Scanner","Copyright (c) 2016 Nosakhare Belvi\nLicense: MIT License\nWebsite: https://github.com/KingsMentor/MobileVisionBarcodeScanner"), "About");
-        db.addInformationPage(new Info("The Android Open Source Project", "Copyright (c) 2016 The Android Open Source Project\nLicense: Apache License 2.0\nWebsite: https://classroom.udacity.com/courses/ud851"), "About");
+        db.addInformationPage(new Info(activity.getString(R.string.About_App_Header),activity.getString(R.string.About_App_Body)), "About");
+        db.addInformationPage(new Info(activity.getString(R.string.Open_Source_Header),activity.getString(R.string.Open_Source_Body)), "About");
+        db.addInformationPage(new Info(activity.getString(R.string.Barcode_Scanner_Header),activity.getString(R.string.Barcode_Scanner_Body)), "About");
+        db.addInformationPage(new Info(activity.getString(R.string.Android_Open_Source_Proj_Header), activity.getString(R.string.Android_Open_Source_Proj_Body)), "About");
         ArrayList<Info> nav_titles = db.getNavigationTitles();
         String about_title = activity.getString(R.string.about_title);
         for (Info item : nav_titles) {
@@ -317,8 +313,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     /** Loads General Info
      *  A refactor created by Littlesnowman88 on 15 June 2015
+     * IMPORTANT: If the refresh button is ever deleted and updates become completely automatic,
+     *            THIS WILL NEED TO RETURN VOID
      */
-    private void readGeneralInfo(String result) {
+    private boolean readGeneralInfo(String result) { //TODO: GO BACK TO VOID IF REFRESH BUTTON DELETE
         JSONObject json = null;
         if (result != null) {
             try {
@@ -327,14 +325,16 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 e.printStackTrace();
             }
             if (json == null) {
-                return;
+                return false; //TODO
             }
             try {
-                loadGeneralInfo(json.getJSONObject("general"));
+                return loadGeneralInfo(json.getJSONObject("general")); //TODO: DELETE RETURN
             } catch (Exception e) {
                 e.printStackTrace();
+                return false; //TODO
             }
         }
+        return false; //TODO
     }
 
     /** acesses the notifications json and sets the notifications nav title
@@ -549,20 +549,61 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     /**
      * Loads general Information
      * @param json, result of API query for general information
+     * Modified by Littlesnowman88 & TFMoo on 12 July 2018
+     * IMPORTANT: If the refresh button is ever deleted and updates become completely automatic,
+     *            THIS WILL NEED TO RETURN VOID
      */
-    private void loadGeneralInfo(JSONObject json) {
+    private boolean loadGeneralInfo(JSONObject json) {
         if (json == null) {
-            return;
+            return false;
         }
+
         JSONArray tempGeneral = json.names();
 
-        for (int i = 0; i < tempGeneral.length(); i++) {
+        int[] new_version = getVersionNumber(json, tempGeneral);
+        int[] old_version = db.getVersionNum();
+        if (qrAddress.equals(db.getGeneral("url"))) { //if updating same event
+            boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
+
+            if (update_flags[0]) { //config update needed == true
+                int[] new_config_version = {new_version[0], old_version[1]};
+                db.clear();
+                db.addGeneral("url", qrAddress);
+                db.replaceVersionNum(new_config_version);
+                finishLoadGeneralInfo(json, tempGeneral);
+            } else { //config update needed == false
+                return false;
+            }
+            if (update_flags[1]) { //notifications update needed == true
+                connection = checkConnection(db.getGeneral("notifications_url"));
+                loadNotifications(connectionResult);
+            }
+
+        } else { //if scanning/selecting new event
+            db.clear();
+            db.addGeneral("url", qrAddress);
+            int[] notif_forced_update_version = {new_version[0], -1}; //-1 forces the notification to recognize a "version change" and update notifications.
+            db.replaceVersionNum(notif_forced_update_version);
+            finishLoadGeneralInfo(json, tempGeneral);
+            connection = checkConnection(db.getGeneral("notifications_url"));
+            loadNotifications(connectionResult);
+        }
+        return true;
+    }
+
+    /** loads all of general info except for version info
+     *  Created/Refactored by Littlesnowman88 on 12 July 2018
+     */
+    private void finishLoadGeneralInfo(JSONObject qrJSON, JSONArray tempGeneral) {
+        //VERSION NUMBER MUST REMAIN THE FIRST THING IN THE JSON'S GENERAL SECTION FOR THIS TO WORK RIGHT
+        int num_general_items = tempGeneral.length();
+        for (int i = 1; i < num_general_items; i++) {
             try {
                 //@id signals a new object, but contains no information on that line
                 if (!tempGeneral.getString(i).equals("@id")) {
-                    //only loads 'refresh' info if it is not already specified by the user
-                    if (!tempGeneral.getString(i).equals("refresh") || db.getGeneral("refresh") == null) {
-                        db.addGeneral(tempGeneral.getString(i), json.getString(tempGeneral.getString(i)));
+                    //only loads refresh rate into database if rate is not already specified by the user
+                    if (!tempGeneral.getString(i).equals("refresh") || db.getGeneral("refresh_rate") == null) {
+                        db.addGeneral(tempGeneral.getString(i), qrJSON.getString(tempGeneral.getString(i)));
                     }
                 }
             } catch (JSONException e) {
@@ -574,13 +615,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     /**
      * Loads notifications Information
      * @param result, result of API query for hq information
+     * Modified by Littlesnowman88 & FTMoo on 12 July 2018
+     * IMPORTANT: If the refresh button is ever deleted and updates become completely automatic,
+     *            THIS WILL NEED TO RETURN VOID
      */
     private void loadNotifications(String result) {
-        ArrayList<Integer> currentNotifications = db.getCurrentNotifications();
-
-        db.deleteNotifications();
-        boolean loadData = false;
-
         if (result != null) {
             JSONObject json = null;
             try {
@@ -593,40 +632,71 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             }
             JSONArray tempNames = json.names();
 
-            for (int i = 0; i < tempNames.length(); i++) {
-                try {
-                    //@id signals a new object, but contains no information on that line
-                    if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
-                        JSONObject notificationObj = json.getJSONObject(tempNames.getString(i));
-                        Info temp = new Info();
-                        temp.setId(Integer.parseInt(tempNames.getString(i)));
-                        temp.setHeader(notificationObj.getString("title"));
-                        temp.setBody(notificationObj.getString("body"));
-                        temp.setDate(notificationObj.getString("date"));
-                        if (!currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
-                            // This one is new
-                            temp.setNew();
+            int[] new_version = getVersionNumber(json, tempNames);
+            int[] old_version = db.getVersionNum();
+            boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
+            if (update_flags[0]) { // if config file needs update
+                new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null, null).execute("");
+            } else { // if config file does not need update
+                if (update_flags [1]) { //if notifications json needs update
+                    int[] new_notif_version = {old_version[0], new_version[1]};
+                    db.replaceVersionNum(new_notif_version);
+                    ArrayList<Integer> currentNotifications = db.getCurrentNotifications();
+                    db.deleteNotifications();
+
+                    int num_notif_items = tempNames.length();
+                    for (int i = 1; i < num_notif_items; i++) {
+                        try {
+                            //@id signals a new object, but contains no information on that line
+                            if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
+                                JSONObject notificationObj = json.getJSONObject(tempNames.getString(i));
+                                Info temp = new Info();
+                                temp.setId(Integer.parseInt(tempNames.getString(i)));
+                                temp.setHeader(notificationObj.getString("title"));
+                                temp.setBody(notificationObj.getString("body"));
+                                temp.setDate(notificationObj.getString("date"));
+                                if (!currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
+                                    // This one is new
+                                    temp.setNew();
+                                }
+
+                                db.addNotification(temp);
+
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
-
-                        db.addNotification(temp);
-
-                        //TODO: SERIAL NUMBER IMPLEMENTATION
-                        //if notification refresh is true, has not already been loaded, and isn't a new event, reload all app data
-                        if (notificationObj.getBoolean("refresh") && !action.equals("new") &&!currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
-                            loadData = true;
-                        }
-
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
             }
-            if(loadData && dataContext != null && dataActivity != null) {
-                new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null,null).execute("");
-
-            }
         }
+    }
 
+    //Gets the version number from the JSON
+    private static int[] getVersionNumber(JSONObject qrJSON, JSONArray json_categories) {
+        //VERSION NUMBER MUST REMAIN THE FIRST THING IN THE JSON'S GENERAL SECTION
+        try {
+            String version_string = qrJSON.getString(json_categories.getString(0));
+            String[] version_tokens = version_string.split(",");
+            int[] version = {Integer.parseInt(version_tokens[0]), Integer.parseInt(version_tokens[1])};
+            return version;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            int[] version = {0,0};
+            return version;
+        }
+    }
+
+    //compares version numbers to see if configuration files need to update
+    private static boolean[] dataNeedsUpdate(int[] old_version, int[] new_version) {
+        boolean[] update_flags = {false, false};
+        if (old_version[0] != new_version[0]) {
+            update_flags[0] = true;
+        }
+        if (old_version[1] != new_version[1]) {
+            update_flags[1] = true;
+        }
+        return update_flags;
     }
 
     /**

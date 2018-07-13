@@ -32,6 +32,11 @@ public class LocalDB extends SQLiteOpenHelper {
     private static final String TABLE_SCANNED_EVENTS = "scanned_events";
     private static final String COLUMN_URL = "url";
     private static final String COLUMN_EVENT_NAME = "event_name";
+    //VERSION NUM TABLE
+    private static final String TABLE_VERSION_NUM = "version_num";
+    private static final String COLUMN_CONFIG_VER = "config_ver";
+    private static final String COLUMN_NOTIF_VER = "notif_ver";
+
     //GENERAL INFO TABLE
     private static final String TABLE_GENERAL_INFO = "general_info";
     private static final String COLUMN_TYPE = "info_type";
@@ -100,6 +105,10 @@ public class LocalDB extends SQLiteOpenHelper {
         String CREATE_TABLE_SCANNED_EVENTS = "CREATE TABLE " + TABLE_SCANNED_EVENTS + "("
                 + COLUMN_URL + " TEXT," + COLUMN_EVENT_NAME + " TEXT)";
         db.execSQL(CREATE_TABLE_SCANNED_EVENTS);
+
+        String CREATE_TABLE_VERSION_NUM = "CREATE TABLE " + TABLE_VERSION_NUM + "("
+                + COLUMN_CONFIG_VER+ " INTEGER," + COLUMN_NOTIF_VER + " INTEGER)";
+        db.execSQL(CREATE_TABLE_VERSION_NUM);
 
         String CREATE_TABLE_GENERAL_INFO = "CREATE TABLE " + TABLE_GENERAL_INFO + "("
                 + COLUMN_TYPE + " TEXT," + COLUMN_INFO + " TEXT)";
@@ -240,6 +249,20 @@ public class LocalDB extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_SCANNED_EVENTS, null, values);
+        db.close();
+    }
+
+    /**
+     * This will add a version number and url to the database
+     * @param version, the int array of version number for the config url and notification url
+     */
+    private void addVersionNum(int[] version){
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_CONFIG_VER, version[0]);
+        values.put(COLUMN_NOTIF_VER, version[1]);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.insert(TABLE_VERSION_NUM, null, values);
         db.close();
     }
 
@@ -403,6 +426,25 @@ public class LocalDB extends SQLiteOpenHelper {
             allEvents.add(0,values);
         }
         return allEvents;
+    }
+
+    /**
+     *
+     * @return the currently saved version number from the database
+     */
+    public int[] getVersionNum(){
+        int[] version_num = {0,0};
+        String queryString = "SELECT * FROM " + TABLE_VERSION_NUM;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(queryString,null);
+
+        while (c.moveToNext()){
+            version_num[0] = c.getInt(0);
+            version_num[1] = c.getInt(1);
+        }
+        c.close();
+        db.close();
+        return version_num;
     }
 
     /**
@@ -1033,6 +1075,12 @@ public class LocalDB extends SQLiteOpenHelper {
         db.close();
     }
 
+    private void removeVersionNum (){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_VERSION_NUM, null, null);
+        db.close();
+    }
+
     /* ************************* Replace Queries ************************* */
 
     /**
@@ -1046,6 +1094,16 @@ public class LocalDB extends SQLiteOpenHelper {
         removeEvent(remove_url);
         addEvent(add_url,add_name);
     }
+
+    /**
+     * Updates the version number for the current event
+     * @param version, the new version number of the config and notification urls
+     */
+    public void replaceVersionNum (int[] version){
+        removeVersionNum();
+        addVersionNum(version);
+    }
+
 
     //REMOVED BY LITTLESNOEMAN88, 7 June 2018
 //    /* ************************* Update Queries ************************* */

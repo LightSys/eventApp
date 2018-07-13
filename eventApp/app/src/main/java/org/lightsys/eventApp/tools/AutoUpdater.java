@@ -289,7 +289,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
      * @author: Littlesnowman88
      */
     private void setRefreshFrequency() {
-        String refresh_setting = sharedPreferences.getString("refresh_rate", db.getGeneral("refresh").trim());
+        String refresh_setting = sharedPreferences.getString("refresh_rate", db.getGeneral("refresh_rate").trim());
         switch (refresh_setting) {
             case "never":
                 updateMillis = NEVER;
@@ -298,7 +298,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
                     setAutoRefresh();
                 break;
             case "default":
-                String defaultVal = db.getGeneral("refresh");
+                String defaultVal = db.getGeneral("refresh_rate");
                 if (defaultVal.equals("never")) { updateMillis = NEVER; }
                 else if (defaultVal.equals("auto")) {setAutoRefresh();}
                 else { updateMillis = Integer.parseInt(defaultVal) * ONE_MINUTE; }
@@ -324,7 +324,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         } else { //if connected via cellular network
             //if refresh has been pressed or if an update has happened in the last hour.
             if ((elapsedTime < (ONE_HOUR))) { //NEED TO ADD: REFRESHES CAUSING UPDATE.
-                updateMillis = Math.max(5, Integer.parseInt(db.getGeneral("refresh").trim()));
+                updateMillis = Math.max(5, Integer.parseInt(db.getGeneral("refresh_rate").trim()));
             } else if (elapsedTime < (2 * ONE_HOUR)) {
                 updateMillis = 10 * ONE_MINUTE;
             } else if (elapsedTime < (3 * ONE_HOUR)) {

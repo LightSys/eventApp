@@ -43,8 +43,18 @@
 
     <!--Information Page resources-->
     <string name="bullet_custom">&#9654;</string>
-
     <string name="msg_default_status">Scan a QR code to import event data.</string>
+
+    <!--About Page resources-->
+    <string name="About_App_Header">LightSys Events (Android App)</string>
+    <string name="About_App_Body">Copyright © 2017&#8211;2018 LightSys Technology Services, Inc. This app was created for the use of distributing event information for ministry events.\n\nThis app\'s source code is also available under the GPLv3 open&#8211;source license at:\n https://github.com/LightSys/eventApp</string>
+    <string name="Open_Source_Header">Open Source</string>
+    <string name="Open_Source_Body">This app includes the following open source libraries:</string>
+    <string name="Barcode_Scanner_Header">Mobile Vision Barcode Scanner</string>
+    <string name="Barcode_Scanner_Body">Copyright © 2016 Nosakhare Belvi\nLicense: MIT License\nWebsite: https://github.com/KingsMentor/MobileVisionBarcodeScanner</string>
+    <string name="Android_Open_Source_Proj_Header">The Android Open Source Project</string>
+    <string name="Android_Open_Source_Proj_Body">Copyright © 2016 The Android Open Source Project\nLicense: Apache License 2.0\nWebsite: https://classroom.udacity.com/courses/ud851</string>
+
 
     <!--Settings Activity resources-->
     <string name="settings_title">Settings</string>

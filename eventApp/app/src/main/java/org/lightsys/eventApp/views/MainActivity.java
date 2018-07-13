@@ -196,7 +196,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == QR_RESULT && resultCode == RESULT_OK && data != null) {
             final String dataURL = data.getStringExtra(QR_DATA_EXTRA);
-            db.addGeneral("url",dataURL);
             Runnable updateEventList = new Runnable() {
                 @Override
                 public void run() {
@@ -271,7 +270,16 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 toggleVisibility();
                 break;
             case R.id.action_refresh:
-                new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null,null).execute("");
+                final String current_url = db.getGeneral("url");
+                Runnable refresh_ui = new Runnable() {
+                    @Override
+                    public void run() {
+                        color = Color.parseColor(db.getThemeColor("themeColor"));
+                        determineBlackOrWhite(color);
+                        setupMenusAndTheme();
+                    }
+                };
+                new DataConnection(context, activity, "refresh", current_url, true, null, refresh_ui).execute("");
                 stopService(updateIntent); //"refresh" (restart) the auto updater
                 startService(updateIntent);
                 break;
@@ -319,6 +327,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
     //Handles what happens when no events have been scanned. It enables the settings, about page, notifications page, and welcome message.
     public void handleNoScannedEvent(){
+        //set a dummy url
+        db.addGeneral("url", "No_Event");
+
         //Set welcome message
         String no_event_message = getString(R.string.no_event_welcome);
         db.addGeneral("welcome_message",no_event_message);
@@ -328,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         DataConnection.setupAboutPage(db, this);
 
         //Set refresh rate
-        db.addGeneral("refresh",getString(R.string.refresh_val_never));
+        db.addGeneral("refresh_rate",getString(R.string.refresh_val_never));
 
         //Set time zone
         db.addGeneral("time_zone", TimeZone.getDefault().getID());

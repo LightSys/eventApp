@@ -23,7 +23,7 @@ final public class TimeZoneInfo {
         ArrayList<String> first_continent = new ArrayList<>();
         time_zone = all_time_zones[0].split("/", 2);
 
-        if(first_continent.size() == 1){
+        if(time_zone.length == 1){
             other.add(time_zone[0]);
             first_continent.add("Other");
         }
@@ -69,7 +69,7 @@ final public class TimeZoneInfo {
         }
         new_continent.add(time_zone[0]);
         new_continent.add(time_zone[1]);
-        parsed_time_zones.add(new_continent);
+        parsed_time_zones.add(parsed_time_zones.size() - 1, new_continent);
         return parsed_time_zones;
     }
 }

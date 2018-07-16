@@ -6,16 +6,15 @@
 
     <!--This View serves as a visual divider between list items-->
     <View
-        android:id = "@+id/zone_item_top"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#dcdcdc"
         android:layout_marginLeft="6dp"
         android:layout_marginRight="6dp" />
 
-    <!--This TextView holds the time zone name for one time zone-->
+    <!--This TextView holds the continent name name for one continent-->
     <TextView
-        android:id="@+id/time_zone_data"
+        android:id="@+id/continent_data"
         style="@style/TextAppearance.AppCompat.Small"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -25,7 +24,6 @@
 
     <!--This View serves as a visual divider between list items-->
     <View
-        android:id="@+id/zone_item_bottom"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="#dcdcdc"

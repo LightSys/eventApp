@@ -60,6 +60,14 @@
             >
         </activity>
 
+        <activity
+            android:name="org.lightsys.eventApp.views.SettingsViews.TimeZoneSelectionView"
+            android:label = "@string/time_settings_title"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName=".views.SettingsViews.SettingsRecycleView"
+            >
+        </activity>
+
 
         <activity
             android:name="org.lightsys.eventApp.tools.qr.launchQRScanner"

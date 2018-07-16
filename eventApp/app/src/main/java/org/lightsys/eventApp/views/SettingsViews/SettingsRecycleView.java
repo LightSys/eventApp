@@ -18,22 +18,21 @@ import org.lightsys.eventApp.data.LocationInfo;
 import org.lightsys.eventApp.data.TimeZoneInfo;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.ColorContrastHelper;
+import org.lightsys.eventApp.tools.SettingsAdapters.ContinentSelectionAdapter;
 import org.lightsys.eventApp.tools.SettingsAdapters.EventLocationAdapter;
-import org.lightsys.eventApp.tools.SettingsAdapters.TimeZoneAdapter;
 
 
-public class SettingsRecycleView extends AppCompatActivity implements EventLocationAdapter.EventLocationAdapterOnClickHandler, TimeZoneAdapter.TimeZoneAdapterOnClickHandler {
+public class SettingsRecycleView extends AppCompatActivity implements EventLocationAdapter.EventLocationAdapterOnClickHandler, ContinentSelectionAdapter.TimeZoneAdapterOnClickHandler {
 
     private RecyclerView recyclerView;
     private LocalDB db;
     private EventLocationAdapter eventAdapter;
-    private TimeZoneAdapter zoneAdapter;
-    private String[] eventLocations, allTimeZones;
-    private String selectedStringTimeZone;
-    private Intent recyclerview_to_fragment;
+    private ContinentSelectionAdapter continentAdapter;
+    private String[][] allTimeZones;
+    private String[] eventLocations, continents;
+    private String selectedContinent;
+    private Intent recyclerview_to_fragment, recyclerview_to_reyclerview;
     private int color, black_or_white;
-    private static final int BLACK = Color.parseColor("#000000");
-    private static final int WHITE = Color.parseColor("#ffffff");
 
 
     @Override
@@ -46,8 +45,10 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
                 LinearLayoutManager.VERTICAL, false);
         recyclerView.setLayoutManager(layoutManager);
         db = new LocalDB(context);
-        Intent fragment_to_here = getIntent();
+
         recyclerview_to_fragment = new Intent(context, SettingsFragment.class);
+        recyclerview_to_reyclerview = new Intent(context, TimeZoneSelectionView.class);
+        Intent fragment_to_here = getIntent();
         String adapterToUse = fragment_to_here.getStringExtra("adapter");
 
         /* set up an action bar for returning to Main Activity */
@@ -73,21 +74,42 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
             eventLocations = LocationInfo.getEventLocations(db);
             eventAdapter.setLocationData(eventLocations);
             recyclerView.setAdapter(eventAdapter);
-        } else if (adapterToUse.equals("TimeZoneAdapter")) {
-            zoneAdapter = new TimeZoneAdapter(this);
+        } else if (adapterToUse.equals("ContinentSelectionAdapter")) {
+            continentAdapter = new ContinentSelectionAdapter(this);
             allTimeZones = TimeZoneInfo.getAllTimeZones();
-            zoneAdapter.setTimeData(allTimeZones);
-            recyclerView.setAdapter(zoneAdapter);
+            continents = allTimeZones[0];
+            continentAdapter.setContinentData(continents);
+            recyclerView.setAdapter(continentAdapter);
         }
     }
 
-    /* overrides EventLocationAdapterOnClickHandler's and TimeZoneAdapterOnClickHandler's onClick(String) */
+    /* overrides EventLocationAdapterOnClickHandler's and ContinentSelectionAdapterOnClickHandler's onClick(String) */
     @Override
     public void onClick(String recycler_view_item) {
-        selectedStringTimeZone = recycler_view_item.trim();
-        recyclerview_to_fragment.putExtra("selected_item", selectedStringTimeZone);
-        setResult(Activity.RESULT_OK, recyclerview_to_fragment);
-        finish();
+        selectedContinent = recycler_view_item.trim();
+        Bundle zone_container = new Bundle();
+        //find the location of the continent in allTimeZones
+        for (int i=0; i<allTimeZones[0].length; i++) {
+            if (selectedContinent.equals(allTimeZones[0][i])) {
+                zone_container.putStringArray("selected_continent", allTimeZones[i+1]);
+                recyclerview_to_reyclerview.putExtras(zone_container);
+                startActivityForResult(recyclerview_to_reyclerview, 1);
+                break;
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) {
+            if (resultCode == Activity.RESULT_OK) {
+                String selected_zone = selectedContinent + "/"
+                        + data.getStringExtra("selected_item");
+                recyclerview_to_fragment.putExtra("selected_item", selected_zone);
+                setResult(Activity.RESULT_OK, recyclerview_to_fragment);
+                finish();
+            }
+        }
     }
 
     /* used for the back-arrow button that returns to the Settings Activity
@@ -101,6 +123,4 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
         }
         return super.onOptionsItemSelected(item);
     }
-
-
 }

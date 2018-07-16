@@ -232,7 +232,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
         /*take note of the button press and prep the adapter */
         current_time_zone_button = 2;
         fragment_to_recycleview.removeExtra("adapter");
-        fragment_to_recycleview.putExtra("adapter", "TimeZoneAdapter");
+        fragment_to_recycleview.putExtra("adapter", "ContinentSelectionAdapter");
         waitToCheckButton();
         //start time zone recycler view activity, passing along a string with time zone adapter
         startActivityForResult(fragment_to_recycleview, 1);
@@ -307,7 +307,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                             my_remote_zone_button.setChecked(true);
                             custom_zone_button.setChecked(false);
                             break;
-                        case "TimeZoneAdapter":
+                        case "ContinentSelectionAdapter":
                             event_zone_button.setChecked(false);
                             my_remote_zone_button.setChecked(false);
                             custom_zone_button.setChecked(true);

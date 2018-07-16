@@ -38,7 +38,7 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
     }
 
     /**
-     * A viewholder to handle clicks that happen inside of the recycler view; passes items clicked up to the TimeZoneAdapter's onClick.
+     * A viewholder to handle clicks that happen inside of the recycler view; passes items clicked up to the ContinentSelectionAdapter's onClick.
      */
     protected class ScannedEventsAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public final TextView eventsTextView;
@@ -69,7 +69,7 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
     /** called when each ViewHolder in the RecycleView is created.
      * @param viewGroup: the single view group that contains all the list views
      * @param viewType: an integer indicating different types of items.
-     * @return: an TimeZoneAdapterViewHolder that contains the Views for each time zone
+     * @return: an ContinentSelectionAdapterViewHolder that contains the Views for each time zone
      */
     @Override
     public ScannedEventsAdapterViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {

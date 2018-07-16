@@ -558,7 +558,7 @@ public class LocalDB extends SQLiteOpenHelper {
      *  greater than 24 hours as of this version.
      */
     public ArrayList<ScheduleInfo> getFullSchedule() {
-        ArrayList<String> days = getJSONDays();
+        ArrayList<String> days = determineDays();
         ArrayList<ScheduleInfo> schedule;
         if (sharedPreferences.getString("selected_time_setting", "").equals("on-site")) {
             schedule = getDailySchedule(days);
@@ -568,6 +568,19 @@ public class LocalDB extends SQLiteOpenHelper {
         allDays = days;
         scheduleTimeRange = getScheduleEdges(schedule);
         return schedule;
+    }
+
+    private ArrayList<String> determineDays() {
+        ArrayList<String> days = getJSONDays();
+        int num_days = days.size();
+        for (int i=0; i < num_days - 1; i++) {
+            String tomorrow = createTomorrow(days.get(i));
+            if (! days.contains(tomorrow)) {
+                days.add(i+1, tomorrow);
+                num_days++;
+            }
+        }
+        return days;
     }
 
     /** getDailySchedule returns daily schedule info for an on-site timezone

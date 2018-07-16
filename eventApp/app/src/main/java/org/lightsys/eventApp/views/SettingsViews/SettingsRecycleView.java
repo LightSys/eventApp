@@ -11,16 +11,13 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.style.ForegroundColorSpan;
 import android.view.MenuItem;
 
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.LocationInfo;
 import org.lightsys.eventApp.data.TimeZoneInfo;
 import org.lightsys.eventApp.tools.LocalDB;
-import org.lightsys.eventApp.tools.SettingsAdapters.ColorContrastHelper;
+import org.lightsys.eventApp.tools.ColorContrastHelper;
 import org.lightsys.eventApp.tools.SettingsAdapters.EventLocationAdapter;
 import org.lightsys.eventApp.tools.SettingsAdapters.TimeZoneAdapter;
 
@@ -63,12 +60,12 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
             color = Color.parseColor(db.getThemeColor("themeColor"));
             black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
             actionBar.setBackgroundDrawable(new ColorDrawable(color));
-            setToolBarTextColor(actionBar);
+            actionBar = ColorContrastHelper.setToolBarTextColor(actionBar, black_or_white);
         } catch (Exception e) {
             color = Color.parseColor("#6080C0");
             black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
             actionBar.setBackgroundDrawable(new ColorDrawable(color));
-            setToolBarTextColor(actionBar);
+            actionBar = ColorContrastHelper.setToolBarTextColor(actionBar, black_or_white);
         }
 
         if (adapterToUse.equals("EventLocationAdapter")) {
@@ -81,30 +78,6 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
             allTimeZones = TimeZoneInfo.getAllTimeZones();
             zoneAdapter.setTimeData(allTimeZones);
             recyclerView.setAdapter(zoneAdapter);
-
-        }
-
-    }
-
-    /**
-     * converts the given hex_color into grayscale and determines whether toolBar text color should be black or white
-     * Created by Littlesnowman88 on 22 June 2018
-     * @param action_bar, the action bar having its text color set
-     * Postcondition: text color is set to either black or white, whatever will show better
-     */
-    private void setToolBarTextColor(ActionBar action_bar) {
-        String title = action_bar.getTitle().toString();
-        SpannableStringBuilder color_setter = new SpannableStringBuilder(title);
-        if (black_or_white == BLACK) {
-            ForegroundColorSpan color_span = new ForegroundColorSpan(BLACK);
-            color_setter.setSpan(color_span, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-            action_bar.setTitle(color_setter);
-            action_bar.setHomeAsUpIndicator(R.drawable.ic_arrow_back_black);
-        } else {
-            ForegroundColorSpan color_span = new ForegroundColorSpan(WHITE);
-            color_setter.setSpan(color_span, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-            action_bar.setTitle(color_setter);
-            action_bar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
         }
     }
 

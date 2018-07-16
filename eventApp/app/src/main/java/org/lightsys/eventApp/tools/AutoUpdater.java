@@ -361,7 +361,7 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
         try {
             return Math.max(time, Integer.parseInt(db.getGeneral("refresh_rate").trim())) * ONE_MINUTE;
         } catch (Exception e) {
-            //if default_rate is null (shouldn't be, but...), never, or auto, choose the passed in value.
+            //if JSON default_rate is never or auto, choose the passed in value.
             return time * ONE_MINUTE;
         }
     }

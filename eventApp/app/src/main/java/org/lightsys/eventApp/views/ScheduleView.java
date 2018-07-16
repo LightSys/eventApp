@@ -111,7 +111,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        if (s.equals("selected_time_setting")) {
+        if (s.equals("time_zone")) {
             selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", eventLocations[0]));
             removeViews();
             buildSchedule();
@@ -206,7 +206,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             CreateColumn(oneDay, today.equals(oneDay.get(0).getDay()));
         }
 
-        //TODO: HORIZONTAL SCROLLING RELATED. ANALYZE and RETHINK?
         //synchronize scroll header and scroll body
         ScrollB.setOnTouchListener(new View.OnTouchListener(){
 
@@ -314,7 +313,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         Box.addView(dividerHorizontal,1);
 
         //prep to convert date to day of week for schedule display
-        //TODO: Change this function call to receive from shared preferences?
         Log.d("Selected_Time_Zone ", selectedTimeZone.toString());
         TimeZone calTimeZone = selectedTimeZone;
         Calendar cal = Calendar.getInstance(calTimeZone, Locale.getDefault());
@@ -326,7 +324,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         SimpleDateFormat dateOutputFormatter = new SimpleDateFormat("MMMM dd yyyy", Locale.getDefault());
         inputFormatter.setTimeZone(calTimeZone); dayOutputFormatter.setTimeZone(calTimeZone); dateOutputFormatter.setTimeZone(calTimeZone);
 
-        //TODO: cal.setTime(storedDate) could still be problematic; it still uses the phone's default time zone! TEST with present day event.
         //create headers for each day
         Date storedDate = null;
         for (String d:days) {
@@ -576,7 +573,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
 
                 //adjust for time zone difference if device time zone is different from event time zone
-                cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone"))); //TODO: THIS IS DANGEROUS
+                cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone")));
                 cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStr[0]));
                 cal.set(Calendar.MINUTE, Integer.parseInt(timeStr[1]));
 

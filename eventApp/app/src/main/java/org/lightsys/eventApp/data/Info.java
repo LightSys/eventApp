@@ -63,6 +63,8 @@ public class Info {
 
     public void setNew() { this.is_new = true; }
 
+    public void setOld() {this.is_new = false; }
+
     public boolean getNew() { return this.is_new; }
 
 }

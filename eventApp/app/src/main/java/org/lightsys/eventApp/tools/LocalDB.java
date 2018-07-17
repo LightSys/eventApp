@@ -1007,6 +1007,39 @@ public class LocalDB extends SQLiteOpenHelper {
         return notifications;
     }
 
+    /** sets all the notifications "is new" to false
+     * created by: Littlesnowman88
+     * created on: 16 July 2018
+     */
+    public void unflagNewNotifications() {
+        String queryString = "SELECT * FROM " + TABLE_NOTIFICATIONS;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(queryString, null);
+
+        while (c.moveToNext()) {
+            if (c.getInt(4) == 1) {
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_HEADER, c.getString(1));
+                values.put(COLUMN_INFO, c.getString(2));
+                values.put(COLUMN_DATE, c.getString(3));
+                values.put(COLUMN_ID, c.getInt(0));
+                values.put(COLUMN_NEW, 0);
+                String whereClause = COLUMN_HEADER + " = " + "?";
+                String[] whereArgs = {c.getString(1)};
+
+                db.update(TABLE_NOTIFICATIONS, values, whereClause, whereArgs);
+            }
+        }
+
+        ArrayList<Info> notifications = getNotifications();
+        for (Info notification : notifications) {
+            notification.setOld();
+        }
+
+        c.close();
+        db.close();
+    }
+
     /**
      * returns Notifications
      * @return Info
@@ -1116,22 +1149,5 @@ public class LocalDB extends SQLiteOpenHelper {
         removeVersionNum();
         addVersionNum(version);
     }
-
-
-    //REMOVED BY LITTLESNOEMAN88, 7 June 2018
-//    /* ************************* Update Queries ************************* */
-//    /**
-//     * update general table to set refresh rate
-//     */
-//    public void updateRefreshRate(String rate){
-//        //String refresh = "'refresh'";
-//        ContentValues values = new ContentValues();
-//        values.put(COLUMN_INFO, rate);
-//
-//        SQLiteDatabase db = this.getWritableDatabase();
-//        db.update(TABLE_GENERAL_INFO, values, COLUMN_TYPE + " = 'refresh'", null);
-//        db.close();
-//    }
-
 
 }

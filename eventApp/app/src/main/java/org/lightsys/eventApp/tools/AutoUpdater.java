@@ -136,6 +136,7 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
     }
 
 
+    //Modified by Littlesnowman88 on 16 July 2018 so new notifications don't get passed into the for loop.
     // This gets called when the AsyncTask DataConnection completes.
     public void onCompletion()
     {
@@ -146,6 +147,7 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
         for (Info item : notifications) {
             sendNotification(item.getId(), item.getHeader(), item.getBody());
         }
+        db.unflagNewNotifications();
 
         // Release any wake lock now that we're done.
         pmCleanup();

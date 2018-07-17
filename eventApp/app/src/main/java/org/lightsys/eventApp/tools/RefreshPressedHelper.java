@@ -36,9 +36,15 @@ public class RefreshPressedHelper extends Observable{
 
     @Override
     public synchronized void addObserver(Observer o) {
-        if (o.getClass() ==  AutoUpdater.class && ! observers.contains(o)) {
+        if (o.getClass() == AutoUpdater.class) {
+            for (Observer observer : observers) {
+                if (observer.getClass() == o.getClass()) {
+                    return;
+                }
+            }
             observers.add(o);
         }
+
     }
 
     @Override

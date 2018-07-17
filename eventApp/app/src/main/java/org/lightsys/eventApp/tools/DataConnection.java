@@ -397,19 +397,14 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             if (json == null) {
                 return;
             }
-            try {
-                //separate JSON object and get individual parts to be stored in Local Database
-                loadTheme(json.getJSONArray("theme"));
-                loadContactPage(json.getJSONObject("contact_page"));
-                loadSchedule(json.getJSONObject("schedule"));
-                loadHousing(json.getJSONObject("housing"));
-                loadPrayerPartners(json.getJSONArray("prayer_partners"));
-                loadInformationalPage(json.getJSONObject("information_page"),db);
-                loadContacts(json.getJSONObject("contacts"));
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            //separate JSON object and get individual parts to be stored in Local Database
+            try { loadTheme(json.getJSONArray("theme")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadContactPage(json.getJSONObject("contact_page")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadSchedule(json.getJSONObject("schedule")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadHousing(json.getJSONObject("housing")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadPrayerPartners(json.getJSONArray("prayer_partners")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadInformationalPage(json.getJSONObject("information_page"),db); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadContacts(json.getJSONObject("contacts")); } catch (JSONException e) { e.printStackTrace(); }
         }
     }
 

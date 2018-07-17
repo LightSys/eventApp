@@ -78,6 +78,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         this.loadAll = loadAll;
         this.action = action;
         this.db = new LocalDB(dataContext.get());
+        old_qrAddress = db.getGeneral("old_url");
         Log.d(TAG, "DataConnection: " + qrAddress);
         if (activity != null) {
             spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle);
@@ -246,6 +247,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             Log.i(Tag, "pulling data");
 
             try {
+                old_qrAddress = db.getGeneral("url");
                 if(loadAll) {
                     loadInfoAndNavTitles();
                 } else{
@@ -563,7 +565,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
             if (update_flags[0]) { //config update needed == true
                 int[] new_config_version = {new_version[0], old_version[1]};
-                old_qrAddress = db.getGeneral("url");
                 db.clear();
                 db.addGeneral("url", qrAddress);
                 db.replaceVersionNum(new_config_version);
@@ -577,7 +578,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             }
 
         } else { //if scanning/selecting new event
-            old_qrAddress = db.getGeneral("url");
             db.clear();
             db.addGeneral("url", qrAddress);
             int[] notif_forced_update_version = {new_version[0], -1}; //-1 forces the notification to recognize a "version change" and update notifications.

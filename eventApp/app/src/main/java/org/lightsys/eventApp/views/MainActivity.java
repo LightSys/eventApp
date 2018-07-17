@@ -318,6 +318,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     public void handleNoScannedEvent(){
         //set a dummy url
         db.addGeneral("url", "No_Event");
+        db.addGeneral("old_url", "No_Event");
 
         //Set welcome message
         String no_event_message = getString(R.string.no_event_welcome);

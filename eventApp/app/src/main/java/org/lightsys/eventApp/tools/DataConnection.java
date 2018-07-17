@@ -735,16 +735,22 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
         for (int i = 0; i < tempNames.length(); i++) {
             try {
+                String json_item = tempNames.getString(i);
                 //@id signals a new object, but contains no information on that line
-                if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
-                    JSONObject HousingObj = json.getJSONObject(tempNames.getString(i));
-
-                    String host_name = tempNames.getString(i);
-                    String driver = HousingObj.getString("driver");
-                    String students = HousingObj.getString("students");
-
-                    // add the Contact Object to db
+                if (!json_item.equals("@id") && !json_item.equals("nav") && !json_item.equals("icon")) {
+                    JSONObject HousingObj = json.getJSONObject(json_item);
                     HousingInfo temp = new HousingInfo();
+                    String host_name, driver, students;
+
+                    host_name = (json_item != null)? json_item : "No Assigned Host";
+
+                    driver = HousingObj.getString("driver");
+                    students = HousingObj.getString("students");
+
+                    if(driver == null){driver = "No Assigned Driver";}
+                    if(students == null) {students = "No Assigned Guests";}
+
+                    // add the Housing Info Object to db
                     temp.setName(host_name);
                     temp.setDriver(driver);
                     temp.setStudents(students);

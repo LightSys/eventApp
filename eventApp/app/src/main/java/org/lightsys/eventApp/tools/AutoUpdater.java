@@ -104,6 +104,15 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
     }
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        refresh_pressed_listener = RefreshPressedHelper.getInstance();
+        refresh_pressed_listener.addObserver(this);
+    }
+
+    @Override
     public void onDestroy() {
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         super.onDestroy();
@@ -113,9 +122,6 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         Log.d("AutoUpdater", "onStartCommand()");
-
-        refresh_pressed_listener = RefreshPressedHelper.getInstance();
-        refresh_pressed_listener.addObserver(this);
 
         if (intent != null) {
             String once = intent.getStringExtra("checkOnce");
@@ -254,10 +260,6 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
      */
     private void checkForUpdates()
     {
-        if (sharedPreferences == null) {
-            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
-            sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        }
         db.close();
 
         Calendar currentDate = Calendar.getInstance();

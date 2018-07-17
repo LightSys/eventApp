@@ -159,7 +159,6 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
         pmCleanup();
     }
 
-
     private void pmCleanup()
     {
         if (wifiLock != null && wifiLock.isHeld()) {

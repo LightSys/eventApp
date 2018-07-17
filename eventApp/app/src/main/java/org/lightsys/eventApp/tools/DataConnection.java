@@ -54,6 +54,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     private LocalDB db;
     private final String qrAddress;    //location of JSON file
+    private String old_qrAddress;
     private final WeakReference<Context> dataContext; // Context that the DataConnection was executed in
     private final WeakReference<Activity> dataActivity;
     private ProgressDialog spinner;
@@ -561,6 +562,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
             if (update_flags[0]) { //config update needed == true
                 int[] new_config_version = {new_version[0], old_version[1]};
+                old_qrAddress = db.getGeneral("url");
                 db.clear();
                 db.addGeneral("url", qrAddress);
                 db.replaceVersionNum(new_config_version);
@@ -574,6 +576,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             }
 
         } else { //if scanning/selecting new event
+            old_qrAddress = db.getGeneral("url");
             db.clear();
             db.addGeneral("url", qrAddress);
             int[] notif_forced_update_version = {new_version[0], -1}; //-1 forces the notification to recognize a "version change" and update notifications.
@@ -637,7 +640,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     db.replaceVersionNum(new_notif_version);
                     ArrayList<Info> notifications = db.getNotifications();
                     db.deleteNotifications();
-
+                    boolean isSameURL = (old_qrAddress.equals(qrAddress));
                     int num_notif_items = tempNames.length();
                     for (int i = 1; i < num_notif_items; i++) {
                         try {
@@ -650,7 +653,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                                 temp.setHeader(notificationObj.getString("title"));
                                 temp.setBody(notificationObj.getString("body"));
                                 temp.setDate(notificationObj.getString("date"));
-                                if (notificationIsNewOrChanged(notifications,temp)) {
+                                if (isSameURL && notificationIsNewOrChanged(notifications,temp)) {
                                     temp.setNew();
                                 } else {temp.setOld();}
 

@@ -202,7 +202,10 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     resetScannedEventsAdapter(dataURL);
                 }
             };
-            new DataConnection(context, activity, "new", dataURL, true, null,updateEventList).execute("");
+            String action;
+            if (dataURL.equals(db.getGeneral("url"))) {action = "refresh";}
+            else {action = "new";}
+            new DataConnection(context, activity, action, dataURL, true, null,updateEventList).execute("");
         }
     }
 
@@ -349,7 +352,10 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     resetScannedEventsAdapter(scanned_url);
                 }
             };
-            new DataConnection(context, activity, "new", scanned_url, true, null, updateList).execute("");
+            String action;
+            if (scanned_url.equals(db.getGeneral("url"))) {action = "refresh";}
+            else {action = "new";}
+            new DataConnection(context, activity, action, scanned_url, true, null, updateList).execute("");
         }
     }
 

@@ -298,8 +298,6 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
     @Override
     public void update(Observable observable, Object o) {
         refresh_pressed = true;
-        Log.d("PREF_CHECK", sharedPreferences.getString("refresh_rate", "FREF_NULL"));
-        Log.d("DATABASE_CHECK", db.getGeneral("refresh_rate").trim());
         String refresh_setting = sharedPreferences.getString("refresh_rate", db.getGeneral("refresh_rate").trim());
         if (refresh_setting.equals("auto")) {
             setAutoRefresh();

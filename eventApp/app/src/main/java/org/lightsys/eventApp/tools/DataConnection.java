@@ -471,11 +471,12 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 //@id signals a new object, but contains no information on that line
                 if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
                     JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
-
+                    String header = ContactObj.getString("header");
+                    String body = ContactObj.getString("content");
                     // add the Contact Page Object to db
                     Info temp = new Info();
-                    temp.setHeader(ContactObj.getString("header"));
-                    temp.setBody(ContactObj.getString("content"));
+                    temp.setHeader(header==null?"":header);
+                    temp.setBody(body==null?"":body);
                     temp.setId(ContactObj.getInt("id"));
 
                     db.addContactPage(temp);

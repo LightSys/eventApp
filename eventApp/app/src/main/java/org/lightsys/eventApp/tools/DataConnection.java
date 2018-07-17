@@ -283,10 +283,16 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             addNotificationTitle(connectionResult, db, main_activity);
             connection = checkConnection(qrAddress);
             loadEventInfo(connectionResult);
+<<<<<<< Updated upstream
 
             //add about page
             setupAboutPage(db, main_activity);
         }
+=======
+            setupAboutPage(db, main_activity);
+        }
+
+>>>>>>> Stashed changes
     }
 
     /**
@@ -317,7 +323,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * IMPORTANT: If the refresh button is ever deleted and updates become completely automatic,
      *            THIS WILL NEED TO RETURN VOID
      */
-    private boolean readGeneralInfo(String result) { //TODO: GO BACK TO VOID IF REFRESH BUTTON DELETE
+    private boolean readGeneralInfo(String result) {
         JSONObject json = null;
         if (result != null) {
             try {
@@ -326,16 +332,16 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 e.printStackTrace();
             }
             if (json == null) {
-                return false; //TODO
+                return false;
             }
             try {
-                return loadGeneralInfo(json.getJSONObject("general")); //TODO: DELETE RETURN
+                return loadGeneralInfo(json.getJSONObject("general"));
             } catch (Exception e) {
                 e.printStackTrace();
-                return false; //TODO
+                return false;
             }
         }
-        return false; //TODO
+        return false;
     }
 
     /** acesses the notifications json and sets the notifications nav title
@@ -572,12 +578,12 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 db.addGeneral("url", qrAddress);
                 db.replaceVersionNum(new_config_version);
                 finishLoadGeneralInfo(json, tempGeneral);
-            } else { //config update needed == false
+            } else { //config update needed = false
+                if (update_flags[1]) { //notifications update needed == true
+                    connection = checkConnection(db.getGeneral("notifications_url"));
+                    loadNotifications(connectionResult);
+                }
                 return false;
-            }
-            if (update_flags[1]) { //notifications update needed == true
-                connection = checkConnection(db.getGeneral("notifications_url"));
-                loadNotifications(connectionResult);
             }
 
         } else { //if scanning/selecting new event
@@ -642,24 +648,24 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 if (update_flags [1]) { //if notifications json needs update
                     int[] new_notif_version = {old_version[0], new_version[1]};
                     db.replaceVersionNum(new_notif_version);
-                    ArrayList<Integer> currentNotifications = db.getCurrentNotifications();
+                    ArrayList<Info> notifications = db.getNotifications();
                     db.deleteNotifications();
 
                     int num_notif_items = tempNames.length();
                     for (int i = 1; i < num_notif_items; i++) {
                         try {
+                            String json_item = tempNames.getString(i);
                             //@id signals a new object, but contains no information on that line
-                            if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
-                                JSONObject notificationObj = json.getJSONObject(tempNames.getString(i));
+                            if (! json_item.equals("version_num") && !json_item.equals("@id") && !json_item.equals("nav") && !json_item.equals("icon")) {
+                                JSONObject notificationObj = json.getJSONObject(json_item);
                                 Info temp = new Info();
-                                temp.setId(Integer.parseInt(tempNames.getString(i)));
+                                temp.setId(Integer.parseInt(json_item));
                                 temp.setHeader(notificationObj.getString("title"));
                                 temp.setBody(notificationObj.getString("body"));
                                 temp.setDate(notificationObj.getString("date"));
-                                if (!currentNotifications.contains(Integer.parseInt(tempNames.getString(i)))) {
-                                    // This one is new
+                                if (notificationIsNewOrChanged(notifications,temp)) {
                                     temp.setNew();
-                                }
+                                } else {temp.setOld();}
 
                                 db.addNotification(temp);
 
@@ -671,6 +677,22 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 }
             }
         }
+    }
+
+    private static boolean notificationIsNewOrChanged(ArrayList<Info> notifications, Info new_notif) {
+        for (Info notif : notifications){
+            if (notif.getId() == new_notif.getId()) { //if the notification currently exists
+                //but something significant about it has changed
+                if (!notif.getBody().equals(new_notif.getBody())
+                        || !notif.getHeader().equals(new_notif.getHeader())
+                        || !notif.getDate().equals(new_notif.getDate()))
+                { return true; }
+                else { //the notification exists and nothing significant has changed
+                    return false;
+                }
+            }
+        } //else, the notification ID was not found, so it must be new.
+        return true;
     }
 
     //Gets the version number from the JSON

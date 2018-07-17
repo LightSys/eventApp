@@ -283,9 +283,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             addNotificationTitle(connectionResult, db, main_activity);
             connection = checkConnection(qrAddress);
             loadEventInfo(connectionResult);
+
+            //add about page
+            setupAboutPage(db, main_activity);
         }
-        //add about page
-        setupAboutPage(db, main_activity);
     }
 
     /**

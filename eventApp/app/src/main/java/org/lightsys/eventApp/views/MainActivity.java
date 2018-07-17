@@ -649,6 +649,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 fragment = new WelcomeView();
                 fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
                         .commit();
+                //sets refresh icon
+                successfulConnection = true;
             }else if (intent.getStringExtra("action").equals("expired")){
                 //if event has expired
                 Toast.makeText(context, "Event has expired, please scan a QR for a new event", Toast.LENGTH_SHORT).show();

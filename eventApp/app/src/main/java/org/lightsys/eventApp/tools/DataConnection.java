@@ -78,7 +78,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         this.loadAll = loadAll;
         this.action = action;
         this.db = new LocalDB(dataContext.get());
-        old_qrAddress = db.getGeneral("old_url");
+        old_qrAddress = db.getGeneral("notifications_url");
         Log.d(TAG, "DataConnection: " + qrAddress);
         if (activity != null) {
             spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle);
@@ -247,7 +247,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             Log.i(Tag, "pulling data");
 
             try {
-                old_qrAddress = db.getGeneral("url");
+                old_qrAddress = db.getGeneral("notifications_url");
                 if(loadAll) {
                     loadInfoAndNavTitles();
                 } else{

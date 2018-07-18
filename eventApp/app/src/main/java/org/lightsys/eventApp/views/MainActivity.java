@@ -250,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 toggleVisibility();
                 break;
             case R.id.action_refresh:
-                final String current_url = db.getGeneral("url");
+                final String current_url = db.getGeneral("notifications_url");
                 Runnable refresh_ui = new Runnable() {
                     @Override
                     public void run() {
@@ -259,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                         setupMenusAndTheme();
                     }
                 };
-                new DataConnection(context, activity, "refresh", current_url, true, null, refresh_ui).execute("");
+                new DataConnection(context, activity, "refresh", current_url, false, null, refresh_ui).execute("");
                 stopService(updateIntent); //"refresh" (restart) the auto updater
                 updateIntent.removeExtra("refreshed_pressed");
                 updateIntent.putExtra("refresh_pressed", true);

@@ -70,9 +70,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
     private SharedPreferences sharedPreferences;
     private String[] eventLocations;
     private TimeZone selectedTimeZone;
-
-
-    //TODO: MAKE THIS RECREATE UPON CHANGING SHARED PREFERENCES.
+    
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         v = inflater.inflate(R.layout.schedule_layout, container, false);

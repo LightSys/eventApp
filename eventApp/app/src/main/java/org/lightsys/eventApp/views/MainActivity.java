@@ -615,6 +615,15 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "PRAYER_PARTNERS")
                             .commit();
                     break;
+                case "About":
+                    Bundle about_bundle = new Bundle();
+                    about_bundle.putString("page", title);
+
+                    fragment = new AboutPageView();
+                    fragment.setArguments(about_bundle);
+                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "ABOUT")
+                            .commit();
+                    break;
                 default:
                     Bundle bundle = new Bundle();
                     bundle.putString("page", title);

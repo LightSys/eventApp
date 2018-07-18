@@ -298,10 +298,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Must be called by MainActivity's handleNoScannedEvent, thus this function is static.
      */
     public static void setupAboutPage(LocalDB db, Activity activity){
-        db.addInformationPage(new Info(activity.getString(R.string.About_App_Header),activity.getString(R.string.About_App_Body)), "About");
-        db.addInformationPage(new Info(activity.getString(R.string.Open_Source_Header),activity.getString(R.string.Open_Source_Body)), "About");
-        db.addInformationPage(new Info(activity.getString(R.string.Barcode_Scanner_Header),activity.getString(R.string.Barcode_Scanner_Body)), "About");
-        db.addInformationPage(new Info(activity.getString(R.string.Android_Open_Source_Proj_Header), activity.getString(R.string.Android_Open_Source_Proj_Body)), "About");
+        db.addAboutPage(new Info(activity.getString(R.string.About_App_Header),activity.getString(R.string.About_App_Body)), "About");
+        db.addAboutPage(new Info(activity.getString(R.string.Open_Source_Header),activity.getString(R.string.Open_Source_Body)), "About");
+        db.addAboutPage(new Info(activity.getString(R.string.Barcode_Scanner_Header),activity.getString(R.string.Barcode_Scanner_Body)), "About");
+        db.addAboutPage(new Info(activity.getString(R.string.Android_Open_Source_Proj_Header), activity.getString(R.string.Android_Open_Source_Proj_Body)), "About");
         ArrayList<Info> nav_titles = db.getNavigationTitles();
         String about_title = activity.getString(R.string.about_title);
         for (Info item : nav_titles) {

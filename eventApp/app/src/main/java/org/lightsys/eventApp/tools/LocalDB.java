@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.HousingInfo;
@@ -18,9 +17,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -41,7 +37,6 @@ public class LocalDB extends SQLiteOpenHelper {
     private static final String TABLE_VERSION_NUM = "version_num";
     private static final String COLUMN_CONFIG_VER = "config_ver";
     private static final String COLUMN_NOTIF_VER = "notif_ver";
-
     //GENERAL INFO TABLE
     private static final String TABLE_GENERAL_INFO = "general_info";
     private static final String COLUMN_TYPE = "info_type";
@@ -70,6 +65,9 @@ public class LocalDB extends SQLiteOpenHelper {
     private static final String COLUMN_HEADER = "header";
     private static final String COLUMN_INFO = "info";
     private static final String COLUMN_PAGE = "page";
+    //ABOUT PAGE TABLE
+    // uses the same columns as the information page
+    private static final String TABLE_ABOUT_PAGE = "about_page";
     //HOUSING TABLE
     private static final String TABLE_HOUSING = "housing";
     private static final String COLUMN_DRIVER = "driver";
@@ -136,6 +134,10 @@ public class LocalDB extends SQLiteOpenHelper {
                 + COLUMN_HEADER + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_PAGE + " TEXT)";
         db.execSQL(CREATE_TABLE_INFORMATION_PAGE);
 
+        String CREATE_TABLE_ABOUT_PAGE = "CREATE TABLE " + TABLE_ABOUT_PAGE + "(" + COLUMN_HEADER
+                + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_PAGE + " TEXT)";
+        db.execSQL(CREATE_TABLE_ABOUT_PAGE);
+
         String CREATE_TABLE_NOTIFICATIONS = "CREATE TABLE " + TABLE_NOTIFICATIONS + "("
                 + COLUMN_ID + " INTEGER PRIMARY KEY," + COLUMN_HEADER + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_DATE + " TEXT," + COLUMN_NEW + " INTEGER)";
         db.execSQL(CREATE_TABLE_NOTIFICATIONS);
@@ -186,6 +188,7 @@ public class LocalDB extends SQLiteOpenHelper {
         db.delete(TABLE_NAVIGATION_TITLES, null, null);
         db.delete(TABLE_THEME, null, null);
         db.delete(TABLE_CONTACT_PAGE, null, null);
+        db.delete(TABLE_ABOUT_PAGE, null, null);
     }
 
     //delete all notifications
@@ -346,6 +349,20 @@ public class LocalDB extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_INFORMATION_PAGE, null, values);
+        db.close();
+    }
+
+    /**
+     * adds about page information
+     */
+    public void addAboutPage(Info aboutPage, String Page){
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_HEADER, aboutPage.getHeader());
+        values.put(COLUMN_INFO, aboutPage.getBody());
+        values.put(COLUMN_PAGE, Page);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.insert(TABLE_ABOUT_PAGE,null,values);
         db.close();
     }
 
@@ -952,6 +969,32 @@ public class LocalDB extends SQLiteOpenHelper {
         ArrayList<Info> hq = new ArrayList<>();
 
         String queryString = "SELECT * FROM " + TABLE_INFORMATION_PAGE + " WHERE "
+                + COLUMN_PAGE + " LIKE \"%" + page + "%\"";
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(queryString, null);
+
+        while (c.moveToNext()) {
+            Info temp = new Info();
+
+            temp.setHeader(c.getString(0));
+            temp.setBody(c.getString(1));
+
+            hq.add(temp);
+        }
+        c.close();
+        db.close();
+        return hq;
+    }
+
+    /**
+     * Returns about page information
+     * @return an ArrayList of Info objects for page
+     */
+    public ArrayList<Info> getAboutPage(String page) {
+        ArrayList<Info> hq = new ArrayList<>();
+
+        String queryString = "SELECT * FROM " + TABLE_ABOUT_PAGE + " WHERE "
                 + COLUMN_PAGE + " LIKE \"%" + page + "%\"";
 
         SQLiteDatabase db = this.getReadableDatabase();

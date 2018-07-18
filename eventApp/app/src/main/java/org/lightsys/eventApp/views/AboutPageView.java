@@ -1,8 +1,8 @@
 package org.lightsys.eventApp.views;
 
+import android.support.v4.app.Fragment;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,14 +17,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
- * Created by otter57 on 3/29/17.
+ * Created by TFMoo on 7/18/2018.
  *
- * Displays Informational Page
+ * Displays About Page
  */
-
-public class InformationalPageView extends Fragment {
-
-    private ArrayList<Info> InfoPage;
+public class AboutPageView extends Fragment {
+    private ArrayList<Info> AboutPage;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -32,8 +30,8 @@ public class InformationalPageView extends Fragment {
         String page = getArguments().getString("page");
         getActivity().setTitle(page);
 
-        LocalDB db = new LocalDB(getContext());
-        InfoPage = db.getInfoPage(page);
+        LocalDB db = new LocalDB(getActivity().getApplicationContext());
+        AboutPage = db.getAboutPage(page);
 
         ListView infoListView = v.findViewById(R.id.infoList);
 
@@ -53,7 +51,7 @@ public class InformationalPageView extends Fragment {
     private ArrayList<HashMap<String, String>> generateListItems() {
         ArrayList<HashMap<String, String>> aList = new ArrayList<>();
         String oldHeader = null;
-        for (Info hq : InfoPage) {
+        for (Info hq : AboutPage) {
             HashMap<String, String> hm = new HashMap<>();
 
             if (!hq.getHeader().equals(oldHeader)) {
@@ -70,4 +68,3 @@ public class InformationalPageView extends Fragment {
         return aList;
     }
 }
-

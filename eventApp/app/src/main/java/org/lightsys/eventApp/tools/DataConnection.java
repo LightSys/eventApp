@@ -742,7 +742,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     HousingInfo temp = new HousingInfo();
                     String host_name, driver, students;
 
-                    host_name = (json_item != null)? json_item : "No Assigned Host";
+                    host_name = (!json_item.equals(""))? json_item : "No Assigned Host";
 
                     driver = HousingObj.getString("driver");
                     students = HousingObj.getString("students");

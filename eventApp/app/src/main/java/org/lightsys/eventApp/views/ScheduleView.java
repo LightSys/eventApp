@@ -463,7 +463,10 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             while (schedule.get(activityIndex).getDay().equals(day)) {
                 oneDay.add(schedule.get(activityIndex));
                 activityIndex++;
-                if (activityIndex == scheduleSize) {break;}
+                if (activityIndex == scheduleSize) {
+                    activityIndex--;
+                    break;
+                }
             }
             scheduleByDay.add(d, oneDay);
 

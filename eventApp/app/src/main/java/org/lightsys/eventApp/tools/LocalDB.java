@@ -969,7 +969,7 @@ public class LocalDB extends SQLiteOpenHelper {
         ArrayList<Info> hq = new ArrayList<>();
 
         String queryString = "SELECT * FROM " + TABLE_INFORMATION_PAGE + " WHERE "
-                + COLUMN_PAGE + " LIKE \"%" + page + "%\"" + " LIMIT 1";
+                + COLUMN_PAGE + " = \"" + page + "\"";
 
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(queryString, null);

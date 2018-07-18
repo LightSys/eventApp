@@ -45,7 +45,6 @@ import org.lightsys.eventApp.tools.AutoUpdater;
 import org.lightsys.eventApp.tools.DataConnection;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.NavigationAdapter;
-import org.lightsys.eventApp.tools.RefreshPressedHelper;
 import org.lightsys.eventApp.tools.ScannedEventsAdapter;
 import org.lightsys.eventApp.tools.ColorContrastHelper;
 import org.lightsys.eventApp.tools.qr.launchQRScanner;
@@ -90,8 +89,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     ActionBarDrawerToggle toggle;
 
     private boolean successfulConnection = true;
-
-    private RefreshPressedHelper refresh_pressed_helper;
 
     //stuff to automatically refresh the current fragment
     private final android.os.Handler refreshHandler = new android.os.Handler();
@@ -158,11 +155,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
      * Used by the drawer to refresh the toggle button
      * (on activity resume)
      */
-    @Override
-    public void onPostCreate(Bundle savedInstanceState){
-        refresh_pressed_helper = RefreshPressedHelper.getInstance();
-        super.onPostCreate(savedInstanceState);
-    }
 
     //displays home page as selected in navigation menu
     @Override
@@ -258,7 +250,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 toggleVisibility();
                 break;
             case R.id.action_refresh:
-                refresh_pressed_helper.setRefreshPressed(this);
                 final String current_url = db.getGeneral("url");
                 Runnable refresh_ui = new Runnable() {
                     @Override
@@ -270,6 +261,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 };
                 new DataConnection(context, activity, "refresh", current_url, true, null, refresh_ui).execute("");
                 stopService(updateIntent); //"refresh" (restart) the auto updater
+                updateIntent.removeExtra("refreshed_pressed");
+                updateIntent.putExtra("refresh_pressed", true);
                 startService(updateIntent);
                 break;
             case R.id.open_settings_gear:

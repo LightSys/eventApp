@@ -43,7 +43,7 @@ import java.util.Observer;
  *  SharedPreferences updates.
  *  Update frequency while device is asleep.
  */
-public class AutoUpdater extends Service implements CompletionInterface, Observer, SharedPreferences.OnSharedPreferenceChangeListener {
+public class AutoUpdater extends Service implements CompletionInterface, SharedPreferences.OnSharedPreferenceChangeListener {
 
     //time constants in milliseconds
     private static final int ONE_SECOND     = 1000;
@@ -66,9 +66,6 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
 
     //a flag to record if the refresh button in MainActivity has been pressed.
     private boolean refresh_pressed = false;
-
-    //mediator between AutoUpdater and MainActivity to see if refresh is pressed
-    private RefreshPressedHelper refresh_pressed_listener;
 
     private PowerManager powerManager = null;
     private PowerManager.WakeLock wakeLock = null;
@@ -108,14 +105,6 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
         super.onCreate();
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        refresh_pressed_listener = RefreshPressedHelper.getInstance();
-        refresh_pressed_listener.addObserver(this);
-    }
-
-    @Override
-    public void onDestroy() {
-        sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
-        super.onDestroy();
     }
 
     @Override
@@ -124,6 +113,9 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
         Log.d("AutoUpdater", "onStartCommand()");
 
         if (intent != null) {
+            if (intent.getBooleanExtra("refresh_pressed", false)) {
+                processRefreshPressed();
+            }
             String once = intent.getStringExtra("checkOnce");
             if (once != null && once.equals("true")) {
                 Log.d("AutoUpdater", "checking updates via onStartCommand()");
@@ -294,8 +286,7 @@ public class AutoUpdater extends Service implements CompletionInterface, Observe
     private void getUpdates()
     { new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("notifications_url"), false, this,null).execute(""); }
 
-    @Override
-    public void update(Observable observable, Object o) {
+    private void processRefreshPressed() {
         elapsedTime = 0;
         refresh_pressed = true;
         String refresh_setting = sharedPreferences.getString("refresh_rate", db.getGeneral("refresh_rate").trim());

@@ -847,7 +847,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 if (!tempNames.getString(i).equals("@id")) {
                     JSONArray InfoArray = json.getJSONArray(tempNames.getString(i));
 
-                    String title = InfoArray.getJSONObject(0).getString("nav");
+                    String title = InfoArray.getJSONObject(0).getString("nav") + " ";
 
                     String icon = InfoArray.getJSONObject(0).getString("icon");
                     icon = icon.equals("")?"ic_clipboard":icon;

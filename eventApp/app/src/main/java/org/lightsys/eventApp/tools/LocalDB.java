@@ -6,16 +6,21 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.HousingInfo;
 import org.lightsys.eventApp.data.Info;
 import org.lightsys.eventApp.data.ScheduleInfo;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -558,7 +563,7 @@ public class LocalDB extends SQLiteOpenHelper {
      *  greater than 24 hours as of this version.
      */
     public ArrayList<ScheduleInfo> getFullSchedule() {
-        ArrayList<String> days = determineDays();
+        ArrayList<String> days = determineUniqueDays(getJSONDays());
         ArrayList<ScheduleInfo> schedule;
         if (sharedPreferences.getString("selected_time_setting", "").equals("on-site")) {
             schedule = getDailySchedule(days);
@@ -568,19 +573,6 @@ public class LocalDB extends SQLiteOpenHelper {
         allDays = days;
         scheduleTimeRange = getScheduleEdges(schedule);
         return schedule;
-    }
-
-    private ArrayList<String> determineDays() {
-        ArrayList<String> days = getJSONDays();
-        int num_days = days.size();
-        for (int i=0; i < num_days - 1; i++) {
-            String tomorrow = createTomorrow(days.get(i));
-            if (! days.contains(tomorrow)) {
-                days.add(i+1, tomorrow);
-                num_days++;
-            }
-        }
-        return days;
     }
 
     /** getDailySchedule returns daily schedule info for an on-site timezone
@@ -850,7 +842,56 @@ public class LocalDB extends SQLiteOpenHelper {
 
         c.close();
         db.close();
+
         return days;
+    }
+
+    private static ArrayList<String> determineUniqueDays(ArrayList<String> days) {
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+        ArrayList<Date> unique_dates;
+        ArrayList<String> unique_days = new ArrayList<>();
+        unique_dates = determineEdgeDays(days, formatter);
+        Date first_day = unique_dates.get(0);
+        unique_days.add(formatter.format(first_day));
+        if (unique_dates.size() > 1) {
+            Date last_day = unique_dates.get(1);
+            unique_days.add(formatter.format(last_day));
+            Calendar additionCalendar = Calendar.getInstance();
+            additionCalendar.setTime(first_day);
+            additionCalendar.add(Calendar.DATE, 1);
+            Date next_day = additionCalendar.getTime();
+            while (! next_day.equals(last_day)) {
+                int second_to_last = unique_dates.size() - 1;
+                unique_dates.add(second_to_last, next_day);
+                unique_days.add(second_to_last, formatter.format(next_day));
+                additionCalendar.add(Calendar.DATE, 1);
+                next_day = additionCalendar.getTime();
+            }
+        }
+        return unique_days;
+    }
+
+    private static ArrayList<Date> determineEdgeDays(ArrayList<String> days, SimpleDateFormat formatter) {
+        ArrayList<Date> edge_days = new ArrayList<>();
+        Date first_day, last_day;
+        try {
+            first_day = formatter.parse(days.get(0));
+            last_day = formatter.parse(days.get(0));
+        } catch (ParseException e) {
+            throw new RuntimeException(("ERROR: in determineEdgeDays, the first date in days failed to parse.\n" + e.getMessage()));
+        }
+        if (days.size() > 1) {
+            for (String day : days) {
+                try {
+                    Date date = formatter.parse(day);
+                    if (date.before(first_day)) { first_day = date; }
+                    else if (date.after(last_day)) { last_day = date; }
+                } catch (ParseException pe) { pe.printStackTrace(); }
+            }
+            edge_days.add(first_day);
+            edge_days.add(last_day);
+        } else { edge_days.add(first_day); }
+        return edge_days;
     }
 
     /**

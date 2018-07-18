@@ -849,7 +849,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
                     String title = InfoArray.getJSONObject(0).getString("nav");
 
-                    db.addNavigationTitles(title, InfoArray.getJSONObject(0).getString("icon"), title);
+                    String icon = InfoArray.getJSONObject(0).getString("icon");
+                    icon = icon.equals("")?"ic_clipboard":icon;
+                    db.addNavigationTitles(title, icon, title);
 
                     for (int n = 1; n < InfoArray.length(); n++) {
 

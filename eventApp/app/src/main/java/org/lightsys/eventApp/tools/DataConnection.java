@@ -82,7 +82,13 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         old_qrAddress = db.getGeneral("notifications_url");
         Log.d(TAG, "DataConnection: " + qrAddress);
         if (activity != null) {
-            spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle);
+            //having problems with Looper.prepare(); when refresh is pressed and a new DataConnection is created from within an existing DataConnection, I get the error that this try/catch block catches.
+            //For now, this try/catch block allows refresh-pressed to actually load config and/or notifications jsons.
+            //I'm not happy with this strategy, but I am not sure as of now how to ensure that looper prepares correctly. -Littlesnowman88
+            try { spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle); }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         mainActivityRunnable = runnable;
     }
@@ -117,7 +123,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             callback.onCompletion();
 
         // Dismiss spinner to show data retrieval is done
-        if (dataActivity != null && dataActivity.get() != null) {
+        if (dataActivity != null && dataActivity.get() != null && spinner != null) {
             spinner.dismiss();
         }
         if (dataContext != null && dataContext.get().getClass() == MainActivity.class && connection && !action.equals("auto_update")) {
@@ -225,7 +231,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         db = new LocalDB(dataContext.get());
 
         //set spinner as app collects data
-        if (dataActivity != null && dataActivity.get() != null) {
+        if (dataActivity != null && dataActivity.get() != null && spinner != null) {
             spinner.setMessage("Gathering event info...");
             dataActivity.get().runOnUiThread(new Runnable() {
                 @Override
@@ -240,7 +246,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         connection = checkConnection(qrAddress);
 
         //if connection error occurred, cancel spinner
-        if (!connection && dataActivity != null && dataActivity.get() != null){
+        if (!connection && dataActivity != null && dataActivity.get() != null && spinner != null){
             spinner.dismiss();
         }
 
@@ -408,7 +414,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             try { loadSchedule(json.getJSONObject("schedule")); } catch (JSONException e) { e.printStackTrace(); }
             try { loadHousing(json.getJSONObject("housing")); } catch (JSONException e) { e.printStackTrace(); }
             try { loadPrayerPartners(json.getJSONArray("prayer_partners")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadInformationalPage(json.getJSONObject("information_page"),db); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadInformationalPage(json.getJSONObject("information_page")); } catch (JSONException e) { e.printStackTrace(); }
             try { loadContacts(json.getJSONObject("contacts")); } catch (JSONException e) { e.printStackTrace(); }
         }
     }
@@ -641,14 +647,14 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             int[] old_version = db.getVersionNum();
             boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
             if (update_flags[0]) { // if config file needs update
-                new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null, null).execute("");
+                new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null, mainActivityRunnable).execute("");
             } else { // if config file does not need update
                 if (update_flags [1]) { //if notifications json needs update
                     int[] new_notif_version = {old_version[0], new_version[1]};
                     db.replaceVersionNum(new_notif_version);
                     ArrayList<Info> notifications = db.getNotifications();
                     db.deleteNotifications();
-                    boolean isSameURL = (old_qrAddress.equals(qrAddress));
+                    boolean isSameURL = (qrAddress.equals(old_qrAddress));
                     int num_notif_items = tempNames.length();
                     for (int i = 1; i < num_notif_items; i++) {
                         try {
@@ -750,7 +756,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     JSONObject HousingObj = json.getJSONObject(json_item);
                     HousingInfo temp = new HousingInfo();
                     String host_name, driver, students;
-                    
+
                     host_name = (!json_item.equals(""))? json_item : string_resources.getString(R.string.no_host);
                     driver = HousingObj.getString("driver");
                     students = HousingObj.getString("students");
@@ -843,7 +849,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Loads Information pages
      * @param json, result of API query for information pages
      */
-    public static void loadInformationalPage(JSONObject json, LocalDB db) {
+    private void loadInformationalPage(JSONObject json) {
         if (json == null) {
             return;
         }

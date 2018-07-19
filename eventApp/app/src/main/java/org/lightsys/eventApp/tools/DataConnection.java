@@ -54,13 +54,13 @@ import static android.content.ContentValues.TAG;
 public class DataConnection extends AsyncTask<String, Void, String> {
 
     private LocalDB db;
-    private final String qrAddress;    //location of JSON file
+    private String qrAddress;    //location of JSON file
     private String old_qrAddress;
     private final WeakReference<Context> dataContext; // Context that the DataConnection was executed in
     private final WeakReference<Activity> dataActivity;
     private ProgressDialog spinner;
     private String action;
-    private final boolean loadAll; //specifies whether all info should be reloaded or only notifications
+    private boolean loadAll; //specifies whether all info should be reloaded or only notifications
     private boolean connection;
     private String connectionResult;
     private CompletionInterface callback;
@@ -79,16 +79,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         this.loadAll = loadAll;
         this.action = action;
         this.db = new LocalDB(dataContext.get());
-        old_qrAddress = db.getGeneral("notifications_url");
         Log.d(TAG, "DataConnection: " + qrAddress);
         if (activity != null) {
-            //having problems with Looper.prepare(); when refresh is pressed and a new DataConnection is created from within an existing DataConnection, I get the error that this try/catch block catches.
-            //For now, this try/catch block allows refresh-pressed to actually load config and/or notifications jsons.
-            //I'm not happy with this strategy, but I am not sure as of now how to ensure that looper prepares correctly. -Littlesnowman88
-            try { spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle); }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
+            spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle);
         }
         mainActivityRunnable = runnable;
     }
@@ -647,7 +640,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             int[] old_version = db.getVersionNum();
             boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
             if (update_flags[0]) { // if config file needs update
-                new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null, mainActivityRunnable).execute("");
+                qrAddress = db.getGeneral("url");
+                loadAll = true;
+                connection = checkConnection(qrAddress);
+                loadInfoAndNavTitles();
+                //new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null, mainActivityRunnable).execute("");
             } else { // if config file does not need update
                 if (update_flags [1]) { //if notifications json needs update
                     int[] new_notif_version = {old_version[0], new_version[1]};

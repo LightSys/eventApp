@@ -11,7 +11,7 @@ import android.widget.HorizontalScrollView;
  *
  * Scrollview for displaying schedule
  */
-//TODO: THINK ABOUT THIS DECISION ABOUT SCROLL VELOCITY
+
 public class HorizontalScrollNoFling extends HorizontalScrollView{
 
 
@@ -35,7 +35,6 @@ public class HorizontalScrollNoFling extends HorizontalScrollView{
     @Override
     public void fling (int velocityY)
     {
-        //TODO: MATHY STUFF TO MANUALLY ADJUST SCROLL, OR ELSE REDESIGN THE SCROLLVIEW FROM THE XML
     /*Scroll view is no longer gonna handle scroll velocity.
      * super.fling(velocityY);
     */

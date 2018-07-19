@@ -34,7 +34,7 @@ final public class TimeZoneInfo {
             parsed_time_zones.add(other);
         }
 
-        for(int i = 1; i < all_time_zone_size; i++){ //TODO: GO BACK TO A FOR EACH
+        for(int i = 1; i < all_time_zone_size; i++){
             time_zone = all_time_zones[i].split("/", 2);
             if(time_zone.length == 1){
                 other.add(all_time_zones[i]);

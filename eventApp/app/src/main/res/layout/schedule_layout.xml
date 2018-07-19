@@ -14,7 +14,6 @@
 
 
     <!--Table Head Container-->
-    <!--TODO: MAKE THIS FLINGABLE!-->
     <org.lightsys.eventApp.tools.HorizontalScrollNoFling
         android:id="@+id/HeaderScroll"
         android:layout_width="fill_parent"
@@ -58,7 +57,6 @@
             </View>
 
             <!--Events Columns-->
-            <!--TODO: MAKE THIS FLINGABLE-->
             <org.lightsys.eventApp.tools.HorizontalScrollNoFling
                 android:id="@+id/bodyScroll"
                 android:layout_width="fill_parent"

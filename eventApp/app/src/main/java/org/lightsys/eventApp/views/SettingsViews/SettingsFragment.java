@@ -123,7 +123,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                 my_remote_zone_button.setEnabled(false);
                 prefEditor.putString("selected_time_setting", "on-site");
                 event_zone_button.setChecked(true);
-                selectedStringTimeZone = eventLocations[0]; //TODO: If event locations changes, change this call
+                selectedStringTimeZone = eventLocations[0];
                 prefEditor.putString("time_zone", selectedStringTimeZone).apply();
             }
         } else {
@@ -137,7 +137,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                 custom_zone_button.setEnabled(false);
                 prefEditor.putString("selected_time_setting", "on-site");
                 event_zone_button.setChecked(true);
-                selectedStringTimeZone = eventLocations[0]; //TODO: If event locations changes, change this call
+                selectedStringTimeZone = eventLocations[0];
                 prefEditor.putString("time_zone", selectedStringTimeZone).apply();
             }
         } else {

@@ -660,8 +660,8 @@ public class LocalDB extends SQLiteOpenHelper {
     private ArrayList<ScheduleInfo> getAdjustedDailySchedule(ArrayList<String> days) {
         ArrayList<ScheduleInfo> schedule = new ArrayList<>();
         int timeStart, timeLength, adjustedTimeStart, adjustedTimeEnd, time_zone_difference;
-        TimeZone on_site_time_zone = TimeZone.getTimeZone(getGeneral("time_zone")); //TODO: taking away from getGeneral and to chosen location.
-        TimeZone selected_time_zone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", getGeneral("time_zone"))); //TODO: taking away from getGeneral and to chosen location.
+        TimeZone on_site_time_zone = TimeZone.getTimeZone(getGeneral("time_zone"));
+        TimeZone selected_time_zone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", getGeneral("time_zone")));
         String today, yesterday, tomorrow;
         SQLiteDatabase db;
         String queryString;

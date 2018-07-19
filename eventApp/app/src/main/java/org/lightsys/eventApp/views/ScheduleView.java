@@ -153,7 +153,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
         //insert other event start and end time into the times ArrayList
         int oneItemStart, oneItemEnd;
-        //TODO: add event end into Schedule Info item to save on computation here?
         for (ScheduleInfo event : schedule) {
             oneItemStart = event.getTimeStart();
             oneItemEnd = event.getTimeEnd();
@@ -365,7 +364,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             dayLayout.addView(dividerHorizontal);
             dayLayout.addView(headerBox);
 
-            //TODO: this is where the today's color change will get set. Why no use isToday?
             //if day is today, highlight
             if (dateOutputFormatter.format(calNow.getTime()).equals(dateOutputFormatter.format(cal.getTime()))){
                 today = d;
@@ -482,7 +480,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         LinearLayout columnLayout = new LinearLayout(context);
         columnLayout.setLayoutParams(new LinearLayout.LayoutParams(width*4+padding + paddingLg+extraW, LinearLayout.LayoutParams.MATCH_PARENT));
         columnLayout.setOrientation(LinearLayout.VERTICAL);
-        //TODO: this is where the today's color change will get set
         if (isToday){
             columnLayout.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_right));
         }
@@ -555,9 +552,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             }else{
                 heightCol = heightCol*15 + 2* paddingLg;
             }
-
-
-            //TODO: ALSO SET THE EVENT'S COLOR TO BRIGHT YELLOW
 
             //if column is current day, add red line at current time
             if (isToday){

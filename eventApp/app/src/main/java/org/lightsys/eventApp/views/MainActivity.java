@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == QR_RESULT && resultCode == RESULT_OK && data != null) {
             final String dataURL = data.getStringExtra(QR_DATA_EXTRA);
-            Runnable updateEventList = new Runnable() {
+            Runnable updateScannedEventList = new Runnable() {
                 @Override
                 public void run() {
                     resetScannedEventsAdapter(dataURL);
@@ -203,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             String action;
             if (dataURL.equals(db.getGeneral("url"))) {action = "refresh";}
             else {action = "new";}
-            new DataConnection(context, activity, action, dataURL, true, null,updateEventList).execute("");
+            new DataConnection(context, activity, action, dataURL, true, null,updateScannedEventList).execute("");
         }
     }
 
@@ -345,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             gatherData(true);
         }
         else {
-            Runnable updateList = new Runnable() {
+            Runnable updateScannedEventsList = new Runnable() {
                 @Override
                 public void run() {
                     resetScannedEventsAdapter(scanned_url);
@@ -354,7 +354,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             String action;
             if (scanned_url.equals(db.getGeneral("url"))) {action = "refresh";}
             else {action = "new";}
-            new DataConnection(context, activity, action, scanned_url, true, null, updateList).execute("");
+            new DataConnection(context, activity, action, scanned_url, true, null, updateScannedEventsList).execute("");
         }
     }
 
@@ -530,7 +530,13 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Log.d(TAG, "onClick: " + db.getGeneral("url"));
-                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null,null).execute(""); //TODO: BUGGY
+                        Runnable updateScannedEventsList = new Runnable() {
+                            @Override
+                            public void run() {
+                                resetScannedEventsAdapter(db.getGeneral("url"));
+                            }
+                        };
+                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null, updateScannedEventsList).execute("");
                     }
                 })
                 .setPositiveButton(R.string.rescan_qr_button, new DialogInterface.OnClickListener() {
@@ -675,6 +681,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 fragTransaction.detach(currentFragment);
                 fragTransaction.attach(currentFragment);
                 fragTransaction.commit();
+                successfulConnection = true;
             }
         }
     };

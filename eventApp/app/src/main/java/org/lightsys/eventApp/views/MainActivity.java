@@ -201,8 +201,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 }
             };
             String action;
-//            if (dataURL.equals(db.getGeneral("url"))) {action = "refresh";}
-//            else {action = "new";}
             new DataConnection(context, activity, "new", dataURL, true, null,updateScannedEventList).execute("");
         }
     }

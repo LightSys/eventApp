@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -109,8 +110,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         main_to_settings = new Intent(MainActivity.this, SettingsActivity.class);
 
         /*set up auto updater*/
-        updateIntent = new Intent(getBaseContext(), AutoUpdater.class);
-        startService(updateIntent);
+        updateIntent = new Intent(MainActivity.this, AutoUpdater.class);
         refreshHandler.postDelayed(refreshRunnable, 1000);
 
         /*set up toolbar*/
@@ -163,6 +163,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
         onNavigationItemSelected(navigationList.getChildAt(0));
         navigationList.setItemChecked(0, true);
+    }
+
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        startService(updateIntent);
     }
 
     @Override
@@ -250,7 +256,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 toggleVisibility();
                 break;
             case R.id.action_refresh:
-                final String current_url = db.getGeneral("notifications_url");
                 Runnable refresh_ui = new Runnable() {
                     @Override
                     public void run() {
@@ -259,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                         setupMenusAndTheme();
                     }
                 };
-                new DataConnection(context, activity, "refresh", current_url, false, null, refresh_ui).execute("");
+                new DataConnection(context, activity, "refresh", db.getGeneral("notifications_url"), false, null, refresh_ui).execute("");
                 stopService(updateIntent); //"refresh" (restart) the auto updater
                 updateIntent.removeExtra("refreshed_pressed");
                 updateIntent.putExtra("refresh_pressed", true);
@@ -318,8 +323,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         db.addGeneral("welcome_message",no_event_message);
         gatherData(false);
 
-        DataConnection.addNotificationTitle(null, db, this);
-        DataConnection.setupAboutPage(db, this);
+        DataConnection.addNotificationTitle(null, db, getResources());
+        DataConnection.setupAboutPage(db, getResources());
 
         //Set refresh rate
         db.addGeneral("refresh_rate",getString(R.string.refresh_val_never));
@@ -525,7 +530,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Log.d(TAG, "onClick: " + db.getGeneral("url"));
-                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null,null).execute("");
+                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null,null).execute(""); //TODO: BUGGY
                     }
                 })
                 .setPositiveButton(R.string.rescan_qr_button, new DialogInterface.OnClickListener() {

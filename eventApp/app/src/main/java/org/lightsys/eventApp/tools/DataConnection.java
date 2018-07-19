@@ -9,6 +9,7 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -279,37 +280,37 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      *            readGeneralInfo and loadGeneralInfo will need to become void.
      */
     private void loadInfoAndNavTitles() {
-        Activity main_activity = (MainActivity)dataActivity.get();
+        Resources string_resources = dataContext.get().getResources();
         if (readGeneralInfo(connectionResult)) {
             String notification_url = db.getGeneral("notifications_url");
             connection = checkConnection(notification_url);
-            addNotificationTitle(connectionResult, db, main_activity);
+            addNotificationTitle(connectionResult, db, string_resources);
             connection = checkConnection(qrAddress);
             loadEventInfo(connectionResult);
-            setupAboutPage(db, main_activity);
+            setupAboutPage(db, string_resources);
         }
     }
 
     /**
      * Sets up the about page
      * @param db
-     * @param activity
+     * @param string_resources
      *
      * Must be called by MainActivity's handleNoScannedEvent, thus this function is static.
      */
-    public static void setupAboutPage(LocalDB db, Activity activity){
-        db.addAboutPage(new Info(activity.getString(R.string.About_App_Header),activity.getString(R.string.About_App_Body)), "About");
-        db.addAboutPage(new Info(activity.getString(R.string.Open_Source_Header),activity.getString(R.string.Open_Source_Body)), "About");
-        db.addAboutPage(new Info(activity.getString(R.string.Barcode_Scanner_Header),activity.getString(R.string.Barcode_Scanner_Body)), "About");
-        db.addAboutPage(new Info(activity.getString(R.string.Android_Open_Source_Proj_Header), activity.getString(R.string.Android_Open_Source_Proj_Body)), "About");
+    public static void setupAboutPage(LocalDB db, Resources string_resources){
+        db.addAboutPage(new Info(string_resources.getString(R.string.About_App_Header),string_resources.getString(R.string.About_App_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.Open_Source_Header),string_resources.getString(R.string.Open_Source_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.Barcode_Scanner_Header),string_resources.getString(R.string.Barcode_Scanner_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.Android_Open_Source_Proj_Header), string_resources.getString(R.string.Android_Open_Source_Proj_Body)), "About");
         ArrayList<Info> nav_titles = db.getNavigationTitles();
-        String about_title = activity.getString(R.string.about_title);
+        String about_title = string_resources.getString(R.string.about_title);
         for (Info item : nav_titles) {
             if (item.getHeader().equals(about_title)) {
                 return;
             }
         }
-        db.addNavigationTitles(activity.getString(R.string.about_title), "ic_info", "About");
+        db.addNavigationTitles(string_resources.getString(R.string.about_title), "ic_info", "About");
 
     }
 
@@ -344,8 +345,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      *
      *  Must be called by MainActivity's handleNoScannedEvent, thus this function is public static.
      */
-    public static void addNotificationTitle(String result, LocalDB db, Activity activity) {
-        String notifications_title = activity.getString(R.string.notifications_title);
+    public static void addNotificationTitle(String result, LocalDB db, Resources string_resources) {
+        String notifications_title = string_resources.getString(R.string.notifications_title);
+
         if (result != null) {
             try {
                 JSONObject json = null;
@@ -429,8 +431,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
 
                     String contact_name = tempNames.getString(i);
-                    String contact_address = (ContactObj.getString("address").equals("null")) ? null : ContactObj.getString("address");
-                    String contact_phone = (ContactObj.getString("phone").equals("null")) ? null : ContactObj.getString("phone");
+                    String contact_address = ContactObj.getString("address");
+                    String contact_phone = (ContactObj.getString("phone"));
+                    if (contact_name == null || contact_name.equals("")) contact_name = "No name";
+                    if (contact_address.equals("null")) contact_address = "";
+                    if (contact_phone.equals("null")) contact_phone = "";
 
                     // add the Contact Object to db
                     ContactInfo temp = new ContactInfo();
@@ -560,7 +565,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
         int[] new_version = getVersionNumber(json, tempGeneral);
         int[] old_version = db.getVersionNum();
-        if (qrAddress.equals(db.getGeneral("url"))) { //if updating same event
+        if (qrAddress.equals(db.getGeneral("url")) || qrAddress.equals(old_qrAddress)) { //if updating same event
             boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
 
             if (update_flags[0]) { //config update needed == true
@@ -743,12 +748,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     String host_name, driver, students;
 
                     host_name = (!json_item.equals(""))? json_item : "No Assigned Host";
-
                     driver = HousingObj.getString("driver");
                     students = HousingObj.getString("students");
 
-                    if(driver == null){driver = "No Assigned Driver";}
-                    if(students == null) {students = "No Assigned Guests";}
+                    if(driver == null || driver.equals("")){driver = "No Assigned Driver";}
+                    if(students == null || students.equals("")) {students = "No Assigned Guests";}
 
                     // add the Housing Info Object to db
                     temp.setName(host_name);

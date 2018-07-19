@@ -26,10 +26,16 @@
     <string name="no_event_welcome">No event has been scanned.\nPress the camera icon to scan an event.</string>
     <string name="default_welcome">Welcome!</string>
 
+    <!--Contact Resources-->
+    <string name="no_name">No Name</string>
+
     <!--Housing resources-->
     <string name="map_button">Get directions</string>
     <string name="phone_button">Call</string>
     <string name="cancel_button">Cancel</string>
+    <string name="no_host">No Assigned Host</string>
+    <string name="no_driver">No Assigned Driver</string>
+    <string name="no_guest">No Assigned Guest</string>
 
     <!--Schedule resources-->
     <string name="contact_button">Contact Button</string>

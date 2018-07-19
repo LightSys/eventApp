@@ -424,6 +424,8 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
         JSONArray tempNames = json.names();
 
+        Resources string_resources = dataContext.get().getResources();
+
         for (int i = 0; i < tempNames.length(); i++) {
             try {
                 //@id signals a new object, but contains no information on that line
@@ -433,7 +435,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     String contact_name = tempNames.getString(i);
                     String contact_address = ContactObj.getString("address");
                     String contact_phone = (ContactObj.getString("phone"));
-                    if (contact_name == null || contact_name.equals("")) contact_name = "No name";
+                    if (contact_name == null || contact_name.equals("")) contact_name = string_resources.getString(R.string.no_name);
                     if (contact_address.equals("null")) contact_address = "";
                     if (contact_phone.equals("null")) contact_phone = "";
 
@@ -738,6 +740,8 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             e.printStackTrace();
         }
 
+        Resources string_resources = dataContext.get().getResources();
+
         for (int i = 0; i < tempNames.length(); i++) {
             try {
                 String json_item = tempNames.getString(i);
@@ -746,13 +750,13 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     JSONObject HousingObj = json.getJSONObject(json_item);
                     HousingInfo temp = new HousingInfo();
                     String host_name, driver, students;
-
-                    host_name = (!json_item.equals(""))? json_item : "No Assigned Host";
+                    
+                    host_name = (!json_item.equals(""))? json_item : string_resources.getString(R.string.no_host);
                     driver = HousingObj.getString("driver");
                     students = HousingObj.getString("students");
 
-                    if(driver == null || driver.equals("")){driver = "No Assigned Driver";}
-                    if(students == null || students.equals("")) {students = "No Assigned Guests";}
+                    if(driver == null || driver.equals("")){driver = string_resources.getString(R.string.no_driver);}
+                    if(students == null || students.equals("")) {students = string_resources.getString(R.string.no_guest);}
 
                     // add the Housing Info Object to db
                     temp.setName(host_name);

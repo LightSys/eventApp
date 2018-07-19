@@ -482,9 +482,11 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     String header = ContactObj.getString("header");
                     String body = ContactObj.getString("content");
                     // add the Contact Page Object to db
+                    if (header == null || header.equals("null")) header = "";
+                    if (body == null || body.equals("null")) body = "";
                     Info temp = new Info();
-                    temp.setHeader(header==null?"":header);
-                    temp.setBody(body==null?"":body);
+                    temp.setHeader(header);
+                    temp.setBody(body);
                     temp.setId(ContactObj.getInt("id"));
 
                     db.addContactPage(temp);

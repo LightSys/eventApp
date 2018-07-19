@@ -114,6 +114,7 @@ public class ContactsView extends Fragment {
         for (ContactInfo c : contact) {
             HashMap<String, String> hm = new HashMap<>();
             String info = c.getName();
+            if (info == null || info.equals("null")) info = "";
             info += (c.getAddress()==null)? "":"\n"+ c.getAddress();
             info += (c.getPhone()==null)? "":"\n"+ c.getPhone();
 

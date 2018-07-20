@@ -567,7 +567,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         JSONArray tempGeneral = json.names();
 
         int[] new_version = getVersionNumber(json, tempGeneral);
-        int[] old_version = db.getVersionNum();
+        int[] old_version = db.getJSONVersionNum();
         if (qrAddress.equals(db.getGeneral("url")) || qrAddress.equals(old_qrAddress)) { //if updating same event
             boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
 
@@ -575,7 +575,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 int[] new_config_version = {new_version[0], old_version[1]};
                 db.clear();
                 db.addGeneral("url", qrAddress);
-                db.replaceVersionNum(new_config_version);
+                db.replaceJSONVersionNum(new_config_version);
                 finishLoadGeneralInfo(json, tempGeneral);
             } else { //config update needed = false
                 if (update_flags[1]) { //notifications update needed == true
@@ -585,11 +585,12 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 return false;
             }
 
+
         } else { //if scanning/selecting new event
             db.clear();
             db.addGeneral("url", qrAddress);
             int[] notif_forced_update_version = {new_version[0], -1}; //-1 forces the notification to recognize a "version change" and update notifications.
-            db.replaceVersionNum(notif_forced_update_version);
+            db.replaceJSONVersionNum(notif_forced_update_version);
             finishLoadGeneralInfo(json, tempGeneral);
             connection = checkConnection(db.getGeneral("notifications_url"));
             loadNotifications(connectionResult);
@@ -639,7 +640,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             JSONArray tempNames = json.names();
 
             int[] new_version = getVersionNumber(json, tempNames);
-            int[] old_version = db.getVersionNum();
+            int[] old_version = db.getJSONVersionNum();
             boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
             if (update_flags[0]) { // if config file needs update
                 qrAddress = db.getGeneral("url");
@@ -650,7 +651,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             } else { // if config file does not need update
                 if (update_flags [1]) { //if notifications json needs update
                     int[] new_notif_version = {old_version[0], new_version[1]};
-                    db.replaceVersionNum(new_notif_version);
+                    db.replaceJSONVersionNum(new_notif_version);
                     ArrayList<Info> notifications = db.getNotifications();
                     db.deleteNotifications();
                     boolean isSameURL = (qrAddress.equals(old_qrAddress));

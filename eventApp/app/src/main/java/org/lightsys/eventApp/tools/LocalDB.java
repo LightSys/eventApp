@@ -27,14 +27,14 @@ import java.util.TimeZone;
 
 public class LocalDB extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 12;
+    private static final int DATABASE_VERSION = 13;
     private static final String DATABASE_NAME = "SBCaT.db";
     //SCANNED EVENTS TABLE
     private static final String TABLE_SCANNED_EVENTS = "scanned_events";
     private static final String COLUMN_URL = "url";
     private static final String COLUMN_EVENT_NAME = "event_name";
     //VERSION NUM TABLE
-    private static final String TABLE_VERSION_NUM = "version_num";
+    private static final String TABLE_JSON_VERSION_NUM = "json_version_num";
     private static final String COLUMN_CONFIG_VER = "config_ver";
     private static final String COLUMN_NOTIF_VER = "notif_ver";
     //GENERAL INFO TABLE
@@ -109,9 +109,9 @@ public class LocalDB extends SQLiteOpenHelper {
                 + COLUMN_URL + " TEXT," + COLUMN_EVENT_NAME + " TEXT)";
         db.execSQL(CREATE_TABLE_SCANNED_EVENTS);
 
-        String CREATE_TABLE_VERSION_NUM = "CREATE TABLE " + TABLE_VERSION_NUM + "("
+        String CREATE_TABLE_JSON_VERSION_NUM = "CREATE TABLE " + TABLE_JSON_VERSION_NUM + "("
                 + COLUMN_CONFIG_VER+ " INTEGER," + COLUMN_NOTIF_VER + " INTEGER)";
-        db.execSQL(CREATE_TABLE_VERSION_NUM);
+        db.execSQL(CREATE_TABLE_JSON_VERSION_NUM);
 
         String CREATE_TABLE_GENERAL_INFO = "CREATE TABLE " + TABLE_GENERAL_INFO + "("
                 + COLUMN_TYPE + " TEXT," + COLUMN_INFO + " TEXT)";
@@ -164,12 +164,31 @@ public class LocalDB extends SQLiteOpenHelper {
     }
 
     /**
-     * Since the SQLite Database is meant to stay local, it will never use this call
-     * and should never use this call, or else all accounts will be erased.
+     * Upgrades the database based on the new and old version numbers
      */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        //nothing. The database model won't be changed.
+        switch(oldVersion){
+            case 12: //Released to Play Store March 2018
+                String CREATE_TABLE_SCANNED_EVENTS = "CREATE TABLE " + TABLE_SCANNED_EVENTS + "("
+                        + COLUMN_URL + " TEXT," + COLUMN_EVENT_NAME + " TEXT)";
+                db.execSQL(CREATE_TABLE_SCANNED_EVENTS);
+
+                String CREATE_TABLE_VERSION_NUM = "CREATE TABLE " + TABLE_JSON_VERSION_NUM + "("
+                        + COLUMN_CONFIG_VER+ " INTEGER," + COLUMN_NOTIF_VER + " INTEGER)";
+                db.execSQL(CREATE_TABLE_VERSION_NUM);
+
+                String CREATE_TABLE_ABOUT_PAGE = "CREATE TABLE " + TABLE_ABOUT_PAGE + "(" + COLUMN_HEADER
+                        + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_PAGE + " TEXT)";
+                db.execSQL(CREATE_TABLE_ABOUT_PAGE);
+
+                db.execSQL("ALTER TABLE " + TABLE_NAVIGATION_TITLES + " ADD COLUMN " + COLUMN_NAV_ID
+                        + " TEXT DEFAULT \"\"");
+            case 13: //Released to Play Store August 2018
+
+            default:
+                //This should be the case of the current version
+        }
     }
 
 	/* ************************* Clear Queries ************************* */
@@ -257,20 +276,6 @@ public class LocalDB extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_SCANNED_EVENTS, null, values);
-        db.close();
-    }
-
-    /**
-     * This will add a version number and url to the database
-     * @param version, the int array of version number for the config url and notification url
-     */
-    private void addVersionNum(int[] version){
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_CONFIG_VER, version[0]);
-        values.put(COLUMN_NOTIF_VER, version[1]);
-
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.insert(TABLE_VERSION_NUM, null, values);
         db.close();
     }
 
@@ -454,9 +459,9 @@ public class LocalDB extends SQLiteOpenHelper {
      *
      * @return the currently saved version number from the database
      */
-    public int[] getVersionNum(){
+    public int[] getJSONVersionNum(){
         int[] version_num = {0,0};
-        String queryString = "SELECT * FROM " + TABLE_VERSION_NUM;
+        String queryString = "SELECT * FROM " + TABLE_JSON_VERSION_NUM;
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(queryString,null);
 
@@ -1205,12 +1210,6 @@ public class LocalDB extends SQLiteOpenHelper {
         db.close();
     }
 
-    private void removeVersionNum (){
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_VERSION_NUM, null, null);
-        db.close();
-    }
-
     /* ************************* Replace Queries ************************* */
 
     /**
@@ -1229,9 +1228,15 @@ public class LocalDB extends SQLiteOpenHelper {
      * Updates the version number for the current event
      * @param version, the new version number of the config and notification urls
      */
-    public void replaceVersionNum (int[] version){
-        removeVersionNum();
-        addVersionNum(version);
+    public void replaceJSONVersionNum (int[] version){
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_CONFIG_VER, version[0]);
+        values.put(COLUMN_NOTIF_VER, version[1]);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        //where clause and args are null because only one entry currently exists in this table.
+        db.update(TABLE_JSON_VERSION_NUM, values, null, null);
+        db.close();
     }
 
 }

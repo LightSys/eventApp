@@ -317,6 +317,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         //set a dummy url
         db.addGeneral("url", "No_Event");
         db.addGeneral("old_url", "No_Event");
+        int[] start_version = {0,0};
+        db.addJSONVersionNum(start_version);
 
         //Set welcome message
         String no_event_message = getString(R.string.no_event_welcome);

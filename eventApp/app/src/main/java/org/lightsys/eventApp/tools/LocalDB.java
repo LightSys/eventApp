@@ -110,7 +110,7 @@ public class LocalDB extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_SCANNED_EVENTS);
 
         String CREATE_TABLE_JSON_VERSION_NUM = "CREATE TABLE " + TABLE_JSON_VERSION_NUM + "("
-                + COLUMN_CONFIG_VER+ " INTEGER," + COLUMN_NOTIF_VER + " INTEGER)";
+                + COLUMN_CONFIG_VER + " INTEGER," + COLUMN_NOTIF_VER + " INTEGER)";
         db.execSQL(CREATE_TABLE_JSON_VERSION_NUM);
 
         String CREATE_TABLE_GENERAL_INFO = "CREATE TABLE " + TABLE_GENERAL_INFO + "("
@@ -276,6 +276,25 @@ public class LocalDB extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_SCANNED_EVENTS, null, values);
+        db.close();
+    }
+
+    /**
+     * This will add a version number and url to the database
+     * @param version, the int array of version number for the config url and notification url
+     * NOTE FROM LITTLESNOWMAN88:
+     *                 this should be called only from handleNoScannedEvent from MainActivity.
+     *                 All other changes to version number should be handled with
+     *                 replaceJSONVersionNum, because only one version number needs to be
+     *                 stored in the database.
+     */
+    public void addJSONVersionNum(int[] version){
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_CONFIG_VER, version[0]);
+        values.put(COLUMN_NOTIF_VER, version[1]);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.insert(TABLE_JSON_VERSION_NUM, null, values);
         db.close();
     }
 
@@ -1235,8 +1254,8 @@ public class LocalDB extends SQLiteOpenHelper {
 
         SQLiteDatabase db = this.getWritableDatabase();
         //where clause and args are null because only one entry currently exists in this table.
+        //THIS WILL NOT WORK UNLESS the table has been initialized with at least one row.
         db.update(TABLE_JSON_VERSION_NUM, values, null, null);
         db.close();
     }
-
 }

@@ -5,14 +5,6 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!--This View serves as a visual divider between list items-->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/white"
-        android:layout_marginLeft="6dp"
-        android:layout_marginRight="6dp" />
-
     <!--This TextView holds the event name for one event-->
     <TextView
         android:id="@+id/scanned_event_name"
@@ -24,13 +16,5 @@
         android:background="@color/darkGray"
         android:padding="@dimen/more_space_border_dimen_lg"
         android:gravity="center_horizontal"/>
-
-    <!--This View serves as a visual divider between list items-->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/white"
-        android:layout_marginLeft="6dp"
-        android:layout_marginRight="6dp" />
 
 </LinearLayout>

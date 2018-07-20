@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
@@ -64,7 +65,7 @@ public class TimeZoneSelectionView extends AppCompatActivity implements ZoneSele
         zones = getIntent().getExtras().getStringArray("selected_continent");
         zoneSelectionAdapter.setZoneData(zones);
         recyclerView.setAdapter(zoneSelectionAdapter);
-        
+        recyclerView.addItemDecoration(new DividerItemDecoration(context, LinearLayoutManager.VERTICAL));
     }
 
     /* overrides TimeZoneAdapter's on click handler */

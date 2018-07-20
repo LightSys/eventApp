@@ -84,7 +84,7 @@ public class ContinentSelectionAdapter extends RecyclerView.Adapter<ContinentSel
     @Override
     public void onBindViewHolder(ContinentSelectionAdapterViewHolder chavh, int pos) {
         String continent = continents[pos];
-        chavh.continentTextView.setText(continent + "\n");
+        chavh.continentTextView.setText(continent);
     }
 
 

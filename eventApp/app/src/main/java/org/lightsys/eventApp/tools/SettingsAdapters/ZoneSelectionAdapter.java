@@ -39,13 +39,10 @@ public class ZoneSelectionAdapter extends RecyclerView.Adapter<ZoneSelectionAdap
      */
     protected class ZoneSelectionAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public final TextView timeTextView;
-        public final View topBorder, bottomBorder;
 
         public ZoneSelectionAdapterViewHolder(View view) {
             super(view);
             timeTextView = (TextView) view.findViewById(R.id.time_zone_data);
-            topBorder = view.findViewById(R.id.zone_item_top);
-            bottomBorder = view.findViewById(R.id.zone_item_bottom);
             view.setOnClickListener(this);
         }
 
@@ -86,11 +83,9 @@ public class ZoneSelectionAdapter extends RecyclerView.Adapter<ZoneSelectionAdap
     public void onBindViewHolder(ZoneSelectionAdapterViewHolder zsavh, int pos) {
         String zone = zones[pos];
         if (zone != null) {
-            zsavh.timeTextView.setText(zone + "\n");
+            zsavh.timeTextView.setText(zone);
         } else {
             zsavh.timeTextView.setVisibility(View.GONE);
-            zsavh.topBorder.setVisibility(View.GONE);
-            zsavh.bottomBorder.setVisibility(View.GONE);
         }
     }
 

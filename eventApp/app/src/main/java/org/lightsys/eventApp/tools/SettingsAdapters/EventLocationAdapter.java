@@ -87,7 +87,7 @@ public class EventLocationAdapter
     @Override
     public void onBindViewHolder(EventLocationAdapterViewHolder elavh, int pos) {
         String event_location = locationData[pos];
-        elavh.locationTextView.setText(event_location + "\n");
+        elavh.locationTextView.setText(event_location);
     }
 
     @Override

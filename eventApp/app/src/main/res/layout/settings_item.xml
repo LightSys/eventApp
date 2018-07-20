@@ -6,30 +6,16 @@
     android:orientation="vertical"
     >
 
-    <!--This View serves as a visual divider between list items-->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#dcdcdc"
-        android:layout_marginLeft="6dp"
-        android:layout_marginRight="6dp" />
-
     <!--This TextView holds the settings item for one settings option-->
     <TextView
         android:id="@+id/settings_option"
         style="@style/TextAppearance.AppCompat.Small"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize = "23sp"
+        android:textSize = "24sp"
         android:textColor="#000000"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
         />
-
-    <!--This View serves as a visual divider between list items-->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#dcdcdc"
-        android:layout_marginLeft="6dp"
-        android:layout_marginRight="6dp" />
 
 </LinearLayout>

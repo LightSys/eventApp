@@ -4,14 +4,6 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!--This View serves as a visual divider between list items-->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#dcdcdc"
-        android:layout_marginLeft="6dp"
-        android:layout_marginRight="6dp" />
-
     <!--This TextView holds the location data for one event location-->
     <TextView
         android:id="@+id/event_location_data"
@@ -20,14 +12,8 @@
         android:layout_height="wrap_content"
         android:textSize = "24sp"
         android:textColor="#414141"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
         />
-
-    <!--This View serves as a visual divider between list items-->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#dcdcdc"
-        android:layout_marginLeft="6dp"
-        android:layout_marginRight="6dp" />
 
 </LinearLayout>

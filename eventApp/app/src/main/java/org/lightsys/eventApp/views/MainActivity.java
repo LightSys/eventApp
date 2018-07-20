@@ -25,6 +25,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -124,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         }
         scannedEvents = db.getAllEvents();
         scannedEventsView = findViewById(R.id.scanned_events_recyclerview);
+        scannedEventsView.addItemDecoration(new DividerItemDecoration(context, LinearLayoutManager.VERTICAL));
         scannedEventsView.setVisibility(View.GONE);
         scannedEventsView.setEnabled(false);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this,

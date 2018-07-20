@@ -84,7 +84,7 @@ public class SettingsViewAdapter  extends RecyclerView.Adapter<SettingsViewAdapt
     @Override
     public void onBindViewHolder(SettingsViewAdapterViewHolder svavh, int pos) {
         String setting_option = settings_options[pos];
-        svavh.settingsViewTextView.setText(setting_option + "\n");
+        svavh.settingsViewTextView.setText(setting_option);
     }
 
     @Override public int getItemCount() {

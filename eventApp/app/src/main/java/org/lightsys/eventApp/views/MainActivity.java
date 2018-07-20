@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             db.addEvent(scan_qr,scan_qr);
         }
         scannedEvents = db.getAllEvents();
-        scannedEventsView = findViewById(R.id.scanned_events_recyclerview);
+        scannedEventsView = (RecyclerView) findViewById(R.id.scanned_events_recyclerview);
         scannedEventsView.addItemDecoration(new DividerItemDecoration(context, LinearLayoutManager.VERTICAL));
         scannedEventsView.setVisibility(View.GONE);
         scannedEventsView.setEnabled(false);
@@ -202,7 +202,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     resetScannedEventsAdapter(dataURL);
                 }
             };
-            String action;
             new DataConnection(context, activity, "new", dataURL, true, null,updateScannedEventList).execute("");
         }
     }
@@ -285,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer != null && drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {

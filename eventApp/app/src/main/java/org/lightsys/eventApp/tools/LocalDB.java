@@ -106,7 +106,7 @@ public class LocalDB extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
 
         String CREATE_TABLE_SCANNED_EVENTS = "CREATE TABLE " + TABLE_SCANNED_EVENTS + "("
-                + COLUMN_URL + " TEXT," + COLUMN_EVENT_NAME + " TEXT)";
+                + COLUMN_URL + " TEXT," + COLUMN_EVENT_NAME + " TEXT," + COLUMN_ICON + " TEXT)";
         db.execSQL(CREATE_TABLE_SCANNED_EVENTS);
 
         String CREATE_TABLE_JSON_VERSION_NUM = "CREATE TABLE " + TABLE_JSON_VERSION_NUM + "("
@@ -171,7 +171,7 @@ public class LocalDB extends SQLiteOpenHelper {
         switch(oldVersion){
             case 12: //Released to Play Store March 2018
                 String CREATE_TABLE_SCANNED_EVENTS = "CREATE TABLE " + TABLE_SCANNED_EVENTS + "("
-                        + COLUMN_URL + " TEXT," + COLUMN_EVENT_NAME + " TEXT)";
+                        + COLUMN_URL + " TEXT," + COLUMN_EVENT_NAME + " TEXT," + COLUMN_ICON + " TEXT)";
                 db.execSQL(CREATE_TABLE_SCANNED_EVENTS);
 
                 String CREATE_TABLE_VERSION_NUM = "CREATE TABLE " + TABLE_JSON_VERSION_NUM + "("
@@ -184,6 +184,7 @@ public class LocalDB extends SQLiteOpenHelper {
 
                 db.execSQL("ALTER TABLE " + TABLE_NAVIGATION_TITLES + " ADD COLUMN " + COLUMN_NAV_ID
                         + " TEXT DEFAULT \"\"");
+
             case 13: //Released to Play Store August 2018
 
             default:
@@ -269,10 +270,11 @@ public class LocalDB extends SQLiteOpenHelper {
      * @param url, the url of the event
      * @param name, the name of the event
      */
-    public void addEvent (String url, String name){
+    public void addEvent (String url, String name, String image_string){
         ContentValues values = new ContentValues();
         values.put(COLUMN_URL, url);
         values.put(COLUMN_EVENT_NAME, name);
+        values.put(COLUMN_ICON, image_string);
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_SCANNED_EVENTS, null, values);
@@ -459,7 +461,7 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      *
-     * @return returns and ArrayList with the name and url of all events in the database
+     * @return returns and ArrayList with the name, url, and icon of all events in the database
      */
     public ArrayList<String[]> getAllEvents() {
         ArrayList<String[]> allEvents = new ArrayList<>();
@@ -468,7 +470,8 @@ public class LocalDB extends SQLiteOpenHelper {
         Cursor c = db.rawQuery(urlQuery,null);
 
         while (c.moveToNext()) {
-            String[] values = {c.getString(c.getColumnIndex(COLUMN_EVENT_NAME)),c.getString(c.getColumnIndex(COLUMN_URL))};
+            String[] values = {c.getString(c.getColumnIndex(COLUMN_EVENT_NAME)),
+                    c.getString(c.getColumnIndex(COLUMN_URL)),c.getString(c.getColumnIndex(COLUMN_ICON))};
             allEvents.add(0,values);
         }
         return allEvents;
@@ -1238,9 +1241,9 @@ public class LocalDB extends SQLiteOpenHelper {
      * @param add_url, the url of the event to be added
      * @param add_name, the name of the event to be added
      */
-    public void replaceEvent (String remove_url, String add_url, String add_name){
+    public void replaceEvent (String remove_url, String add_url, String add_name, String add_icon){
         removeEvent(remove_url);
-        addEvent(add_url,add_name);
+        addEvent(add_url,add_name, add_icon);
     }
 
     /**

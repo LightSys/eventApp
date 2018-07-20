@@ -3,7 +3,20 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="horizontal">
+
+    <!--This ImageView holds the image for one event-->
+    <ImageView
+        android:id="@+id/scanned_event_logo"
+        android:layout_height="match_parent"
+        android:layout_width="1dp"
+        android:paddingTop = "@dimen/more_space_border_dimen_lg"
+        android:paddingBottom = "@dimen/more_space_border_dimen_lg"
+        android:layout_gravity="center_vertical"
+        android:background="@color/darkGray"
+        android:scaleType="fitXY"
+        />
+
 
     <!--This TextView holds the event name for one event-->
     <TextView
@@ -14,7 +27,8 @@
         android:textStyle="bold"
         android:textColor="@color/white"
         android:background="@color/darkGray"
-        android:padding="@dimen/more_space_border_dimen_lg"
+        android:paddingTop="@dimen/more_space_border_dimen_lg"
+        android:paddingBottom="@dimen/more_space_border_dimen_lg"
         android:gravity="center_horizontal"/>
 
 </LinearLayout>

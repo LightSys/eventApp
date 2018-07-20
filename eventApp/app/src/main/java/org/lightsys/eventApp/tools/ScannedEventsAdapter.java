@@ -2,10 +2,16 @@ package org.lightsys.eventApp.tools;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.lightsys.eventApp.R;
@@ -16,6 +22,7 @@ import java.util.ArrayList;
 public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdapter.ScannedEventsAdapterViewHolder>{
 
     private ArrayList<String[]> scannedEvents;
+    private Context app_context;
 
     private final ScannedEventsAdapterOnClickHandler clickHandler;
 
@@ -31,10 +38,11 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
     }
 
     /** Constructor **/
-    public ScannedEventsAdapter(ScannedEventsAdapterOnClickHandler clikHandlr,ArrayList list) {
+    public ScannedEventsAdapter(ScannedEventsAdapterOnClickHandler clikHandlr,ArrayList list, Context context) {
         scannedEvents = list;
         numRecyclerViewItems = list.size();
         clickHandler = clikHandlr;
+        app_context = context;
     }
 
     /**
@@ -42,12 +50,13 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
      */
     protected class ScannedEventsAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public final TextView eventsTextView;
+        public final ImageView eventsImageView;
 
         public ScannedEventsAdapterViewHolder(View view) {
             super(view);
             eventsTextView = (TextView) view.findViewById(R.id.scanned_event_name);
+            eventsImageView = (ImageView) view.findViewById(R.id.scanned_event_logo);
             view.setOnClickListener(this);
-
         }
 
         /**
@@ -61,8 +70,18 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
             String scanned_url = scanned_item[1];
             clickHandler.onClick(scanned_url);
         }
-        public void bind(String name){
+        public void bind(String name, String image){
             eventsTextView.setText(name);
+            if (image != null && !image.equals("")) {
+                byte[] decodedBytes = Base64.decode(image, Base64.DEFAULT);
+                Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                eventsImageView.setImageBitmap(decodedBitmap);
+                LinearLayout.LayoutParams expand = new LinearLayout.LayoutParams(125, LinearLayout.LayoutParams.MATCH_PARENT);
+                eventsImageView.setLayoutParams(expand);
+            } else {
+                LinearLayout.LayoutParams minimize = new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.MATCH_PARENT);
+                eventsImageView.setLayoutParams(minimize);
+            }
         }
     }
 
@@ -86,7 +105,8 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
     @Override
     public void onBindViewHolder(ScannedEventsAdapterViewHolder seavh, int pos) {
         String scanned_event = scannedEvents.get(pos)[0];
-        seavh.bind(scanned_event);
+        String scanned_logo = scannedEvents.get(pos)[2];
+        seavh.bind(scanned_event, scanned_logo);
     }
 
 

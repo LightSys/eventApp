@@ -289,7 +289,11 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     private void processRefreshPressed() {
         elapsedTime = 0;
         refresh_pressed = true;
-        String refresh_setting = sharedPreferences.getString("refresh_rate", db.getGeneral("refresh_rate").trim());
+        String db_refresh_rate;
+        //catch allows for old JSON compatibility
+        try { db_refresh_rate = db.getGeneral("refresh_rate").trim(); }
+        catch (Exception e) { db_refresh_rate = db.getGeneral("refresh"); }
+        String refresh_setting = sharedPreferences.getString("refresh_rate", db_refresh_rate);
         if (refresh_setting.equals("auto")) {
             setAutoRefresh();
         }
@@ -302,7 +306,11 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
      * @author: Littlesnowman88
      */
     private void setRefreshFrequency() {
-        String refresh_setting = sharedPreferences.getString("refresh_rate", db.getGeneral("refresh_rate").trim());
+        String db_refresh_rate;
+        //catch allows for old JSON compatibility
+        try { db_refresh_rate = db.getGeneral("refresh_rate").trim(); }
+        catch (Exception e) { db_refresh_rate = db.getGeneral("refresh"); }
+        String refresh_setting = sharedPreferences.getString("refresh_rate", db_refresh_rate);
         switch (refresh_setting) {
             case "never":
                 updateMillis = NEVER;
@@ -311,10 +319,9 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
                     setAutoRefresh();
                 break;
             case "default":
-                String defaultVal = db.getGeneral("refresh_rate");
-                if (defaultVal.equals("never")) { updateMillis = NEVER; }
-                else if (defaultVal.equals("auto")) {setAutoRefresh();}
-                else { updateMillis = Integer.parseInt(defaultVal) * ONE_MINUTE; }
+                if (db_refresh_rate.equals("never")) { updateMillis = NEVER; }
+                else if (db_refresh_rate.equals("auto")) {setAutoRefresh();}
+                else { updateMillis = Integer.parseInt(db_refresh_rate) * ONE_MINUTE; }
                 break;
             case "1":
                 if (! isAwake()) { refresh_setting = "5"; } //then continue onto default.
@@ -354,7 +361,11 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     //Created by Littlesnowman88
     private int chooseMaxTime(int time) {
         try {
-            return Math.max(time, Integer.parseInt(db.getGeneral("refresh_rate").trim())) * ONE_MINUTE;
+            String db_refresh_rate;
+            //catch allows for old JSON compatibility
+            try { db_refresh_rate = db.getGeneral("refresh_rate").trim(); }
+            catch (Exception e) { db_refresh_rate = db.getGeneral("refresh"); }
+            return Math.max(time, Integer.parseInt(db_refresh_rate)) * ONE_MINUTE;
         } catch (Exception e) {
             //if JSON default_rate is never or auto, choose the passed in value.
             return time * ONE_MINUTE;

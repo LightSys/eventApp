@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         /*set up scanned events recycler view*/
         String scan_qr = getResources().getString(R.string.scan_new_qr);
         if(db.getEvent(scan_qr) == null){
-            db.addEvent(scan_qr,scan_qr);
+            db.addEvent(scan_qr,scan_qr, "");
         }
         scannedEvents = db.getAllEvents();
         scannedEventsView = (RecyclerView) findViewById(R.id.scanned_events_recyclerview);
@@ -131,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         LinearLayoutManager layoutManager = new LinearLayoutManager(this,
                 LinearLayoutManager.VERTICAL, false);
         scannedEventsView.setLayoutManager(layoutManager);
-        scannedEventsAdapter = new ScannedEventsAdapter(this,scannedEvents);
+        scannedEventsAdapter = new ScannedEventsAdapter(this,scannedEvents, context);
         scannedEventsView.setAdapter(scannedEventsAdapter);
 
         //set theme color
@@ -316,7 +316,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         //set a dummy url
         db.addGeneral("url", "No_Event");
         db.addGeneral("old_url", "No_Event");
-        int[] start_version = {0,0};
+        db.addGeneral("logo", "");
+        int[] start_version = {-1,-1};
         db.addJSONVersionNum(start_version);
 
         //Set welcome message
@@ -360,9 +361,10 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     }
 
     private void resetScannedEventsAdapter(String scanned_url){
-        String[] name_and_url = {getValidEventName(), scanned_url};
-        addScannedEvent(name_and_url);
-        scannedEventsAdapter = new ScannedEventsAdapter(this,scannedEvents);
+        String logo = db.getGeneral("logo");
+        String[] name_url_image = {getValidEventName(), scanned_url, db.getGeneral("logo")};
+        addScannedEvent(name_url_image);
+        scannedEventsAdapter = new ScannedEventsAdapter(this,scannedEvents, context);
         scannedEventsView.setAdapter(scannedEventsAdapter);
         //setupMenusAndTheme() is called here because it needs to happen AFTER a new DataConnection is created,
         //   and new data connections are created after a scanned event is clicked AND after the QR is received.
@@ -393,29 +395,29 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         }
     }
 
-    public void addScannedEvent(String[] name_and_url) {
-        if(!hasNameAndUrl(name_and_url)) {
-            scannedEvents.add(0,name_and_url);
+    public void addScannedEvent(String[] name_url_image) {
+        if(!hasNameAndUrl(name_url_image)) {
+            scannedEvents.add(0,name_url_image);
             if(scannedEvents.size() > 6) {
-                db.replaceEvent(scannedEvents.get(5)[1], name_and_url[1], name_and_url[0]);
+                db.replaceEvent(scannedEvents.get(5)[1], name_url_image[1], name_url_image[0], name_url_image[2]);
                 scannedEvents.remove(5);
             }
             else {
-                db.addEvent(name_and_url[1], name_and_url[0]);
+                db.addEvent(name_url_image[1], name_url_image[0], name_url_image[2]);
             }
         }
         else {
-            int event_position = findIndexOfUrl(name_and_url);
+            int event_position = findIndexOfUrl(name_url_image);
             scannedEvents.remove(event_position);
-            scannedEvents.add(0,name_and_url);
-            db.replaceEvent(name_and_url[1],name_and_url[1],name_and_url[0]);
+            scannedEvents.add(0,name_url_image);
+            db.replaceEvent(name_url_image[1],name_url_image[1],name_url_image[0], name_url_image[2]);
         }
     }
 
-    private int findIndexOfUrl(String[] name_and_url){
+    private int findIndexOfUrl(String[] name_url_image){
         int size = scannedEvents.size();
         for(int i = 0; i < size; i++){
-            if(scannedEvents.get(i)[1].equals(name_and_url[1])) {
+            if(scannedEvents.get(i)[1].equals(name_url_image[1])) {
                 return i;
             }
         }

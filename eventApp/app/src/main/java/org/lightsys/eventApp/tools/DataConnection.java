@@ -602,15 +602,22 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      *  Created/Refactored by Littlesnowman88 on 12 July 2018
      */
     private void finishLoadGeneralInfo(JSONObject qrJSON, JSONArray tempGeneral) {
-        //VERSION NUMBER MUST REMAIN THE FIRST THING IN THE JSON'S GENERAL SECTION FOR THIS TO WORK RIGHT
         int num_general_items = tempGeneral.length();
+        //for backwards compatibility with old JSONs.
+        try {
+            String first_general_gategory = tempGeneral.getString(0);
+            if (!first_general_gategory.equals("version_num")) {
+                db.addGeneral(first_general_gategory, qrJSON.getString(first_general_gategory));
+            }
+        } catch (Exception e) {e.printStackTrace();}
         for (int i = 1; i < num_general_items; i++) {
             try {
                 //@id signals a new object, but contains no information on that line
-                if (!tempGeneral.getString(i).equals("@id")) {
+                String general_category_title = tempGeneral.getString(i);
+                if (!general_category_title.equals("@id")) {
                     //only loads refresh rate into database if rate is not already specified by the user
-                    if (!tempGeneral.getString(i).equals("refresh_rate") || db.getGeneral("refresh_rate") == null) {
-                        db.addGeneral(tempGeneral.getString(i), qrJSON.getString(tempGeneral.getString(i)));
+                    if (!general_category_title.equals("refresh_rate") || db.getGeneral("refresh_rate") == null) {
+                        db.addGeneral(general_category_title, qrJSON.getString(general_category_title));
                     }
                 }
             } catch (JSONException e) {
@@ -705,8 +712,13 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         try {
             String version_string = qrJSON.getString(json_categories.getString(0));
             String[] version_tokens = version_string.split(",");
-            int[] version = {Integer.parseInt(version_tokens[0]), Integer.parseInt(version_tokens[1])};
-            return version;
+            if (version_tokens.length == 2) {
+                int[] version = {Integer.parseInt(version_tokens[0]), Integer.parseInt(version_tokens[1])};
+                return version;
+            } else {
+                int[] version = {0,0};
+                return version;
+            }
         } catch (JSONException e) {
             e.printStackTrace();
             int[] version = {0,0};

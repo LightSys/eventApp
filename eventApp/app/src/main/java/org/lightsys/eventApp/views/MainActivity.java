@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         /*set up scanned events recycler view*/
         String scan_qr = getResources().getString(R.string.scan_new_qr);
         if(db.getEvent(scan_qr) == null){
-            db.addEvent(scan_qr,scan_qr, "");
+            db.addEvent(scan_qr,scan_qr, getString(R.string.scan_qr_logo));
         }
         scannedEvents = db.getAllEvents();
         scannedEventsView = (RecyclerView) findViewById(R.id.scanned_events_recyclerview);
@@ -316,7 +316,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         //set a dummy url
         db.addGeneral("url", "No_Event");
         db.addGeneral("old_url", "No_Event");
-        db.addGeneral("logo", "");
         int[] start_version = {-1,-1};
         db.addJSONVersionNum(start_version);
 

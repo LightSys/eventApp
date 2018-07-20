@@ -19,6 +19,7 @@
 
     <!-- Margins -->
     <dimen name="more_space_border_dimen">8dp</dimen>
+    <dimen name="more_space_border_dimen_small">5dp</dimen>
 
     <dimen name="border_dimen">8dp</dimen>
     <dimen name="border_dimen_indent">15dp</dimen>

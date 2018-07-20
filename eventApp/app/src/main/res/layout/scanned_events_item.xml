@@ -10,13 +10,12 @@
         android:id="@+id/scanned_event_logo"
         android:layout_height="match_parent"
         android:layout_width="1dp"
-        android:paddingTop = "@dimen/more_space_border_dimen_lg"
-        android:paddingBottom = "@dimen/more_space_border_dimen_lg"
+        android:padding = "@dimen/more_space_border_dimen_small"
         android:layout_gravity="center_vertical"
         android:background="@color/darkGray"
-        android:scaleType="fitXY"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
         />
-
 
     <!--This TextView holds the event name for one event-->
     <TextView
@@ -29,6 +28,10 @@
         android:background="@color/darkGray"
         android:paddingTop="@dimen/more_space_border_dimen_lg"
         android:paddingBottom="@dimen/more_space_border_dimen_lg"
+        android:paddingRight="@dimen/more_space_border_dimen_small"
+        android:paddingEnd="@dimen/more_space_border_dimen_small"
+        android:paddingLeft="0dp"
+        android:paddingStart="0dp"
         android:gravity="center_horizontal"/>
 
 </LinearLayout>

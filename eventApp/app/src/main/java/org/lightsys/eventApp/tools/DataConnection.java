@@ -710,7 +710,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     private static int[] getVersionNumber(JSONObject qrJSON, JSONArray json_categories) {
         //VERSION NUMBER MUST REMAIN THE FIRST THING IN THE JSON'S GENERAL SECTION
         try {
-            String version_string = qrJSON.getString(json_categories.getString(0));
+            String version_string = qrJSON.getString(json_categories.getString(0)); //TODO: Make this flexible in ordering?
             String[] version_tokens = version_string.split(",");
             if (version_tokens.length == 2) {
                 int[] version = {Integer.parseInt(version_tokens[0]), Integer.parseInt(version_tokens[1])};
@@ -729,10 +729,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     //compares version numbers to see if configuration files need to update
     private static boolean[] dataNeedsUpdate(int[] old_version, int[] new_version) {
         boolean[] update_flags = {false, false};
-        if (old_version[0] != new_version[0]) {
+        if (old_version[0] != new_version[0] || new_version[0]==0) {
             update_flags[0] = true;
         }
-        if (old_version[1] != new_version[1]) {
+        if (old_version[1] != new_version[1] || new_version[1]==0) {
             update_flags[1] = true;
         }
         return update_flags;

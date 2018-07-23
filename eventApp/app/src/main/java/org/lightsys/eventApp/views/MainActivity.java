@@ -148,10 +148,20 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        //if no data, import data
-        gatherData(db.getGeneral("refresh_expire") == null);
-        if(scannedEvents.size() == 1){
-            handleNoScannedEvent();
+        //if no events have been imported, load the "no event" state
+        if(scannedEvents.size() == 1){ handleNoScannedEvent(); }
+        else { 
+//            //otherwise, load data and launch the welcome view fragment
+//            Runnable updateScannedEventList = new Runnable() {
+//                @Override
+//                public void run() {
+//                    resetScannedEventsAdapter(db.getGeneral("url"));
+//                }
+//            };
+//            String url = db.getGeneral("url");
+//            new DataConnection(context, activity, "new", db.getGeneral("url"), true, null,
+//                    updateScannedEventList).execute("");
+            gatherData(false);
         }
     }
 
@@ -375,12 +385,17 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         setupMenusAndTheme();
     }
 
-    //Returns "No Name" if invalid
+    //Returns the event's welcome message or "No Name" if invalid
     private String getValidEventName(){
         String name = null;
         String event_name = db.getGeneral("event_name");
         if (event_name != null){ name = event_name.trim();}
-        if (name == null || name.equals("")) { name = getString(R.string.no_event_name); }
+        if (name == null || name.equals("")) {
+            //for backwards compatibility with old JSONs
+            if (db.getGeneral("welcome_message")!= null) {
+                name = db.getGeneral("welcome_message");
+            } else { name = getString(R.string.no_event_name); }
+        }
         return name;
     }
 

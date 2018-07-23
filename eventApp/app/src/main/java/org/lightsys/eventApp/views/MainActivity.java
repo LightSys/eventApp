@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -392,6 +394,34 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             scannedEventsView.setVisibility(View.VISIBLE);
             scannedEventsView.setEnabled(true);
         }
+    }
+
+    //if scanned events dropdown is open and click occurs outside dropdown, dropdown closes
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            View content;
+            int[] contentLocation = new int[2];
+            scannedEventsView.getLocationOnScreen(contentLocation);
+            Rect scannedEventsRect = new Rect(contentLocation[0],
+                    contentLocation[1],
+                    contentLocation[0] + scannedEventsView.getWidth(),
+                    contentLocation[1] + scannedEventsView.getHeight());
+
+            content = findViewById(R.id.toolbar);
+            contentLocation = new int[2];
+            content.getLocationOnScreen(contentLocation);
+            Rect toolBarRect = new Rect(contentLocation[0],
+                    contentLocation[1],
+                    contentLocation[0] + content.getWidth(),
+                    contentLocation[1] + content.getHeight());
+
+            if (!(scannedEventsRect.contains((int) event.getX(), (int) event.getY())) && !(toolBarRect.contains((int) event.getX(), (int) event.getY())) && scannedEventsView.getVisibility() == View.VISIBLE) {
+                toggleVisibility();
+            }
+        }
+        return super.dispatchTouchEvent(event);
     }
 
     public void addScannedEvent(String[] name_url_image) {

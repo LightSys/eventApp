@@ -192,23 +192,46 @@ public class LocalDB extends SQLiteOpenHelper {
                 //add the scanQR "event", and this appears to happen before mainActivity succeeds in getting any event.
                 Resources string_resources = app_context.getResources();
                 String scan_qr = string_resources.getString(R.string.scan_new_qr);
-                addEvent(scan_qr, scan_qr, string_resources.getString(R.string.scan_qr_logo));
+                onUpgradeAddEvent(db, scan_qr, scan_qr, string_resources.getString(R.string.scan_qr_logo));
 
                 String event_url, event_name, event_logo;
                 //if an old app version had already scanned a qr, keep it's basic information.
-                if (getGeneral("url")!=null) {
-                    event_url = getGeneral("url");
-                    if (getGeneral("welcome_message")!=null) { event_name = getGeneral("welcome_message"); }
+                if (onUpgradeGetGeneral(db, "url")!=null) {
+                    event_url = onUpgradeGetGeneral(db, "url");
+                    if (onUpgradeGetGeneral(db, "welcome_message")!=null) { event_name = onUpgradeGetGeneral(db, "welcome_message"); }
                     else { event_name = string_resources.getString(R.string.no_name); }
-                    if (getGeneral("logo")!=null){event_logo = getGeneral("logo"); }
+                    if (onUpgradeGetGeneral(db, "logo")!=null){event_logo = onUpgradeGetGeneral(db, "logo"); }
                     else {event_logo = "";}
-                    addEvent(event_url, event_name, event_logo);
+                    onUpgradeAddEvent(db, event_url, event_name, event_logo);
                 }
             case 13: //Released to Play Store August 2018
 
             default:
                 //This should be the case of the current version
         }
+    }
+
+    private static void onUpgradeAddEvent(SQLiteDatabase db, String url, String name, String logo_string) {
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_URL, url);
+        values.put(COLUMN_EVENT_NAME, name);
+        values.put(COLUMN_ICON, logo_string);
+        db.insert(TABLE_SCANNED_EVENTS, null, values);
+    }
+
+    private static String onUpgradeGetGeneral(SQLiteDatabase db, String category) {
+        String general=null;
+        String queryString = "SELECT " + COLUMN_INFO + " FROM " + TABLE_GENERAL_INFO + " WHERE "
+                + COLUMN_TYPE + " = " + "?";
+        String[] selectionArgs = {category};
+        Cursor c = db.rawQuery(queryString, selectionArgs);
+
+        while (c.moveToNext()) {
+            general = c.getString(0);
+
+        }
+        c.close();
+        return general;
     }
 
 	/* ************************* Clear Queries ************************* */

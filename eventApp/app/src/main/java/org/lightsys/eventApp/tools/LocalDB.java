@@ -3,10 +3,12 @@ package org.lightsys.eventApp.tools;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.HousingInfo;
 import org.lightsys.eventApp.data.Info;
@@ -29,6 +31,7 @@ public class LocalDB extends SQLiteOpenHelper {
 
     private static final int DATABASE_VERSION = 13;
     private static final String DATABASE_NAME = "SBCaT.db";
+    private static Context app_context;
     //SCANNED EVENTS TABLE
     private static final String TABLE_SCANNED_EVENTS = "scanned_events";
     private static final String COLUMN_URL = "url";
@@ -96,6 +99,7 @@ public class LocalDB extends SQLiteOpenHelper {
      */
     public LocalDB(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        app_context = context;
     }
 
     /**
@@ -185,6 +189,21 @@ public class LocalDB extends SQLiteOpenHelper {
                 db.execSQL("ALTER TABLE " + TABLE_NAVIGATION_TITLES + " ADD COLUMN " + COLUMN_NAV_ID
                         + " TEXT DEFAULT \"\"");
 
+                //add the scanQR "event", and this appears to happen before mainActivity succeeds in getting any event.
+                Resources string_resources = app_context.getResources();
+                String scan_qr = string_resources.getString(R.string.scan_new_qr);
+                addEvent(scan_qr, scan_qr, string_resources.getString(R.string.scan_qr_logo));
+
+                String event_url, event_name, event_logo;
+                //if an old app version had already scanned a qr, keep it's basic information.
+                if (getGeneral("url")!=null) {
+                    event_url = getGeneral("url");
+                    if (getGeneral("welcome_message")!=null) { event_name = getGeneral("welcome_message"); }
+                    else { event_name = string_resources.getString(R.string.no_name); }
+                    if (getGeneral("logo")!=null){event_logo = getGeneral("logo"); }
+                    else {event_logo = "";}
+                    addEvent(event_url, event_name, event_logo);
+                }
             case 13: //Released to Play Store August 2018
 
             default:

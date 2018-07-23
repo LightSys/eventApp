@@ -1,17 +1,20 @@
 package org.lightsys.eventApp.tools;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Looper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -58,7 +61,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     private String old_qrAddress;
     private final WeakReference<Context> dataContext; // Context that the DataConnection was executed in
     private final WeakReference<Activity> dataActivity;
-    private ProgressDialog spinner;
+    private ProgressBar loading_bar;
     private String action;
     private boolean loadAll; //specifies whether all info should be reloaded or only notifications
     private boolean connection;
@@ -81,7 +84,12 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         this.db = new LocalDB(dataContext.get());
         Log.d(TAG, "DataConnection: " + qrAddress);
         if (activity != null) {
-            spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle);
+            RelativeLayout main_layout = dataActivity.get().findViewById(R.id.main_layout);
+            loading_bar = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
+            loading_bar.setBackgroundColor(Color.parseColor("#787878"));
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(600, 100);
+            params.addRule(RelativeLayout.CENTER_IN_PARENT);
+            main_layout.addView(loading_bar, params);
         }
         mainActivityRunnable = runnable;
     }
@@ -115,9 +123,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         if (callback != null)
             callback.onCompletion();
 
-        // Dismiss spinner to show data retrieval is done
-        if (dataActivity != null && dataActivity.get() != null && spinner != null) {
-            spinner.dismiss();
+        // Dismiss progress bar to show data retrieval is done
+        if (dataActivity != null && dataActivity.get() != null && loading_bar != null) {
+            loading_bar.setVisibility(View.GONE);
+            dataActivity.get().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
         }
         if (dataContext != null && dataContext.get().getClass() == MainActivity.class && connection && !action.equals("auto_update")) {
             Toast.makeText(dataContext.get(), "data successfully imported", Toast.LENGTH_SHORT).show();
@@ -223,15 +232,18 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             return;
         db = new LocalDB(dataContext.get());
 
-        //set spinner as app collects data
-        if (dataActivity != null && dataActivity.get() != null && spinner != null) {
-            spinner.setMessage("Gathering event info...");
+        //set loading bar as app collects data
+        if (dataActivity != null && dataActivity.get() != null && loading_bar != null) {
+            //TODO: SET TEXT HERE? OR SET PROGRESS TO ZERO
+//                    setMessage("Gathering event info...");
             dataActivity.get().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    spinner.setIndeterminate(true);
-                    spinner.setCancelable(false);
-                    spinner.show();
+                    loading_bar.setIndeterminate(true);
+                    dataActivity.get().getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                    loading_bar.setVisibility(View.VISIBLE);
+
                 }
             });
         }
@@ -239,8 +251,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         connection = checkConnection(qrAddress);
 
         //if connection error occurred, cancel spinner
-        if (!connection && dataActivity != null && dataActivity.get() != null && spinner != null){
-            spinner.dismiss();
+        if (!connection && dataActivity != null && dataActivity.get() != null && loading_bar != null){
+            loading_bar.setVisibility(View.GONE);
+            dataActivity.get().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
         }
 
         if (connection) {

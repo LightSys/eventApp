@@ -26,6 +26,7 @@
     <string name="notifications_header">Notifications</string>
     <string name="no_event_welcome">No event has been scanned.\nPress the camera icon to scan an event.</string>
     <string name="default_welcome">Welcome!</string>
+    <string name="notification_id">LightSys EventApp Notifications</string>
 
     <!--Contact Resources-->
     <string name="no_name">No Name</string>

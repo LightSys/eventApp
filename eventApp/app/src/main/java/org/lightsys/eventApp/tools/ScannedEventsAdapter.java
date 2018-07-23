@@ -38,7 +38,7 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
     }
 
     /** Constructor **/
-    public ScannedEventsAdapter(ScannedEventsAdapterOnClickHandler clikHandlr,ArrayList list, Context context) {
+    public ScannedEventsAdapter(ScannedEventsAdapterOnClickHandler clikHandlr, ArrayList<String[]> list, Context context) {
         scannedEvents = list;
         numRecyclerViewItems = list.size();
         clickHandler = clikHandlr;

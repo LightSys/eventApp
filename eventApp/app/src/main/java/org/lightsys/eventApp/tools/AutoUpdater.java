@@ -20,6 +20,7 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.WindowManager;
 
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.Info;
@@ -292,7 +293,12 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         String db_refresh_rate;
         //catch allows for old JSON compatibility
         try { db_refresh_rate = db.getGeneral("refresh_rate").trim(); }
-        catch (Exception e) { db_refresh_rate = db.getGeneral("refresh"); }
+        catch (Exception e) {
+            db_refresh_rate = db.getGeneral("refresh");
+            //in Testing/Demo QR code, the refresh rate is -1. Otherwise this "if" statement isn't a problem.
+            if (db_refresh_rate.equals("-1")) {db_refresh_rate = "never"; }
+        }
+
         String refresh_setting = sharedPreferences.getString("refresh_rate", db_refresh_rate);
         if (refresh_setting.equals("auto")) {
             setAutoRefresh();
@@ -309,7 +315,11 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         String db_refresh_rate;
         //catch allows for old JSON compatibility
         try { db_refresh_rate = db.getGeneral("refresh_rate").trim(); }
-        catch (Exception e) { db_refresh_rate = db.getGeneral("refresh"); }
+        catch (Exception e) {
+            db_refresh_rate = db.getGeneral("refresh");
+            //in Testing/Demo QR code, the refresh rate is -1. Otherwise this "if" statement isn't a problem.
+            if (db_refresh_rate.equals("-1")) {db_refresh_rate = "never"; }
+        }
         String refresh_setting = sharedPreferences.getString("refresh_rate", db_refresh_rate);
         switch (refresh_setting) {
             case "never":
@@ -364,7 +374,11 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
             String db_refresh_rate;
             //catch allows for old JSON compatibility
             try { db_refresh_rate = db.getGeneral("refresh_rate").trim(); }
-            catch (Exception e) { db_refresh_rate = db.getGeneral("refresh"); }
+            catch (Exception e) {
+                db_refresh_rate = db.getGeneral("refresh");
+                //in Testing/Demo QR code, the refresh rate is -1. Otherwise this "if" statement isn't a problem.
+                if (db_refresh_rate.equals("-1")) {db_refresh_rate = "never"; }
+            }
             return Math.max(time, Integer.parseInt(db_refresh_rate)) * ONE_MINUTE;
         } catch (Exception e) {
             //if JSON default_rate is never or auto, choose the passed in value.
@@ -392,7 +406,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     private boolean isAwake() {
         Boolean awake;
         acquirePowerLock();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) { //if api > 20
             awake = powerManager.isInteractive();
         } else {
             awake = powerManager.isScreenOn();
@@ -426,7 +440,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         Intent notificationIntent = new Intent(context, MainActivity.class);
         PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
-        nBuild = new NotificationCompat.Builder(context)
+        nBuild = new NotificationCompat.Builder(context, context.getResources().getString(R.string.notification_id))
                 .setContentTitle(title)
                 .setContentText(subject)
                 .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
@@ -439,7 +453,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         // Turn on the device and send the notification.
         if (powerManager != null) {
             screenWakeLock = powerManager.newWakeLock(
-                    PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
                     "org.lightsys.eventApp.tools.AutoUpdater"
             );
             screenWakeLock.acquire(500);

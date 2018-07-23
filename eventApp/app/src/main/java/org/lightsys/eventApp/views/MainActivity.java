@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             Runnable updateScannedEventList = new Runnable() {
                 @Override
                 public void run() {
-                    resetScannedEventsAdapter(dataURL);
+                    resetScannedEventsAdapter("add", dataURL);
                 }
             };
             new DataConnection(context, activity, "new", dataURL, true, null,updateScannedEventList).execute("");
@@ -349,7 +349,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             Runnable updateScannedEventsList = new Runnable() {
                 @Override
                 public void run() {
-                    resetScannedEventsAdapter(scanned_url);
+                    resetScannedEventsAdapter("add", scanned_url);
                 }
             };
             String action;
@@ -359,18 +359,59 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         }
     }
 
-    private void resetScannedEventsAdapter(String scanned_url){
-        String logo = db.getGeneral("logo");
-        String[] name_url_image = {getValidEventName(), scanned_url, db.getGeneral("logo")};
-        addScannedEvent(name_url_image);
+    //Overriding the scanned events recycler view
+    @Override
+    public boolean onLongClick(final String scanned_url) {
+        if(scanned_url.equals(getResources().getString(R.string.scan_new_qr))){
+            return true;
+        }
+        else {
+            AlertDialog prompt_event_remove = promptEventRemove(scanned_url);
+            prompt_event_remove.show();
+        }
+        return true;
+    }
+
+    //Prompts the user if they would like to delete an event upon a long click
+    private AlertDialog promptEventRemove(final String scanned_url){
+        AlertDialog dialog_box = new AlertDialog.Builder(this)
+                .setMessage("Would you like to delete this event?")
+                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        resetScannedEventsAdapter("remove",scanned_url);
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .create();
+            return dialog_box;
+    }
+
+    private void resetScannedEventsAdapter(String add_or_remove, String scanned_url){
+        if(add_or_remove.equals("add")){
+            String[] name_url_image = {getValidEventName(), scanned_url, db.getGeneral("logo")};
+            addScannedEvent(name_url_image);
+
+            //setupMenusAndTheme() is called here because it needs to happen AFTER a new DataConnection is created,
+            //   and new data connections are created after a scanned event is clicked AND after the QR is received.
+            //   DataConnection calls this after it has built the database, so the themes will now load properly.
+            color = Color.parseColor(db.getThemeColor("themeColor"));
+            black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
+            setupMenusAndTheme();
+        }
+        else if(add_or_remove.equals("remove")){
+            db.removeEvent(scanned_url);
+            int event_position = findIndexOfURL(scanned_url);
+            scannedEvents.remove(event_position);
+        }
         scannedEventsAdapter = new ScannedEventsAdapter(this,scannedEvents, context);
         scannedEventsView.setAdapter(scannedEventsAdapter);
-        //setupMenusAndTheme() is called here because it needs to happen AFTER a new DataConnection is created,
-        //   and new data connections are created after a scanned event is clicked AND after the QR is received.
-        //   DataConnection calls this after it has built the database, so the themes will now load properly.
-        color = Color.parseColor(db.getThemeColor("themeColor"));
-        black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
-        setupMenusAndTheme();
     }
 
     //Returns the event's welcome message or "No Name" if invalid
@@ -439,17 +480,17 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             }
         }
         else {
-            int event_position = findIndexOfUrl(name_url_image);
+            int event_position = findIndexOfURL(name_url_image[1]);
             scannedEvents.remove(event_position);
             scannedEvents.add(0,name_url_image);
             db.replaceEvent(name_url_image[1],name_url_image[1],name_url_image[0], name_url_image[2]);
         }
     }
 
-    private int findIndexOfUrl(String[] name_url_image){
+    private int findIndexOfURL(String url){
         int size = scannedEvents.size();
         for(int i = 0; i < size; i++){
-            if(scannedEvents.get(i)[1].equals(name_url_image[1])) {
+            if(scannedEvents.get(i)[1].equals(url)) {
                 return i;
             }
         }
@@ -568,7 +609,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                         Runnable updateScannedEventsList = new Runnable() {
                             @Override
                             public void run() {
-                                resetScannedEventsAdapter(db.getGeneral("url"));
+                                resetScannedEventsAdapter("add", db.getGeneral("url"));
                             }
                         };
                         new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null, updateScannedEventsList).execute("");

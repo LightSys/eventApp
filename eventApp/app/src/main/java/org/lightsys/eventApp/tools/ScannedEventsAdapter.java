@@ -34,6 +34,7 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
      * The interface that receives onClick messages.
      */
     public interface ScannedEventsAdapterOnClickHandler {
+        boolean onLongClick(String scanned_event);
         void onClick(String scanned_event);
     }
 
@@ -48,7 +49,7 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
     /**
      * A viewholder to handle clicks that happen inside of the recycler view; passes items clicked up to the ContinentSelectionAdapter's onClick.
      */
-    protected class ScannedEventsAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    protected class ScannedEventsAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         public final TextView eventsTextView;
         public final ImageView eventsImageView;
 
@@ -57,6 +58,7 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
             eventsTextView = (TextView) view.findViewById(R.id.scanned_event_name);
             eventsImageView = (ImageView) view.findViewById(R.id.scanned_event_logo);
             view.setOnClickListener(this);
+            view.setOnLongClickListener(this);
         }
 
         /**
@@ -70,6 +72,15 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
             String scanned_url = scanned_item[1];
             clickHandler.onClick(scanned_url);
         }
+
+        @Override
+        public boolean onLongClick(View v) {
+            String[] scanned_item = scannedEvents.get(getAdapterPosition());
+            String scanned_url = scanned_item[1];
+            clickHandler.onLongClick(scanned_url);
+            return true;
+        }
+
         public void bind(String name, String image){
             eventsTextView.setText(name);
             if (image != null && !image.equals("")) {

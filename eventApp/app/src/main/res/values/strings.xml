@@ -16,6 +16,7 @@
     <string name="refresh">refresh</string>
     <string name="rescan">rescan</string>
     <string name="refresh_dropdown">refresh dropdown</string>
+    <string name="loading_data">Gathering event info...</string>
 
     <!--Navigation Resources-->
     <string name="nav_logo">eventApp Logo</string>

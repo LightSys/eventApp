@@ -252,11 +252,12 @@ public class LocalDB extends SQLiteOpenHelper {
         String queryString = "SELECT * FROM " + TABLE_NAVIGATION_TITLES;
         Cursor c = db.rawQuery(queryString, null);
         while (c.moveToNext()) {
+
             ContentValues values = new ContentValues();
             values.put(COLUMN_NAME, c.getString(0));
             values.put(COLUMN_ICON, c.getString(1));
             values.put(COLUMN_NAV_ID, c.getString(0));
-            String whereClause = "COLUMN_NAME = " + "?";
+            String whereClause = COLUMN_NAME + " = " + "?";
             String[] whereArgs = {c.getString(0)};
 
             db.update(TABLE_NAVIGATION_TITLES, values, whereClause, whereArgs);

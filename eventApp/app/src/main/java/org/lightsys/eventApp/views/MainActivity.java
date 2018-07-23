@@ -150,9 +150,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
         //if no events have been imported, load the "no event" state
         if(scannedEvents.size() == 1){ handleNoScannedEvent(); }
-        else {
-            gatherData(false);
-        }
+        else { gatherData(false); }
     }
 
     /**

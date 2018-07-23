@@ -26,7 +26,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -51,6 +50,7 @@ import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.NavigationAdapter;
 import org.lightsys.eventApp.tools.ScannedEventsAdapter;
 import org.lightsys.eventApp.tools.ColorContrastHelper;
+import org.lightsys.eventApp.tools.RecyclerViewDivider;
 import org.lightsys.eventApp.tools.qr.launchQRScanner;
 import org.lightsys.eventApp.views.SettingsViews.SettingsActivity;
 
@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         }
         scannedEvents = db.getAllEvents();
         scannedEventsView = (RecyclerView) findViewById(R.id.scanned_events_recyclerview);
-        scannedEventsView.addItemDecoration(new DividerItemDecoration(context, LinearLayoutManager.VERTICAL));
+        scannedEventsView.addItemDecoration(new RecyclerViewDivider(this));
         scannedEventsView.setVisibility(View.GONE);
         scannedEventsView.setEnabled(false);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this,
@@ -405,7 +405,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
 
-        if (event.getAction() == MotionEvent.ACTION_UP) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
             View content;
             int[] contentLocation = new int[2];
             scannedEventsView.getLocationOnScreen(contentLocation);

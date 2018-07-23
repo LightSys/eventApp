@@ -204,6 +204,10 @@ public class LocalDB extends SQLiteOpenHelper {
                     else {event_logo = "";}
                     onUpgradeAddEvent(db, event_url, event_name, event_logo);
                 }
+
+                //update the navigation titles to now include navigation IDs
+                onUpgradeSetNavIDs(db);
+
             case 13: //Released to Play Store August 2018
 
             default:
@@ -232,6 +236,32 @@ public class LocalDB extends SQLiteOpenHelper {
         }
         c.close();
         return general;
+    }
+
+    /** sets NavIDs for navigation items that do not have nav_ids in old JSONs (I.E. the nav_items from the Old JSONs).
+     * IMPORTANT NOTE: This assumes the nav_ids provided in the
+     *          Test/Demo QR Code and the Code-a-Thone Session 4 QR Code.
+     *          Other nav_ids will prevent the app from properly loading
+     *          nav_titles until the database is cleared (which happens when
+     *          a qr is scanned).
+     * @param db
+     * Created by: Littlesnowman88
+     * Created on: 23 July 2018
+     */
+    private static void onUpgradeSetNavIDs(SQLiteDatabase db) {
+        String queryString = "SELECT * FROM " + TABLE_NAVIGATION_TITLES;
+        Cursor c = db.rawQuery(queryString, null);
+        while (c.moveToNext()) {
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_NAME, c.getString(0));
+            values.put(COLUMN_ICON, c.getString(1));
+            values.put(COLUMN_NAV_ID, c.getString(0));
+            String whereClause = "COLUMN_NAME = " + "?";
+            String[] whereArgs = {c.getString(0)};
+
+            db.update(TABLE_NAVIGATION_TITLES, values, whereClause, whereArgs);
+        }
+        c.close();
     }
 
 	/* ************************* Clear Queries ************************* */

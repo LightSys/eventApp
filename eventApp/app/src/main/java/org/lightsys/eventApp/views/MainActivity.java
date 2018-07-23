@@ -150,17 +150,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
         //if no events have been imported, load the "no event" state
         if(scannedEvents.size() == 1){ handleNoScannedEvent(); }
-        else { 
-//            //otherwise, load data and launch the welcome view fragment
-//            Runnable updateScannedEventList = new Runnable() {
-//                @Override
-//                public void run() {
-//                    resetScannedEventsAdapter(db.getGeneral("url"));
-//                }
-//            };
-//            String url = db.getGeneral("url");
-//            new DataConnection(context, activity, "new", db.getGeneral("url"), true, null,
-//                    updateScannedEventList).execute("");
+        else {
             gatherData(false);
         }
     }

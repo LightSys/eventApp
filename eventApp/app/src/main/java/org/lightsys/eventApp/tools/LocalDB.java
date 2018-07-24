@@ -728,6 +728,7 @@ public class LocalDB extends SQLiteOpenHelper {
         String today, tomorrow;
         int timeStart, length, timeEnd;
         Cursor c;
+        db = this.getReadableDatabase();
         //make a deep copy of days so that queryString indexing does not get messed up as days changes below.
         ArrayList<String> daysCopy = new ArrayList<>();
         for (String day : days) {
@@ -735,9 +736,8 @@ public class LocalDB extends SQLiteOpenHelper {
         }
         int daysCopySize = daysCopy.size();
         for (int d=0; d < daysCopySize; d++) {
-            db = this.getReadableDatabase();
             queryString = "SELECT * FROM " + TABLE_SCHEDULE + " WHERE " + COLUMN_DAY
-                    + " LIKE \"%" + daysCopy.get(d) + "%\"" + " ORDER BY " + COLUMN_TIME_START;
+                    + " = \"" + daysCopy.get(d) + "\"" + " ORDER BY " + COLUMN_TIME_START;
             c = db.rawQuery(queryString, null);
             while (c.moveToNext()) {
                 today = c.getString(0);
@@ -767,8 +767,8 @@ public class LocalDB extends SQLiteOpenHelper {
                 }
             }
             c.close();
-            db.close();
         }
+        db.close();
         return schedule;
     }
 
@@ -794,9 +794,9 @@ public class LocalDB extends SQLiteOpenHelper {
         for (String day : days) {
             daysCopy.add(day);
         }
-
+        db = this.getReadableDatabase();
         for (int i = 0; i < daysSize; i++) {
-            db = this.getReadableDatabase();
+
             queryString = "SELECT * FROM " + TABLE_SCHEDULE + " WHERE " + COLUMN_DAY
                     + " LIKE \"%" + daysCopy.get(i) + "%\"" + " ORDER BY " + COLUMN_TIME_START;
             c = db.rawQuery(queryString, null);
@@ -884,8 +884,8 @@ public class LocalDB extends SQLiteOpenHelper {
                 }
             }
             c.close();
-            db.close();
         }
+        db.close();
         return schedule;
     }
 

@@ -296,7 +296,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         catch (Exception e) {
             db_refresh_rate = db.getGeneral("refresh");
             //in Testing/Demo QR code, the refresh rate is -1. Otherwise this "if" statement isn't a problem.
-            if (db_refresh_rate.equals("-1")) {db_refresh_rate = "never"; }
+            if (db_refresh_rate==null || db_refresh_rate.equals("-1")) {db_refresh_rate = "never"; }
         }
 
         String refresh_setting = sharedPreferences.getString("refresh_rate", db_refresh_rate);
@@ -318,7 +318,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         catch (Exception e) {
             db_refresh_rate = db.getGeneral("refresh");
             //in Testing/Demo QR code, the refresh rate is -1. Otherwise this "if" statement isn't a problem.
-            if (db_refresh_rate.equals("-1")) {db_refresh_rate = "never"; }
+            if (db_refresh_rate==null || db_refresh_rate.equals("-1")) {db_refresh_rate = "never"; }
         }
         String refresh_setting = sharedPreferences.getString("refresh_rate", db_refresh_rate);
         switch (refresh_setting) {

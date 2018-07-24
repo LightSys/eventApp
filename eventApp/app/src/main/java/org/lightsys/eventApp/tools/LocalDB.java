@@ -510,13 +510,13 @@ public class LocalDB extends SQLiteOpenHelper {
 	/* ************************* Get Queries ************************* */
 
     /**
-     * get scanned event
+     * get scanned event name
      *
      * @param url, title under which the name is stored
      * @return event name
      */
-    public String getEvent(String url){
-        String event=null;
+    public String getEventName(String url){
+        String event="";
         String queryString = "SELECT " + COLUMN_EVENT_NAME + " FROM " + TABLE_SCANNED_EVENTS
                 +" WHERE " + COLUMN_URL + " = " + "?";
         SQLiteDatabase db = this.getReadableDatabase();
@@ -530,6 +530,27 @@ public class LocalDB extends SQLiteOpenHelper {
         c.close();
         db.close();
         return event;
+    }
+
+    /**
+     * gets a scanned event's logo
+     * @param url, the address under which the name is stored
+     * @return String logo
+     */
+    public String getEventLogo(String url) {
+        String logo = "";
+        String queryString = "SELECT " + COLUMN_ICON + " FROM " + TABLE_SCANNED_EVENTS
+                + " WHERE " + COLUMN_URL + " = " + "?";
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] selectionArgs = {url};
+        Cursor c = db.rawQuery(queryString, selectionArgs);
+
+        while (c.moveToNext()) {
+            logo = c.getString(0);
+        }
+        c.close();
+        db.close();
+        return logo;
     }
 
     /**

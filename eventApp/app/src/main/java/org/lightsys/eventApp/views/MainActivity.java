@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
         /*set up scanned events recycler view*/
         String scan_qr = getResources().getString(R.string.scan_new_qr);
-        if(db.getEvent(scan_qr) == null){
+        if(db.getEventName(scan_qr) == null){
             db.addEvent(scan_qr,scan_qr, getString(R.string.scan_qr_logo));
         }
         scannedEvents = db.getAllEvents();
@@ -196,13 +196,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == QR_RESULT && resultCode == RESULT_OK && data != null) {
             final String dataURL = data.getStringExtra(QR_DATA_EXTRA);
-            Runnable updateScannedEventList = new Runnable() {
-                @Override
-                public void run() {
-                    resetScannedEventsAdapter("add", dataURL);
-                }
-            };
-            new DataConnection(context, activity, "new", dataURL, true, null,updateScannedEventList).execute("");
+            new DataConnection(context, activity, "new", dataURL, true, null).execute("");
         }
     }
 
@@ -255,15 +249,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 toggleVisibility();
                 break;
             case R.id.action_refresh:
-                Runnable refresh_ui = new Runnable() {
-                    @Override
-                    public void run() {
-                        color = Color.parseColor(db.getThemeColor("themeColor"));
-                        black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
-                        setupMenusAndTheme();
-                    }
-                };
-                new DataConnection(context, activity, "refresh", db.getGeneral("notifications_url"), false, null, refresh_ui).execute("");
+                new DataConnection(context, activity, "refresh", db.getGeneral("notifications_url"), false, null).execute("");
                 stopService(updateIntent); //"refresh" (restart) the auto updater
                 updateIntent.removeExtra("refreshed_pressed");
                 updateIntent.putExtra("refresh_pressed", true);
@@ -346,16 +332,10 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             gatherData(true);
         }
         else {
-            Runnable updateScannedEventsList = new Runnable() {
-                @Override
-                public void run() {
-                    resetScannedEventsAdapter("add", scanned_url);
-                }
-            };
             String action;
             if (scanned_url.equals(db.getGeneral("url"))) {action = "refresh";}
             else {action = "new";}
-            new DataConnection(context, activity, action, scanned_url, true, null, updateScannedEventsList).execute("");
+            new DataConnection(context, activity, action, scanned_url, true, null).execute("");
         }
     }
 
@@ -395,14 +375,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
     private void resetScannedEventsAdapter(String add_or_remove, String scanned_url){
         if(add_or_remove.equals("add")){
-            String[] name_url_image = {getValidEventName(), scanned_url, db.getGeneral("logo")};
+            String[] name_url_image = {getValidEventName(scanned_url), scanned_url, getValidEventLogo(scanned_url)};
             addScannedEvent(name_url_image);
 
             //setupMenusAndTheme() is called here because it needs to happen AFTER a new DataConnection is created,
             //   and new data connections are created after a scanned event is clicked AND after the QR is received.
             //   DataConnection calls this after it has built the database, so the themes will now load properly.
-            color = Color.parseColor(db.getThemeColor("themeColor"));
-            black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
             setupMenusAndTheme();
         }
         else if(add_or_remove.equals("remove")){
@@ -414,18 +392,42 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         scannedEventsView.setAdapter(scannedEventsAdapter);
     }
 
-    //Returns the event's welcome message or "No Name" if invalid
-    private String getValidEventName(){
+    //If invalid name, returns either the welcome message or "no name". If no connection, returns "Connection failed."
+    private String getValidEventName(String scanned_url){
         String name = null;
-        String event_name = db.getGeneral("event_name");
-        if (event_name != null){ name = event_name.trim();}
-        if (name == null || name.equals("")) {
-            //for backwards compatibility with old JSONs
-            if (db.getGeneral("welcome_message")!= null) {
-                name = db.getGeneral("welcome_message");
-            } else { name = getString(R.string.no_event_name); }
+        if (successfulConnection) {
+            String event_name = db.getGeneral("event_name");
+            if (event_name != null) {
+                name = event_name.trim();
+            }
+            if (name == null || name.equals("")) {
+                //for backwards compatibility with old JSONs
+                if (db.getGeneral("welcome_message") != null) {
+                    name = db.getGeneral("welcome_message");
+                } else {
+                    name = getString(R.string.no_event_name);
+                }
+            }
+        } else {
+            String no_connection = getString(R.string.no_connection);
+            name = db.getEventName(scanned_url);
+            if (name.equals("")) {
+                name = no_connection;
+            } else if (! name.startsWith(no_connection)) {
+                name = no_connection + ":\n" + name;
+            }
         }
         return name;
+    }
+
+    private String getValidEventLogo(String scanned_url){
+        if (successfulConnection) { return db.getGeneral("logo"); }
+        //else
+        String logo = db.getEventLogo(scanned_url);
+        if (logo.equals("")) {
+            logo = getString(R.string.red_X_logo);
+        }
+        return logo;
     }
 
     //toggles the visibility of the scanned events recycler view
@@ -538,6 +540,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
         navigationList = (ListView) findViewById(R.id.nav_list);
 
+        color = Color.parseColor(db.getThemeColor("themeColor"));
+        black_or_white = ColorContrastHelper.determineBlackOrWhite(color);
+
         //Navigation Header Color
         int colors [] = {Color.parseColor(db.getThemeColor("theme1"))==0? Color.parseColor(db.getThemeColor("theme1")): Color.parseColor(db.getThemeColor("themeDark")),
                 Color.parseColor(db.getThemeColor("theme2"))==0? Color.parseColor(db.getThemeColor("theme2")): Color.parseColor(db.getThemeColor("themeMedium")),
@@ -594,7 +599,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     }
 
     //If error, gives user options to retry, rescan, or cancel
-    private void RetryConnection(){
+    private void RetryConnection(final String scanned_url){
         if (alert !=null){
             alert.cancel();
         }
@@ -605,14 +610,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 .setNegativeButton(R.string.retry_connection_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Log.d(TAG, "onClick: " + db.getGeneral("url"));
-                        Runnable updateScannedEventsList = new Runnable() {
-                            @Override
-                            public void run() {
-                                resetScannedEventsAdapter("add", db.getGeneral("url"));
-                            }
-                        };
-                        new DataConnection(context, activity, "refresh", db.getGeneral("url"), true, null, updateScannedEventsList).execute("");
+                        Log.d(TAG, "onClick: " + scanned_url);
+                        new DataConnection(context, activity, "refresh", scanned_url, true, null).execute("");
                     }
                 })
                 .setPositiveButton(R.string.rescan_qr_button, new DialogInterface.OnClickListener() {
@@ -735,29 +734,34 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             if (intent.getStringExtra("action").equals("retry")){
                 //sets refresh error icon and allows user to retry
                 successfulConnection = false;
-                RetryConnection();
+                String received_url = intent.getStringExtra("received_url");
+                if (! intent.getBooleanExtra("action_refresh", false)) {
+                    resetScannedEventsAdapter("add", received_url);
+                }
+                RetryConnection(received_url);
             } else if (intent.getStringExtra("action").equals("auto_update_error")) {
                 //sets refresh error icon
                 successfulConnection = false;
             } else if (intent.getStringExtra("action").equals("new")) {
+                successfulConnection = true;
                 //if new, sets up menus and theme and sends user to welcome page
-                setupMenusAndTheme();
+                resetScannedEventsAdapter("add", db.getGeneral("url"));
                 fragment = new WelcomeView();
                 fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
                         .commit();
                 //sets refresh icon
-                successfulConnection = true;
             }else if (intent.getStringExtra("action").equals("expired")){
                 //if event has expired
                 Toast.makeText(context, "Event has expired, please scan a QR for a new event", Toast.LENGTH_SHORT).show();
                 successfulConnection = false;
             }else {
+                successfulConnection = true;
+                resetScannedEventsAdapter("add", db.getGeneral("url"));
                 Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.contentFrame);
                 final FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();
                 fragTransaction.detach(currentFragment);
                 fragTransaction.attach(currentFragment);
                 fragTransaction.commit();
-                successfulConnection = true;
             }
         }
     };

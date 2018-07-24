@@ -168,16 +168,16 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         CreateTimeCol(v);
 
         //creates schedule column for each day, filling in blank spots.
-        ArrayList< ArrayList<ScheduleInfo> > scheduleByDay = getScheduleDays(days, schedule);
+        ArrayList< ArrayList<ScheduleInfo> > scheduleByDay = getScheduleDays(days, schedule); //takes event days and puts schedule items into them.
         ArrayList<ScheduleInfo> oneDay;
         int currentTime, numEvents;
-        int scheduleByDaySize = scheduleByDay.size();
-        for (int d = 0; d < scheduleByDaySize; d++) {
+        int num_days = scheduleByDay.size(); //number of days, really...
+        for (int d = 0; d < num_days; d++) {
             oneDay = scheduleByDay.get(d);
             currentTime = startTime;
             numEvents = 0;
             //while not at the end of a day
-            while (currentTime < endTime) {
+            while (currentTime < endTime) { //TODO: WHEN CONNECTION FAILS, THIS BECOMES AN ENDLESS LOOP. BADNESS.
                 //if there are no more scheduled events left in the day, fill the ending blank space
                 if (numEvents >= oneDay.size()) {
                     oneDay.add(numEvents, new ScheduleInfo(
@@ -187,13 +187,14 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                     ));
                     //else if the current time is not at an event start time (so a blank won't override an event)
                     //add a blank space between the current time and the next event's start time
-                } else if (currentTime != oneDay.get(numEvents).getTimeStart()) {
+                } else if (currentTime != oneDay.get(numEvents).getTimeStart()) { //seems to be true when no connection, but the same event gets added forever!
                     oneDay.add(numEvents, new ScheduleInfo(
                             currentTime,
                             minutesBetweenTimes(currentTime, oneDay.get(numEvents).getTimeStart()),
                             "schedule_blank"
                     ));
                 }
+                //TODO: INFINITE LOOP SEEMS TO BE CAUSED BY THESE NEXT TWO STATEMENTS NOT GETTING ALONG WELL. SPECIFICALLY, oneDay.get(numEvents) after oneDay.add(blah).
                 //put the current time at the current event's end time
                 currentTime = oneDay.get(numEvents).getTimeEnd();
                 //increment the number of events

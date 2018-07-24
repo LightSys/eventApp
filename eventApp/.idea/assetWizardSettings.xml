@@ -23,7 +23,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/C:/Program%20Files/Android/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/av/ic_playlist_add_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/D:/AndroidStudio/plugins/android/lib/android.jar!/images/material_design_icons/content/ic_clear_black_24dp.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -33,9 +33,12 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="color" value="ffffff" />
-                            <entry key="outputName" value="ic_event_list" />
+                            <entry key="color" value="ff0000" />
+                            <entry key="height" value="40" />
+                            <entry key="outputName" value="ic_no_logo" />
+                            <entry key="overrideSize" value="true" />
                             <entry key="sourceFile" value="C:\Users\eason" />
+                            <entry key="width" value="40" />
                           </map>
                         </option>
                       </PersistentState>

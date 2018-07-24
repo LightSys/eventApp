@@ -59,17 +59,17 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     private final WeakReference<Activity> dataActivity;
     private ProgressDialog spinner;
     private String action;
+    private boolean isOnRefresh = false;
     private boolean loadAll; //specifies whether all info should be reloaded or only notifications
     private boolean connection;
     private String connectionResult;
     private CompletionInterface callback;
-    private Runnable mainActivityRunnable;
 
     private static final String RELOAD_PAGE = "reload_page";
 
     private static final String Tag = "DPS";
 
-    public DataConnection(Context context, Activity activity, String action, String QR, boolean loadAll, CompletionInterface my_callback,Runnable runnable) {
+    public DataConnection(Context context, Activity activity, String action, String QR, boolean loadAll, CompletionInterface my_callback) {
         super();
         dataContext = new WeakReference<>(context);
         dataActivity = new WeakReference<>(activity);
@@ -77,13 +77,13 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         this.callback = my_callback;
         this.loadAll = loadAll;
         this.action = action;
+        if (action!= null && action.equals("refresh")) isOnRefresh = true;
         this.db = new LocalDB(dataContext.get());
         Log.d(TAG, "DataConnection: " + qrAddress);
         if (activity != null) {
             //deprecated but still used in Android Oreo, as of 23 July 2018 at least. -Littlesnowman88
             spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle);
         }
-        mainActivityRunnable = runnable;
     }
 
     @Override
@@ -136,15 +136,12 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
         Log.d(TAG, "onPostExecute: " + action);
         Intent reloadIntent = new Intent(RELOAD_PAGE);
-        reloadIntent.putExtra("action", action);
+        reloadIntent.putExtra("action", action).putExtra("received_url", qrAddress)
+                    .putExtra("action_refresh", isOnRefresh);
         if (dataContext != null) {
             LocalBroadcastManager.getInstance(dataContext.get())
                     .sendBroadcast(reloadIntent);
         }
-        if(mainActivityRunnable != null){
-            mainActivityRunnable.run();
-        }
-
     }
 
     private boolean checkConnection(String address)  {
@@ -654,7 +651,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 loadAll = true;
                 connection = checkConnection(qrAddress);
                 loadInfoAndNavTitles();
-                //new DataConnection(dataContext.get(), dataActivity.get(), action, db.getGeneral("url"), true, null, mainActivityRunnable).execute("");
             } else { // if config file does not need update
                 if (update_flags [1]) { //if notifications json needs update
                     int[] new_notif_version = {old_version[0], new_version[1]};

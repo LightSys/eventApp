@@ -285,7 +285,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     }
 
     private void getUpdates()
-    { new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("notifications_url"), false, this,null).execute(""); }
+    { new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("notifications_url"), false, this).execute(""); }
 
     private void processRefreshPressed() {
         elapsedTime = 0;

@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
         /*set up scanned events recycler view*/
         String scan_qr = getResources().getString(R.string.scan_new_qr);
-        if(db.getEventName(scan_qr) == null){
+        if(db.getEventName(scan_qr) == ""){
             db.addEvent(scan_qr,scan_qr, getString(R.string.scan_qr_logo));
         }
         scannedEvents = db.getAllEvents();
@@ -359,7 +359,17 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 .setPositiveButton(R.string.alert_delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
+                        String most_recent_url = scannedEvents.get(0)[1];
                         resetScannedEventsAdapter("remove",scanned_url);
+                        String new_most_recent_url = scannedEvents.get(0)[1];
+                        if(new_most_recent_url.equals(getString(R.string.scan_new_qr))){
+                            db.clear();
+                            db.deleteNotifications();
+                            handleNoScannedEvent();
+                        }
+                        else if(!new_most_recent_url.equals(most_recent_url)){
+                            new DataConnection(context, activity, "new", new_most_recent_url, true, null).execute("");
+                        }
                         dialogInterface.dismiss();
                     }
                 })

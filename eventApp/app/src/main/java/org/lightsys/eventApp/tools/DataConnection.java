@@ -295,10 +295,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Must be called by MainActivity's handleNoScannedEvent, thus this function is static.
      */
     public static void setupAboutPage(LocalDB db, Resources string_resources){
-        db.addAboutPage(new Info(string_resources.getString(R.string.About_App_Header),string_resources.getString(R.string.About_App_Body)), "About");
-        db.addAboutPage(new Info(string_resources.getString(R.string.Open_Source_Header),string_resources.getString(R.string.Open_Source_Body)), "About");
-        db.addAboutPage(new Info(string_resources.getString(R.string.Barcode_Scanner_Header),string_resources.getString(R.string.Barcode_Scanner_Body)), "About");
-        db.addAboutPage(new Info(string_resources.getString(R.string.Android_Open_Source_Proj_Header), string_resources.getString(R.string.Android_Open_Source_Proj_Body)), "About");
         ArrayList<Info> nav_titles = db.getNavigationTitles();
         String about_title = string_resources.getString(R.string.about_title);
         for (Info item : nav_titles) {
@@ -307,6 +303,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             }
         }
         db.addNavigationTitles(string_resources.getString(R.string.about_title), "ic_info", "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.About_App_Header),string_resources.getString(R.string.About_App_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.Open_Source_Header),string_resources.getString(R.string.Open_Source_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.Barcode_Scanner_Header),string_resources.getString(R.string.Barcode_Scanner_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.Android_Open_Source_Proj_Header), string_resources.getString(R.string.Android_Open_Source_Proj_Body)), "About");
 
     }
 

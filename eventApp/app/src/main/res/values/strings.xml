@@ -32,7 +32,7 @@
 
     <!--Welcome resources-->
     <string name="notifications_header">Notifications</string>
-    <string name="no_event_welcome">No event has been scanned.\nOpen the scanned events list and press "Scan QR" to import an event.</string>
+    <string name="no_event_welcome">Please select either Scan QR or a previously scanned event from the scanned events list.</string>
     <string name="default_welcome">Welcome!</string>
     <string name="notification_id">LightSys EventApp Notifications</string>
 

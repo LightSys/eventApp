@@ -375,15 +375,15 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     //Prompts the user if they would like to delete an event upon a long click
     private AlertDialog promptEventRemove(final String scanned_url){
         AlertDialog dialog_box = new AlertDialog.Builder(this)
-                .setMessage("Would you like to delete this event?")
-                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                .setMessage(R.string.alert_message)
+                .setPositiveButton(R.string.alert_delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         resetScannedEventsAdapter("remove",scanned_url);
                         dialogInterface.dismiss();
                     }
                 })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialogInterface.dismiss();

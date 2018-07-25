@@ -770,6 +770,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 fragTransaction.attach(currentFragment);
                 fragTransaction.commit();
             }
+
+            if(intent.getBooleanExtra("update_schedule", false) && fragment instanceof ScheduleView){
+                    fragment = new ScheduleView();
+                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
+                            .commit();
+            }
         }
     };
 }

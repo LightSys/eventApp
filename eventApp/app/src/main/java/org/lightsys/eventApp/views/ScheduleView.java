@@ -171,30 +171,31 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         ArrayList< ArrayList<ScheduleInfo> > scheduleByDay = getScheduleDays(days, schedule); //takes event days and puts schedule items into them.
         ArrayList<ScheduleInfo> oneDay;
         int currentTime, numEvents;
-        int num_days = scheduleByDay.size(); //number of days, really...
+        int num_days = scheduleByDay.size();
         for (int d = 0; d < num_days; d++) {
             oneDay = scheduleByDay.get(d);
             currentTime = startTime;
             numEvents = 0;
             //while not at the end of a day
-            while (currentTime < endTime) { //TODO: WHEN CONNECTION FAILS, THIS BECOMES AN ENDLESS LOOP. BADNESS.
+            while (currentTime < endTime) {
                 //if there are no more scheduled events left in the day, fill the ending blank space
                 if (numEvents >= oneDay.size()) {
-                    oneDay.add(numEvents, new ScheduleInfo(
+                    ScheduleInfo blank_item = new ScheduleInfo(
                             currentTime,
                             minutesBetweenTimes(currentTime, endTime),
-                            "schedule_blank"
-                    ));
+                            "schedule_blank");
+                    blank_item.setDay(days.get(d));
+                    oneDay.add(numEvents, blank_item);
                     //else if the current time is not at an event start time (so a blank won't override an event)
                     //add a blank space between the current time and the next event's start time
                 } else if (currentTime != oneDay.get(numEvents).getTimeStart()) { //seems to be true when no connection, but the same event gets added forever!
-                    oneDay.add(numEvents, new ScheduleInfo(
+                    ScheduleInfo blank_item = new ScheduleInfo(
                             currentTime,
                             minutesBetweenTimes(currentTime, oneDay.get(numEvents).getTimeStart()),
-                            "schedule_blank"
-                    ));
+                            "schedule_blank");
+                    blank_item.setDay(days.get(d));
+                    oneDay.add(numEvents, blank_item);
                 }
-                //TODO: INFINITE LOOP SEEMS TO BE CAUSED BY THESE NEXT TWO STATEMENTS NOT GETTING ALONG WELL. SPECIFICALLY, oneDay.get(numEvents) after oneDay.add(blah).
                 //put the current time at the current event's end time
                 currentTime = oneDay.get(numEvents).getTimeEnd();
                 //increment the number of events
@@ -484,6 +485,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         if (isToday){
             columnLayout.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_right));
         }
+        TimeZone db_time_zone = TimeZone.getTimeZone(db.getGeneral("time_zone"));
 
         for (ScheduleInfo sch : schedule){
 
@@ -554,32 +556,47 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                 heightCol = heightCol*15 + 2* paddingLg;
             }
 
+            int colors[] = { color , 0xffffffff,0xffffffff,0xffffffff,0xffffffff,0xffffffff, 0xffffffff };
+
             //if column is current day, add red line at current time
             if (isToday){
-                Calendar cal = Calendar.getInstance();
-                String[]timeStr=new String[2];
+                Calendar start_cal = Calendar.getInstance();
+                Calendar end_cal = Calendar.getInstance();
+                String[]start_time_str=new String[2];
+                String[]end_time_str=new String[2];
                 assert sch != null;
-                String time = Integer.toString(sch.getTimeStart());
-                // converts something like 3:45 -> 03:45. (technically 345->0345)
-                while (time.length()<4){
-                    time = "0" + time;
+                String start_time = Integer.toString(sch.getTimeStart());
+                String end_time = Integer.toString(sch.getTimeEnd());
+
+                while(start_time.length()<4){
+                    start_time = "0" + start_time;
                 }
-                timeStr[0] = time.substring(0,2);   //hour
-                timeStr[1] = time.substring(2,4);   //minute
+                while(end_time.length()<4){
+                    end_time = "0" + end_time;
+                }
+                start_time_str[0] = start_time.substring(0,2);
+                start_time_str[1] = start_time.substring(2,4);
+                end_time_str[0] = end_time.substring(0,2);
+                end_time_str[1] = end_time.substring(2,4);
 
+                start_cal.setTimeZone(db_time_zone);
+                start_cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(start_time_str[0]));
+                start_cal.set(Calendar.MINUTE, Integer.parseInt(start_time_str[1]));
+                end_cal.setTimeZone(db_time_zone);
+                end_cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(end_time_str[0]));
+                end_cal.set(Calendar.MINUTE, Integer.parseInt(end_time_str[1]));
 
-                //adjust for time zone difference if device time zone is different from event time zone
-                cal.setTimeZone(TimeZone.getTimeZone(db.getGeneral("time_zone")));
-                cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeStr[0]));
-                cal.set(Calendar.MINUTE, Integer.parseInt(timeStr[1]));
-
-                event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
-                iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.transparent));
-                event.setTypeface(event.getTypeface(), Typeface.NORMAL);
+                if(calNow.after(start_cal) && calNow.before(end_cal)){
+                    for(int i=1; i<colors.length; i++){
+                        colors[i] = 0xffffff90;
+                    }
+                }
+                    event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));
+                    iconsLayout.setBackgroundColor(ContextCompat.getColor(context, R.color.transparent));
+                    event.setTypeface(event.getTypeface(), Typeface.NORMAL);
             }
 
             //gradient background to show event types
-            int colors[] = { color , 0xfffffff,0xfffffff,0xfffffff,0xfffffff,0xfffffff, 0xfffffff };
             GradientDrawable gd = new GradientDrawable(
                     GradientDrawable.Orientation.LEFT_RIGHT,colors);
             gd.setCornerRadius(0f);

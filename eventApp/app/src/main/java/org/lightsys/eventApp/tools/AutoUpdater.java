@@ -284,8 +284,13 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         }
     }
 
-    private void getUpdates()
-    { new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("notifications_url"), false, this).execute(""); }
+    private void getUpdates() {
+        new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("notifications_url"), false, this).execute("");
+
+        Intent auto_to_main = new Intent(this, MainActivity.class);
+        auto_to_main.putExtra("update_schedule", true);
+        sendBroadcast(auto_to_main);
+    }
 
     private void processRefreshPressed() {
         elapsedTime = 0;

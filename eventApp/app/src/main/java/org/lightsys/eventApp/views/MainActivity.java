@@ -55,6 +55,7 @@ import org.lightsys.eventApp.tools.qr.launchQRScanner;
 import org.lightsys.eventApp.views.SettingsViews.SettingsActivity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TimeZone;
 
@@ -303,8 +304,10 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         db.addGeneral("url", "No_Event");
         db.addGeneral("old_url", "No_Event");
         db.addGeneral("notifications_url", "No_Event");
-        int[] start_version = {-1,-1};
-        db.addJSONVersionNum(start_version);
+        int[] no_version = {0,0};
+        int[] start_version = {-2,-2};
+        if (Arrays.equals(no_version, db.getJSONVersionNum())) db.addJSONVersionNum(start_version);
+        else db.replaceJSONVersionNum(start_version);
 
         //Set welcome message
         String no_event_message = getString(R.string.no_event_welcome);

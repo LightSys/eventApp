@@ -97,7 +97,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             }
             if (qrAddress == null){
                 ((MainActivity)dataActivity.get()).gatherData(true);
-            }else if(calNow.getTimeInMillis()<= calExpire.getTimeInMillis() || action.equals("new")){
+            } else if (qrAddress.equals("No_Event")) {
+                throw new Exception("Refresh could not load any data because no event is scanned.");
+            }
+            else if(calNow.getTimeInMillis()<= calExpire.getTimeInMillis() || action.equals("new")){
                 DataPull();
             }else{
                 action="expired";

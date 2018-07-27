@@ -302,6 +302,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         //set a dummy url
         db.addGeneral("url", "No_Event");
         db.addGeneral("old_url", "No_Event");
+        db.addGeneral("notifications_url", "No_Event");
         int[] start_version = {-1,-1};
         db.addJSONVersionNum(start_version);
 

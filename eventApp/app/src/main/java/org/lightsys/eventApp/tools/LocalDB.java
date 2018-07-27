@@ -90,6 +90,10 @@ public class LocalDB extends SQLiteOpenHelper {
     private static final String COLUMN_HEX_CODE = "hex_code";
     //CONTACT PAGE
     private static final String TABLE_CONTACT_PAGE = "contact_page";
+    //LOCATION TABLE
+    private static final String TABLE_EVENT_LOCATIONS = "event_locations";
+    private static final String COLUMN_LOCATION_NAME = "location_name";
+    private static final String COLUMN_TIME_ZONE = "time_zone";
 
 
 	/* ************************* Creation of Database and Tables ************************* */
@@ -165,6 +169,10 @@ public class LocalDB extends SQLiteOpenHelper {
         String CREATE_TABLE_CONTACT_PAGE = "CREATE TABLE " + TABLE_CONTACT_PAGE + "("
                 + COLUMN_HEADER + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_ID + " INTEGER)";
         db.execSQL(CREATE_TABLE_CONTACT_PAGE);
+
+        String CREATE_TABLE_EVENT_LOCATIONS = "CREATE TABLE " + TABLE_EVENT_LOCATIONS + "("
+                + COLUMN_LOCATION_NAME + " TEXT," + COLUMN_TIME_ZONE + " TEXT)";
+        db.execSQL(CREATE_TABLE_EVENT_LOCATIONS);
     }
 
     /**
@@ -185,6 +193,10 @@ public class LocalDB extends SQLiteOpenHelper {
                 String CREATE_TABLE_ABOUT_PAGE = "CREATE TABLE " + TABLE_ABOUT_PAGE + "(" + COLUMN_HEADER
                         + " TEXT," + COLUMN_INFO + " TEXT," + COLUMN_PAGE + " TEXT)";
                 db.execSQL(CREATE_TABLE_ABOUT_PAGE);
+
+                String CREATE_TABLE_EVENT_LOCATIONS = "CREATE TABLE " + TABLE_EVENT_LOCATIONS + "("
+                        + COLUMN_EVENT_NAME + " TEXT," + COLUMN_TIME_ZONE + " TEXT)";
+                db.execSQL(CREATE_TABLE_EVENT_LOCATIONS);
 
                 db.execSQL("ALTER TABLE " + TABLE_NAVIGATION_TITLES + " ADD COLUMN " + COLUMN_NAV_ID
                         + " TEXT DEFAULT \"\"");
@@ -270,6 +282,7 @@ public class LocalDB extends SQLiteOpenHelper {
 	//delete event data
 	public void clear(){
         SQLiteDatabase db = this.getWritableDatabase();
+        String[] general_where_args = {"time_zone"};
 
         db.delete(TABLE_CONTACTS, null, null);
         db.delete(TABLE_SCHEDULE, null, null);
@@ -277,10 +290,11 @@ public class LocalDB extends SQLiteOpenHelper {
         db.delete(TABLE_HOUSING, null, null);
         db.delete(TABLE_PRAYER_PARTNERS, null, null);
         db.delete(TABLE_TIMESTAMP, null, null);
-        db.delete(TABLE_GENERAL_INFO, null, null);
+        db.delete(TABLE_GENERAL_INFO, (COLUMN_TYPE + " != " + "?"), general_where_args);
         db.delete(TABLE_NAVIGATION_TITLES, null, null);
         db.delete(TABLE_THEME, null, null);
         db.delete(TABLE_CONTACT_PAGE, null, null);
+        db.delete(TABLE_EVENT_LOCATIONS, null, null);
         db.delete(TABLE_ABOUT_PAGE, null, null);
     }
 
@@ -306,6 +320,20 @@ public class LocalDB extends SQLiteOpenHelper {
         db.insert(TABLE_TIMESTAMP, null, values);
         db.close();
     }
+
+    /**Add an event location & time zone into the database
+     * Created by Littlesnowman88 26 July 2018
+     * @param location_and_zone, a length 2 string array
+     */
+     public void addEventLocation(String[] location_and_zone) {
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_LOCATION_NAME, location_and_zone[0]);
+        values.put(COLUMN_TIME_ZONE, location_and_zone[1]);
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.insert(TABLE_EVENT_LOCATIONS, null, values);
+        db.close();
+     }
 
     /**
      * Add theme colors into the database
@@ -611,6 +639,62 @@ public class LocalDB extends SQLiteOpenHelper {
         c.close();
         db.close();
         return general;
+    }
+
+    /** getTimeZone looks for a given location name, validates its time zone, and returns the time zone ID
+     * Created by tfmoo 26 July 2018
+     * @param location_name, the name of an event location
+     * @return the name of the time zone ID, or "" if a TimeZone cannot be created from that string.
+     */
+    public String getLocationTimeZone(String location_name) {
+        String time_zone;
+        String queryString = "SELECT " + COLUMN_TIME_ZONE + " FROM " + TABLE_EVENT_LOCATIONS
+                + " WHERE " + COLUMN_LOCATION_NAME + " = " + "?";
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        String[] selectionArgs = {location_name};
+        Cursor c = db.rawQuery(queryString, selectionArgs);
+
+        while (c.moveToNext()) {
+            time_zone = c.getString(0);
+            String[] all_zone_IDs = TimeZone.getAvailableIDs();
+            for (String zone_ID : all_zone_IDs) {
+                if (time_zone.equals(zone_ID)) {
+                    c.close();
+                    db.close();
+                    return time_zone; // if the location is found and the zone ID is valid.
+                }
+            }
+            c.close();
+            db.close();
+            return ""; // if the found time zone is invalid
+        }
+        c.close();
+        db.close();
+        return ""; // if there was no matching location
+    }
+
+    /** get all event location names (NOT THEIR TIME ZONES)
+     *  Created by: Littlesnowman88 & tfmoo 26 July 2018
+     * @return a String Array of all the event location names.
+     */
+    public String[] getAllEventLocations() {
+        ArrayList<String> all_event_locations = new ArrayList<>();
+        String queryString = "SELECT * FROM " + TABLE_EVENT_LOCATIONS;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(queryString, null);
+
+        while (c.moveToNext()) {
+            all_event_locations.add(c.getString(0));
+        }
+        c.close();
+        db.close();
+        int num_locations = all_event_locations.size();
+        String[] event_locations = new String[num_locations];
+        for (int i=0; i < num_locations; i++) {
+            event_locations[i] = all_event_locations.get(i);
+        }
+        return event_locations;
     }
 
     /**
@@ -1353,6 +1437,18 @@ public class LocalDB extends SQLiteOpenHelper {
         //where clause and args are null because only one entry currently exists in this table.
         //THIS WILL NOT WORK UNLESS the table has been initialized with at least one row.
         db.update(TABLE_JSON_VERSION_NUM, values, null, null);
+        db.close();
+    }
+
+    public void replaceTimeZone(String time_zone) {
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_TYPE, "time_zone");
+        values.put(COLUMN_INFO, time_zone);
+        String where_clause = COLUMN_TYPE + " = " + "?";
+        String[] where_args = {"time_zone"};
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.update(TABLE_GENERAL_INFO, values, where_clause, where_args);
         db.close();
     }
 }

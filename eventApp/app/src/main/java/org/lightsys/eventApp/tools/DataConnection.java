@@ -20,6 +20,7 @@ import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.HousingInfo;
 import org.lightsys.eventApp.data.Info;
+import org.lightsys.eventApp.data.LocationInfo;
 import org.lightsys.eventApp.data.ScheduleInfo;
 import org.lightsys.eventApp.views.MainActivity;
 
@@ -287,29 +288,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
     }
 
-    /**
-     * Sets up the about page
-     * @param db
-     * @param string_resources
-     *
-     * Must be called by MainActivity's handleNoScannedEvent, thus this function is static.
-     */
-    public static void setupAboutPage(LocalDB db, Resources string_resources){
-        ArrayList<Info> nav_titles = db.getNavigationTitles();
-        String about_title = string_resources.getString(R.string.about_title);
-        for (Info item : nav_titles) {
-            if (item.getHeader().equals(about_title)) {
-                return;
-            }
-        }
-        db.addNavigationTitles(string_resources.getString(R.string.about_title), "ic_info", "About");
-        db.addAboutPage(new Info(string_resources.getString(R.string.About_App_Header),string_resources.getString(R.string.About_App_Body)), "About");
-        db.addAboutPage(new Info(string_resources.getString(R.string.Open_Source_Header),string_resources.getString(R.string.Open_Source_Body)), "About");
-        db.addAboutPage(new Info(string_resources.getString(R.string.Barcode_Scanner_Header),string_resources.getString(R.string.Barcode_Scanner_Body)), "About");
-        db.addAboutPage(new Info(string_resources.getString(R.string.Android_Open_Source_Proj_Header), string_resources.getString(R.string.Android_Open_Source_Proj_Body)), "About");
-
-    }
-
     /** Loads General Info
      *  A refactor created by Littlesnowman88 on 15 June 2015
      * IMPORTANT: If the refresh button is ever deleted and updates become completely automatic,
@@ -334,219 +312,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             }
         }
         return false;
-    }
-
-    /** acesses the notifications json and sets the notifications nav title
-     *  Created by: Littlesnowman88 on 15 June 2018
-     *
-     *  Must be called by MainActivity's handleNoScannedEvent, thus this function is public static.
-     */
-    public static void addNotificationTitle(String result, LocalDB db, Resources string_resources) {
-        String notifications_title = string_resources.getString(R.string.notifications_title);
-
-        if (result != null) {
-            try {
-                JSONObject json = null;
-                json = new JSONObject(result).getJSONObject("notifications");
-                if (json != null) {
-                    db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Notifications");
-                } else {
-                    preventRepeatTitle(notifications_title, db);
-                }
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-                preventRepeatTitle(notifications_title, db);
-            }
-        } else {
-            preventRepeatTitle(notifications_title, db);
-        }
-
-    }
-
-    /**
-     * Used to prevent navigation titles from repeating
-     * @param notifications_title
-     * @param db
-     *
-     * Static because it is called from static addNotificationTitle, also this function exists to reduce
-     * code duplication within addNotificationTitle
-     */
-    private static void preventRepeatTitle(String notifications_title, LocalDB db){
-        ArrayList<Info> nav_titles = db.getNavigationTitles();
-        for (Info item : nav_titles) {
-            if (item.getHeader().equals(notifications_title)) {
-                return;
-            }
-        }
-        db.addNavigationTitles(notifications_title, "ic_bell", "Notifications");
-    }
-
-    /**
-     * Loads Event info
-     * @param result, result of the API query for the contact info
-     * Slightly refactored by Littlesnowman88 on June 15 2018
-     * loadGeneralInfo function call moved into readGeneralInfo;
-     */
-    private void loadEventInfo(String result) {
-        JSONObject json = null;
-        if (result != null) {
-            try {
-                json = new JSONObject(result);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
-                return;
-            }
-            //separate JSON object and get individual parts to be stored in Local Database
-            try { loadTheme(json.getJSONArray("theme")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadContactPage(json.getJSONObject("contact_page")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadSchedule(json.getJSONObject("schedule")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadHousing(json.getJSONObject("housing")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadPrayerPartners(json.getJSONArray("prayer_partners")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadInformationalPage(json.getJSONObject("information_page")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadContacts(json.getJSONObject("contacts")); } catch (JSONException e) { e.printStackTrace(); }
-        }
-    }
-
-
-    /**
-     * Loads Contact info
-     * @param json, result of the API query for the contact info
-     */
-    private void loadContacts(JSONObject json) {
-        if (json == null) {
-            return;
-        }
-        JSONArray tempNames = json.names();
-
-        Resources string_resources = dataContext.get().getResources();
-
-        for (int i = 0; i < tempNames.length(); i++) {
-            try {
-                //@id signals a new object, but contains no information on that line
-                if (!tempNames.getString(i).equals("@id")) {
-                    JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
-
-                    String contact_name = tempNames.getString(i);
-                    String contact_address = ContactObj.getString("address");
-                    String contact_phone = (ContactObj.getString("phone"));
-                    if (contact_name == null || contact_name.equals("")) contact_name = string_resources.getString(R.string.no_name);
-                    if (contact_address.equals("null")) contact_address = "";
-                    if (contact_phone.equals("null")) contact_phone = "";
-
-                    // add the Contact Object to db
-                    ContactInfo temp = new ContactInfo();
-                    temp.setName(contact_name);
-                    temp.setAddress(contact_address);
-                    temp.setPhone(contact_phone);
-
-                    db.addContact(temp);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    /**
-     * Loads Contact Page info
-     * @param json, result of the API query for the contact page info
-     */
-    private void loadContactPage(JSONObject json) {
-        if (json == null) {
-            return;
-        }
-        JSONArray tempNames = json.names();
-
-        //if valid, adds page to navigation
-        try {
-            if (json.getString("nav").equals("null")) {
-                return;
-            }
-            db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Contacts");
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        for (int i = 0; i < tempNames.length(); i++) {
-            try {
-                //@id signals a new object, but contains no information on that line
-                if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
-                    JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
-                    String header = ContactObj.getString("header");
-                    String body = ContactObj.getString("content");
-                    // add the Contact Page Object to db
-                    if (header == null || header.equals("null")) header = "";
-                    if (body == null || body.equals("null")) body = "";
-                    Info temp = new Info();
-                    temp.setHeader(header);
-                    temp.setBody(body);
-                    temp.setId(ContactObj.getInt("id"));
-
-                    db.addContactPage(temp);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Loads schedule
-     * @param json, result of API query for schedule
-     */
-    private void loadSchedule(JSONObject json) {
-        if (json == null) {
-            return;
-        }
-        JSONArray tempNames = json.names();
-
-        //if valid, adds page to navigation
-        try {
-            if (json.getString("nav").equals("null")) {
-                return;
-            }
-            db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Schedule");
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        for (int i = 0; i < tempNames.length(); i++) {
-            try {
-                //@id signals a new object, but contains no information on that line
-                if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
-                    JSONArray DayArray = json.getJSONArray(tempNames.getString(i));
-
-                    for (int n = 0; n < DayArray.length(); n++) {
-                        JSONObject Event = DayArray.getJSONObject(n);
-
-                        String sch_day = tempNames.getString(i);
-                        int sch_time_start = Event.getInt("start_time");
-                        int sch_time_length = Event.getInt("length");
-                        String sch_description = Event.getString("description");
-                        String sch_location = Event.getString("location");
-                        String sch_category = Event.getString("category");
-
-                        // add the Schedule Object to db
-                        ScheduleInfo temp = new ScheduleInfo();
-                        temp.setDay(sch_day);
-                        temp.setTimeStart(sch_time_start);
-                        temp.setTimeLength(sch_time_length);
-                        temp.setDesc(sch_description);
-                        temp.setLocationName(sch_location);
-                        temp.setCategory(sch_category);
-
-                        db.addSchedule(temp);
-                    }
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     /**
@@ -614,7 +379,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 if (!general_category_title.equals("@id")) {
                     //only loads refresh rate into database if rate is not already specified by the user
                     if (!general_category_title.equals("refresh_rate") || db.getGeneral("refresh_rate") == null) {
-                        db.addGeneral(general_category_title, qrJSON.getString(general_category_title));
+                        if (!general_category_title.equals("time_zone")) { //TODO: THIS MOCKS THE DISAPPEARANCE OF TIME ZONE FROM THE JSON.
+                            db.addGeneral(general_category_title, qrJSON.getString(general_category_title));
+                        }
                     }
                 }
             } catch (JSONException e) {
@@ -734,6 +501,239 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         return update_flags;
     }
 
+    /** acesses the notifications json and sets the notifications nav title
+     *  Created by: Littlesnowman88 on 15 June 2018
+     *
+     *  Must be called by MainActivity's handleNoScannedEvent, thus this function is public static.
+     */
+    public static void addNotificationTitle(String result, LocalDB db, Resources string_resources) {
+        String notifications_title = string_resources.getString(R.string.notifications_title);
+
+        if (result != null) {
+            try {
+                JSONObject json = null;
+                json = new JSONObject(result).getJSONObject("notifications");
+                if (json != null) {
+                    db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Notifications");
+                } else {
+                    preventRepeatTitle(notifications_title, db);
+                }
+            } catch (JSONException e1) {
+                e1.printStackTrace();
+                preventRepeatTitle(notifications_title, db);
+            }
+        } else {
+            preventRepeatTitle(notifications_title, db);
+        }
+
+    }
+
+    /**
+     * Used to prevent navigation titles from repeating
+     * @param notifications_title
+     * @param db
+     *
+     * Static because it is called from static addNotificationTitle, also this function exists to reduce
+     * code duplication within addNotificationTitle
+     */
+    private static void preventRepeatTitle(String notifications_title, LocalDB db){
+        ArrayList<Info> nav_titles = db.getNavigationTitles();
+        for (Info item : nav_titles) {
+            if (item.getHeader().equals(notifications_title)) {
+                return;
+            }
+        }
+        db.addNavigationTitles(notifications_title, "ic_bell", "Notifications");
+    }
+
+    /**
+     * Loads Event info
+     * @param result, result of the API query for the contact info
+     * Slightly refactored by Littlesnowman88 on June 15 2018
+     * loadGeneralInfo function call moved into readGeneralInfo;
+     */
+    private void loadEventInfo(String result) {
+        JSONObject json = null;
+        if (result != null) {
+            try {
+                json = new JSONObject(result);
+            } catch (JSONException e1) {
+                e1.printStackTrace();
+            }
+            if (json == null) {
+                return;
+            }
+            //separate JSON object and get individual parts to be stored in Local Database
+            try { loadLocations();} //TODO: CHANGE to json.getJSONArray("locations") when JSON support happens.
+            catch (Exception e) { //TODO: CHANGE to JSONException e.
+                //for backwards compatibility with old JSONs.
+                e.printStackTrace();
+                String[] zone_with_no_location = {db.getGeneral("time_zone"), db.getGeneral("time_zone")};
+                db.addEventLocation(zone_with_no_location);
+            }
+            try { loadTheme(json.getJSONArray("theme")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadContactPage(json.getJSONObject("contact_page")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadSchedule(json.getJSONObject("schedule")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadHousing(json.getJSONObject("housing")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadPrayerPartners(json.getJSONArray("prayer_partners")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadInformationalPage(json.getJSONObject("information_page")); } catch (JSONException e) { e.printStackTrace(); }
+            try { loadContacts(json.getJSONObject("contacts")); } catch (JSONException e) { e.printStackTrace(); }
+        }
+    }
+
+    /** loads event locations and time zones into the database.
+     *  Created by Littlesnowman88 26 July 2018
+     *  IMPORTANT: EMPTY STRING LOCATIONS AND TIME ZONES ARE ALLOWED.
+     *  IF USER DOES NOT INPUT INTO JSON, THE CATEGORY NEEDS TO BE AN EMPTY STRING.
+     *  -Littlesnowman88
+     *  TODO: CHANGE FROM LOCATION_INFO PROVIDED DATA TO JSON-PROVIDED DATA
+     *  TODO: THE JSON LOCATIONS WILL BE IN THEIR OWN CATEGORY CALLED "LOCATIONS"
+//     *  TODO: THIS PARAMETER NEEDS TO CHANGE WHEN JSONS GET THE "LOCATIONS" FIELD.
+     * @param json, result of API query for "locations"
+     */
+    private void loadLocations() {
+//        if (json == null) { return; }
+        String[][] locations = LocationInfo.getEventLocations();
+        for (String[] location : locations) {
+            db.addEventLocation(location);
+        }
+    }
+
+    /**
+     * Loads colors for theme and schedule
+     * @param json, result of API query for theme
+     */
+    private void loadTheme(JSONArray json) {
+        if (json == null) {
+            return;
+        }
+
+        for (int i = 0; i < json.length(); i++) {
+            try {
+                JSONObject ColorObj = json.getJSONObject(i);
+
+                String name = ColorObj.names().getString(0);
+                String color = ColorObj.getString(name);
+                // add the Contact Object to db
+                if (color.equals("null")) {
+                    switch (name) {
+                        case "themeDark":
+                            color = "#304166";
+                            break;
+                        case "themeMedium":
+                            color = "#364871";
+                            break;
+                        case "themeColor":
+                            color = "#4E69B8";
+                            break;
+                    }
+                }
+                db.addThemeColor(name, color);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Loads Contact Page info
+     * @param json, result of the API query for the contact page info
+     */
+    private void loadContactPage(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        JSONArray tempNames = json.names();
+
+        //if valid, adds page to navigation
+        try {
+            if (json.getString("nav").equals("null")) {
+                return;
+            }
+            db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Contacts");
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < tempNames.length(); i++) {
+            try {
+                //@id signals a new object, but contains no information on that line
+                if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
+                    JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
+                    String header = ContactObj.getString("header");
+                    String body = ContactObj.getString("content");
+                    // add the Contact Page Object to db
+                    if (header == null || header.equals("null")) header = "";
+                    if (body == null || body.equals("null")) body = "";
+                    Info temp = new Info();
+                    temp.setHeader(header);
+                    temp.setBody(body);
+                    temp.setId(ContactObj.getInt("id"));
+
+                    db.addContactPage(temp);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Loads schedule
+     * @param json, result of API query for schedule
+     */
+    private void loadSchedule(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        JSONArray tempNames = json.names();
+
+        //if valid, adds page to navigation
+        try {
+            if (json.getString("nav").equals("null")) {
+                return;
+            }
+            db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Schedule");
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < tempNames.length(); i++) {
+            try {
+                //@id signals a new object, but contains no information on that line
+                if (!tempNames.getString(i).equals("@id") && !tempNames.get(i).equals("nav") && !tempNames.get(i).equals("icon")) {
+                    JSONArray DayArray = json.getJSONArray(tempNames.getString(i));
+
+                    for (int n = 0; n < DayArray.length(); n++) {
+                        JSONObject Event = DayArray.getJSONObject(n);
+
+                        String sch_day = tempNames.getString(i);
+                        int sch_time_start = Event.getInt("start_time");
+                        int sch_time_length = Event.getInt("length");
+                        String sch_description = Event.getString("description");
+                        String sch_location = Event.getString("location");
+                        String sch_category = Event.getString("category");
+
+                        // add the Schedule Object to db
+                        ScheduleInfo temp = new ScheduleInfo();
+                        temp.setDay(sch_day);
+                        temp.setTimeStart(sch_time_start);
+                        temp.setTimeLength(sch_time_length);
+                        temp.setDesc(sch_description);
+                        temp.setLocationName(sch_location);
+                        temp.setCategory(sch_category);
+
+                        db.addSchedule(temp);
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     /**
      * Loads all housing assignments
      * @param json, result of API query for housing
@@ -818,42 +818,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
     }
 
     /**
-     * Loads colors for theme and schedule
-     * @param json, result of API query for theme
-     */
-    private void loadTheme(JSONArray json) {
-        if (json == null) {
-            return;
-        }
-
-        for (int i = 0; i < json.length(); i++) {
-            try {
-                JSONObject ColorObj = json.getJSONObject(i);
-
-                String name = ColorObj.names().getString(0);
-                String color = ColorObj.getString(name);
-                // add the Contact Object to db
-                if (color.equals("null")) {
-                    switch (name) {
-                        case "themeDark":
-                            color = "#304166";
-                            break;
-                        case "themeMedium":
-                            color = "#364871";
-                            break;
-                        case "themeColor":
-                            color = "#4E69B8";
-                            break;
-                    }
-                }
-                db.addThemeColor(name, color);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /**
      * Loads Information pages
      * @param json, result of API query for information pages
      */
@@ -891,6 +855,68 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Loads Contact info
+     * @param json, result of the API query for the contact info
+     */
+    private void loadContacts(JSONObject json) {
+        if (json == null) {
+            return;
+        }
+        JSONArray tempNames = json.names();
+
+        Resources string_resources = dataContext.get().getResources();
+
+        for (int i = 0; i < tempNames.length(); i++) {
+            try {
+                //@id signals a new object, but contains no information on that line
+                if (!tempNames.getString(i).equals("@id")) {
+                    JSONObject ContactObj = json.getJSONObject(tempNames.getString(i));
+
+                    String contact_name = tempNames.getString(i);
+                    String contact_address = ContactObj.getString("address");
+                    String contact_phone = (ContactObj.getString("phone"));
+                    if (contact_name == null || contact_name.equals("")) contact_name = string_resources.getString(R.string.no_name);
+                    if (contact_address.equals("null")) contact_address = "";
+                    if (contact_phone.equals("null")) contact_phone = "";
+
+                    // add the Contact Object to db
+                    ContactInfo temp = new ContactInfo();
+                    temp.setName(contact_name);
+                    temp.setAddress(contact_address);
+                    temp.setPhone(contact_phone);
+
+                    db.addContact(temp);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Sets up the about page
+     * @param db
+     * @param string_resources
+     *
+     * Must be called by MainActivity's handleNoScannedEvent, thus this function is static.
+     */
+    public static void setupAboutPage(LocalDB db, Resources string_resources){
+        ArrayList<Info> nav_titles = db.getNavigationTitles();
+        String about_title = string_resources.getString(R.string.about_title);
+        for (Info item : nav_titles) {
+            if (item.getHeader().equals(about_title)) {
+                return;
+            }
+        }
+        db.addNavigationTitles(string_resources.getString(R.string.about_title), "ic_info", "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.About_App_Header),string_resources.getString(R.string.About_App_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.Open_Source_Header),string_resources.getString(R.string.Open_Source_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.Barcode_Scanner_Header),string_resources.getString(R.string.Barcode_Scanner_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.Android_Open_Source_Proj_Header), string_resources.getString(R.string.Android_Open_Source_Proj_Body)), "About");
+
     }
 
     /**

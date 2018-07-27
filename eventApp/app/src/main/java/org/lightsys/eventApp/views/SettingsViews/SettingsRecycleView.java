@@ -31,8 +31,8 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
     private ContinentSelectionAdapter continentAdapter;
     private String[][] allTimeZones;
     private String[] eventLocations, continents;
-    private String selectedContinent;
-    private Intent recyclerview_to_fragment, recyclerview_to_reyclerview;
+    private String selectedContinent, my_adapter;
+    private Intent recyclerview_to_fragment, recyclerview_to_reyclerview, fragment_to_here;
     private int color, black_or_white;
 
 
@@ -50,8 +50,8 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
 
         recyclerview_to_fragment = new Intent(context, SettingsFragment.class);
         recyclerview_to_reyclerview = new Intent(context, TimeZoneSelectionView.class);
-        Intent fragment_to_here = getIntent();
-        String adapterToUse = fragment_to_here.getStringExtra("adapter");
+        fragment_to_here = getIntent();
+        my_adapter = fragment_to_here.getStringExtra("adapter");
 
         /* set up an action bar for returning to Main Activity */
         ActionBar actionBar = this.getSupportActionBar();
@@ -71,12 +71,12 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
             actionBar = ColorContrastHelper.setToolBarTextColor(actionBar, black_or_white);
         }
 
-        if (adapterToUse.equals("EventLocationAdapter")) {
+        if (my_adapter.equals("EventLocationAdapter")) {
             eventAdapter = new EventLocationAdapter(this);
-            eventLocations = LocationInfo.getEventLocations(db);
+            eventLocations = db.getAllEventLocations();
             eventAdapter.setLocationData(eventLocations);
             recyclerView.setAdapter(eventAdapter);
-        } else if (adapterToUse.equals("ContinentSelectionAdapter")) {
+        } else if (my_adapter.equals("ContinentSelectionAdapter")) {
             continentAdapter = new ContinentSelectionAdapter(this);
             allTimeZones = TimeZoneInfo.getAllTimeZones();
             continents = allTimeZones[0];
@@ -88,15 +88,22 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
     /* overrides EventLocationAdapterOnClickHandler's and ContinentSelectionAdapterOnClickHandler's onClick(String) */
     @Override
     public void onClick(String recycler_view_item) {
-        selectedContinent = recycler_view_item.trim();
-        Bundle zone_container = new Bundle();
-        //find the location of the continent in allTimeZones
-        for (int i=0; i<allTimeZones[0].length; i++) {
-            if (selectedContinent.equals(allTimeZones[0][i])) {
-                zone_container.putStringArray("selected_continent", allTimeZones[i+1]);
-                recyclerview_to_reyclerview.putExtras(zone_container);
-                startActivityForResult(recyclerview_to_reyclerview, 1);
-                break;
+        if (my_adapter.equals("EventLocationAdapter")) {
+            recyclerview_to_fragment.putExtra("event_location", recycler_view_item);
+            setResult(Activity.RESULT_OK, recyclerview_to_fragment);
+            finish();
+        }
+        else if (my_adapter.equals("ContinentSelectionAdapter")) {
+            selectedContinent = recycler_view_item.trim();
+            Bundle zone_container = new Bundle();
+            //find the location of the continent in allTimeZones
+            for (int i = 0; i < allTimeZones[0].length; i++) {
+                if (selectedContinent.equals(allTimeZones[0][i])) {
+                    zone_container.putStringArray("selected_continent", allTimeZones[i + 1]);
+                    recyclerview_to_reyclerview.putExtras(zone_container);
+                    startActivityForResult(recyclerview_to_reyclerview, 1);
+                    break;
+                }
             }
         }
     }

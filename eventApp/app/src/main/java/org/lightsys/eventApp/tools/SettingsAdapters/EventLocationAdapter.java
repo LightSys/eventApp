@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.lightsys.eventApp.R;
+import org.lightsys.eventApp.tools.LocalDB;
 
 /**
  * created by Littlesnowman88 on 31 May 2018

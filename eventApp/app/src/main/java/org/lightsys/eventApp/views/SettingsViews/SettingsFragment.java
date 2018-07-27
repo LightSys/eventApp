@@ -18,7 +18,7 @@ import org.lightsys.eventApp.tools.LocalDB;
 
 import java.util.TimeZone;
 
-/** Craeted by Littlesnowman88 21 June 2018**/
+/** Created by Littlesnowman88 21 June 2018**/
 public class SettingsFragment extends PreferenceFragmentCompat implements SharedPreferences.OnSharedPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
     private SharedPreferences sharedPreferences;
@@ -51,7 +51,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
         prefEditor = sharedPreferences.edit();
 
         db = new LocalDB(this.getContext());
-        eventLocations = LocationInfo.getEventLocations(db);
+        eventLocations = db.getAllEventLocations();
         selectedAdapter = "none";
         initializeIntent();
 
@@ -79,13 +79,25 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
         String selected_time_setting = sharedPreferences.getString("selected_time_setting", "on-site");
         switch (selected_time_setting) {
             case "on-site":
-                event_zone_button.setSummaryOn(sharedPreferences.getString("time_zone", eventLocations[0]));
+                String pref_summary;
+                if (eventLocations[0].equals("")) {
+                    if (db.getLocationTimeZone(eventLocations[0]).equals("")) {
+                        pref_summary = getContext().getResources().getString(R.string.blank_time_zone)
+                        + "\n" + TimeZone.getDefault().getID(); //if event name is blank and time zone is blank, show just this
+                    } else {
+                        pref_summary = sharedPreferences.getString("time_zone", db.getLocationTimeZone(eventLocations[0])); //show only the valid time zone
+                    }
+                } else {
+                    //show the location and the time zone
+                    pref_summary = eventLocations[0] + "\n" + sharedPreferences.getString("time_zone", db.getLocationTimeZone(eventLocations[0]));
+                }
+                event_zone_button.setSummaryOn(pref_summary);
                 my_remote_zone_button.setSummaryOff("");
                 custom_zone_button.setSummaryOff("");
                 break;
             case "my location":
                 event_zone_button.setSummaryOff("");
-                my_remote_zone_button.setSummaryOn(sharedPreferences.getString("time_zone", TimeZone.getDefault().getID().toString()));
+                my_remote_zone_button.setSummaryOn(sharedPreferences.getString("time_zone", TimeZone.getDefault().getID()));
                 custom_zone_button.setSummaryOff("");
                 break;
             case "custom_zone":
@@ -123,7 +135,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                 my_remote_zone_button.setEnabled(false);
                 prefEditor.putString("selected_time_setting", "on-site");
                 event_zone_button.setChecked(true);
-                selectedStringTimeZone = eventLocations[0];
+                selectedStringTimeZone = db.getLocationTimeZone(eventLocations[0]);
+                if (selectedStringTimeZone.equals("")) {
+                    selectedStringTimeZone = TimeZone.getDefault().getID();
+                }
                 prefEditor.putString("time_zone", selectedStringTimeZone).apply();
             }
         } else {
@@ -137,7 +152,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                 custom_zone_button.setEnabled(false);
                 prefEditor.putString("selected_time_setting", "on-site");
                 event_zone_button.setChecked(true);
-                selectedStringTimeZone = eventLocations[0];
+                selectedStringTimeZone = db.getLocationTimeZone(eventLocations[0]);
+                if (selectedStringTimeZone.equals("")) {
+                    selectedStringTimeZone = TimeZone.getDefault().getID();
+                }
                 prefEditor.putString("time_zone", selectedStringTimeZone).apply();
             }
         } else {
@@ -149,7 +167,8 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
 
     private void initializeTimeZoneButtons() {
         /* default to first event location, or previously selected location/time zone if applicable. */
-        selectedStringTimeZone = sharedPreferences.getString("time_zone", eventLocations[0]);
+        selectedStringTimeZone = sharedPreferences.getString("time_zone", db.getLocationTimeZone(eventLocations[0]));
+        if (selectedStringTimeZone.equals("")) selectedStringTimeZone = TimeZone.getDefault().getID();
         String selected_time_setting = sharedPreferences.getString("selected_time_setting", "on-site");
         switch (selected_time_setting) {
             case "on-site":
@@ -204,12 +223,15 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
             event_zone_button.setChecked(true);
             my_remote_zone_button.setChecked(false);
             custom_zone_button.setChecked(false);
-            selectedStringTimeZone = eventLocations[0];
+            selectedStringTimeZone = db.getLocationTimeZone(eventLocations[0]);
+            if (selectedStringTimeZone.equals("")) selectedStringTimeZone = TimeZone.getDefault().getID();
             selectedAdapter = "EventLocationAdapter";
             updateTimeZonePreferences();
-            setPreferenceSummary(event_zone_button, selectedStringTimeZone);
+            String pref_summary = selectedStringTimeZone;
+            if (!eventLocations[0].equals("")) pref_summary = eventLocations[0] + "\n" + pref_summary;
+            setPreferenceSummary(event_zone_button, pref_summary);
         } else {
-            throw new RuntimeException("ERROR: in SettingsFragment, onEventZoneClicked(), there were no event locations!");
+            selectedStringTimeZone = TimeZone.getDefault().getID();
         }
     }
 
@@ -221,7 +243,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
         current_time_zone_button = 1;
         saved_time_zone_button = 1;
 
-        selectedStringTimeZone = TimeZone.getDefault().getID().toString();
+        selectedStringTimeZone = TimeZone.getDefault().getID();
         selectedAdapter = "";
         updateTimeZonePreferences();
         setPreferenceSummary(my_remote_zone_button, selectedStringTimeZone);
@@ -282,17 +304,13 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                 prefEditor.putString("selected_time_setting", "custom_zone"); break;
         }
         prefEditor.apply();
+        db.replaceTimeZone(selectedStringTimeZone);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
             if (resultCode == Activity.RESULT_OK) {
-                String returned_time = data.getStringExtra("selected_item");
-                if (! selectedStringTimeZone.equals(returned_time)) {
-                    selectedStringTimeZone = returned_time;
-                    updateTimeZonePreferences();
-                }
                 String sentAdapter = fragment_to_recycleview.getStringExtra("adapter");
                 if (! selectedAdapter.equals(sentAdapter) ){
                     selectedAdapter = sentAdapter;
@@ -306,13 +324,34 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                             event_zone_button.setChecked(false);
                             my_remote_zone_button.setChecked(true);
                             custom_zone_button.setChecked(false);
+                            selectedStringTimeZone = data.getStringExtra("selected_item");
+                            updateTimeZonePreferences();
                             break;
                         case "ContinentSelectionAdapter":
                             event_zone_button.setChecked(false);
                             my_remote_zone_button.setChecked(false);
                             custom_zone_button.setChecked(true);
+                            selectedStringTimeZone = data.getStringExtra("selected_item");
+                            updateTimeZonePreferences();
+                            break;
                     }
                     updateSavedTimeZoneButton();
+                }
+
+                String pref_summary = selectedStringTimeZone;
+                if (selectedAdapter.equals("EventLocationAdapter")) {
+                    String returned_item = data.getStringExtra("event_location");
+                    pref_summary = db.getLocationTimeZone(returned_item);
+                    if (pref_summary.equals("")) {
+                        pref_summary = getContext().getResources().getString(R.string.blank_time_zone);
+                        selectedStringTimeZone = TimeZone.getDefault().getID();
+                    } else {
+                        selectedStringTimeZone = pref_summary;
+                    }
+                    updateTimeZonePreferences();
+
+                    if (!returned_item.equals(""))
+                        pref_summary = returned_item + "\n" + pref_summary;
                 }
 
                 int num_boxes = time_zone_preferences.getPreferenceCount();
@@ -320,7 +359,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                 for (int b=0; b < num_boxes; b++) {
                     current_box = (CheckBoxPreference) time_zone_preferences.getPreference(b);
                     if (current_box.isEnabled() && current_box.isChecked()) {
-                        setPreferenceSummary(current_box, selectedStringTimeZone);
+                        setPreferenceSummary(current_box, pref_summary);
                     }
                 }
             }

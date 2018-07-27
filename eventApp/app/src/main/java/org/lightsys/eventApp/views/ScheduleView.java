@@ -85,8 +85,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         /* allow Schedule View to access shared preferences for time zone information */
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getContext());
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        eventLocations = LocationInfo.getEventLocations(db);
-        selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", eventLocations[0] ));
+        selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", db.getGeneral("time_zone")));
 
 
         //sets constants for schedule display (density changes values based on screen)
@@ -110,7 +109,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         if (s.equals("time_zone")) {
-            selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", eventLocations[0]));
+            selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", db.getGeneral("time_zone")));
             removeViews();
             buildSchedule();
         }

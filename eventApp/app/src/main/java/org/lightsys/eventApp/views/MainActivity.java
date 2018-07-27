@@ -303,7 +303,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         db.addGeneral("url", "No_Event");
         db.addGeneral("old_url", "No_Event");
         int[] start_version = {-1,-1};
-        db.addJSONVersionNum(start_version);
+        if (db.getJSONVersionNum()==null) db.addJSONVersionNum(start_version);
+        else db.replaceJSONVersionNum(start_version);
 
         //Set welcome message
         String no_event_message = getString(R.string.no_event_welcome);
@@ -317,7 +318,11 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         db.addGeneral("refresh_rate",getString(R.string.refresh_val_never));
 
         //Set time zone
-        db.addGeneral("time_zone", TimeZone.getDefault().getID());
+        db.addGeneral("time_zone", "");
+        if (db.getAllEventLocations().length == 0) {
+            String[] no_location = {"",""};
+            db.addEventLocation(no_location);
+        }
         db.addGeneral("remote_viewing","0");
         db.addGeneral("custom_time_zone","0");
 

@@ -111,6 +111,7 @@
     <string name="no_zone_error">No location or time zone has been selected!</string>
     <string name="remote_zone">My Location</string>
     <string name="recycler_view_hint">Please press one of the following items or press the button again to cancel.</string>
+    <string name="other_category">Other</string>
 
     <string name="on_site_pref" translatable="false">on-site</string>
     <string name="my_location_pref" translatable="false">my_location"</string>

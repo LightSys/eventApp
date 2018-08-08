@@ -105,6 +105,7 @@
 
     <!--TIME ZONE SETTINGS-->
     <string name="time_settings_title">Time Zone Settings</string>
+    <string name="location_selection_title">Location Selection</string>
     <string name="time_zone_setting" translatable = "false">time_zone</string>
     <string name="fetch_error">Error occurred while fetching locations. Please try again.</string>
     <string name="selected_time_zone">Selected time zone is: </string>
@@ -116,5 +117,9 @@
     <string name="on_site_pref" translatable="false">on-site</string>
     <string name="my_location_pref" translatable="false">my_location"</string>
     <string name="custom_zone_pref" translatable="false">custom_zone</string>
+
+    <!--Location Selection resources-->
+    <string name="location_selection_message">Please select the event location you are attending:</string>
+    <string name="remote_location">Remote Location</string>
 
 </resources>

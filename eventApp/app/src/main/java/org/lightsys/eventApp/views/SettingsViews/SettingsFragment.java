@@ -80,22 +80,23 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
         switch (selected_time_setting) {
             case "on-site":
                 String pref_summary;
-                if (eventLocations[0].equals("")) {
-                    if (db.getLocationTimeZone(eventLocations[0]).equals("")) {
-                        pref_summary = getContext().getResources().getString(R.string.blank_time_zone)
-                        + "\n" + TimeZone.getDefault().getID(); //if event name is blank and time zone is blank, show just this
-                    } else {
-                        pref_summary = sharedPreferences.getString("time_zone", db.getLocationTimeZone(eventLocations[0])); //show only the valid time zone
-                    }
+                String selected_event_location = sharedPreferences.getString("selected_event_location", eventLocations[0]);
+                String pref_summary_tz = sharedPreferences.getString("time_zone",db.getLocationTimeZone(selected_event_location));
+                if(pref_summary_tz.equals("")){
+                    pref_summary_tz = getContext().getResources().getString(R.string.blank_time_zone); // If the timezone is not valid, it will use the device's timezone
+                }
+                if (selected_event_location.equals("")) {
+                    //show only the time zone
+                    pref_summary = pref_summary_tz; // If the location name is an empty string, it will just display the time zone
                 } else {
                     //show the location and the time zone
-                    pref_summary = eventLocations[0] + "\n" + sharedPreferences.getString("time_zone", db.getLocationTimeZone(eventLocations[0]));
+                    pref_summary = selected_event_location + "\n" + pref_summary_tz;
                 }
                 event_zone_button.setSummaryOn(pref_summary);
                 my_remote_zone_button.setSummaryOff("");
                 custom_zone_button.setSummaryOff("");
                 break;
-            case "my location":
+            case "my_location":
                 event_zone_button.setSummaryOff("");
                 my_remote_zone_button.setSummaryOn(sharedPreferences.getString("time_zone", TimeZone.getDefault().getID()));
                 custom_zone_button.setSummaryOff("");
@@ -174,7 +175,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
             case "on-site":
                 setOnSiteButton();
                 break;
-            case "my location":
+            case "my_location":
                 setMyLocationButton();
                 break;
             case "custom_zone":
@@ -299,7 +300,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
             case 0:
                 prefEditor.putString("selected_time_setting", "on-site"); break;
             case 1:
-                prefEditor.putString("selected_time_setting", "my location"); break;
+                prefEditor.putString("selected_time_setting", "my_location"); break;
             case 2:
                 prefEditor.putString("selected_time_setting", "custom_zone"); break;
         }
@@ -341,6 +342,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                 String pref_summary = selectedStringTimeZone;
                 if (selectedAdapter.equals("EventLocationAdapter")) {
                     String returned_item = data.getStringExtra("event_location");
+                    prefEditor.putString("selected_event_location", returned_item).apply();
                     pref_summary = db.getLocationTimeZone(returned_item);
                     if (pref_summary.equals("")) {
                         pref_summary = getContext().getResources().getString(R.string.blank_time_zone);

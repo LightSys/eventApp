@@ -1,7 +1,5 @@
 package org.lightsys.eventApp.data;
 
-import org.lightsys.eventApp.tools.LocalDB;
-
 /**
  * Created by Littlesnowman88 on 05/31/2018
  *IMPORTANT NOTE: THIS REPLACES THE JSON DATA UNTIL THE DATA CAN BE READ FROM A REAL JSON.
@@ -20,8 +18,8 @@ public final class LocationInfo {
                 {"Grand Rapids, MI", "America/Detroit"},
                 {"Walmart", "America/Walmart"},
                 {"Undecided", ""},
-                {"", "America/Chicago"},
-                {"", ""}
+                {"Test", "America/Chicago"},
+                {"Test 2", ""}
         };
     }
 }

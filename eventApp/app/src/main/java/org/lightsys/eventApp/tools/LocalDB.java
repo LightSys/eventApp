@@ -7,13 +7,16 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.location.Location;
 
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.HousingInfo;
 import org.lightsys.eventApp.data.Info;
+import org.lightsys.eventApp.data.LocationInfo;
 import org.lightsys.eventApp.data.ScheduleInfo;
 
+import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -787,7 +790,11 @@ public class LocalDB extends SQLiteOpenHelper {
     public ArrayList<ScheduleInfo> getFullSchedule() {
         ArrayList<String> days = determineUniqueDays(getJSONDays());
         ArrayList<ScheduleInfo> schedule;
-        if (sharedPreferences.getString("selected_time_setting", "").equals("on-site")) {
+        String on_site_time_zone = LocationInfo.getEventLocations()[0][1];
+        if(on_site_time_zone.equals("")) on_site_time_zone = TimeZone.getDefault().getID();
+        String selected_time_zone = sharedPreferences.getString("time_zone",getGeneral("time_zone"));
+        if(selected_time_zone.equals("")) selected_time_zone = TimeZone.getDefault().getID();
+        if (selected_time_zone.equals(on_site_time_zone)) {
             schedule = getDailySchedule(days);
         } else {
             schedule = getAdjustedDailySchedule(days);
@@ -865,7 +872,8 @@ public class LocalDB extends SQLiteOpenHelper {
     private ArrayList<ScheduleInfo> getAdjustedDailySchedule(ArrayList<String> days) {
         ArrayList<ScheduleInfo> schedule = new ArrayList<>();
         int timeStart, timeLength, adjustedTimeStart, adjustedTimeEnd, time_zone_difference;
-        TimeZone on_site_time_zone = TimeZone.getTimeZone(getGeneral("time_zone"));
+        String on_site_time_zone_id = LocationInfo.getEventLocations()[0][1];
+        TimeZone on_site_time_zone = (on_site_time_zone_id.equals(""))? TimeZone.getDefault() : TimeZone.getTimeZone(on_site_time_zone_id);
         TimeZone selected_time_zone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", getGeneral("time_zone")));
         String today, yesterday, tomorrow;
         SQLiteDatabase db;

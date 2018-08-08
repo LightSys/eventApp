@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -15,6 +16,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -55,6 +57,7 @@ import org.lightsys.eventApp.tools.qr.launchQRScanner;
 import org.lightsys.eventApp.views.SettingsViews.SettingsActivity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TimeZone;
 
@@ -72,6 +75,7 @@ import static android.content.ContentValues.TAG;
 public class MainActivity extends AppCompatActivity implements ScannedEventsAdapter.ScannedEventsAdapterOnClickHandler{
     static private final String QR_DATA_EXTRA = "qr_data";
     static private final int QR_RESULT = 1;
+    static private final int LOCATION_SELECTION = 2;
     private static final String RELOAD_PAGE = "reload_page";
     private static final int BLACK = Color.parseColor("#000000");
     private static final int WHITE = Color.parseColor("#ffffff");
@@ -80,7 +84,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     private final FragmentManager fragmentManager = getSupportFragmentManager();
     private Context context;
     private Activity activity;
-    private Intent main_to_settings, updateIntent;
+    private Intent main_to_settings, main_to_recyclerview, updateIntent;
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor prefEditor;
     private LocalDB db;
     private AlertDialog alert;
     private Toolbar toolbar;
@@ -106,11 +112,17 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        prefEditor = sharedPreferences.edit();
+
         setContentView(R.layout.activity_main);
         db = new LocalDB(this);
         context = this;
         activity = this;
         main_to_settings = new Intent(MainActivity.this, SettingsActivity.class);
+
+        /*set up location selection recyclerview*/
+        main_to_recyclerview = new Intent(MainActivity.this, LocationSelectionRecyclerView.class);
 
         /*set up auto updater*/
         updateIntent = new Intent(MainActivity.this, AutoUpdater.class);
@@ -190,13 +202,35 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         }
     }
 
-    //on return from QRScanner, import data
+    //On return from QRScanner, import data
+    //Modified by tfmoo to handle time zone settings when an event is loaded
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == QR_RESULT && resultCode == RESULT_OK && data != null) {
             final String dataURL = data.getStringExtra(QR_DATA_EXTRA);
             new DataConnection(context, activity, "new", dataURL, true, null).execute("");
+        }
+        if (requestCode == LOCATION_SELECTION && resultCode == RESULT_OK){
+            String chosen_location = data.getStringExtra("event_location");
+            String time_zone = "";
+            if(chosen_location.equals(getString(R.string.remote_location))){
+                time_zone = TimeZone.getDefault().getID();
+                db.replaceTimeZone(time_zone);
+                prefEditor.putString("time_zone", time_zone).apply();
+                prefEditor.putString("selected_time_setting", "my_location").apply();
+            }
+            else {
+                time_zone = db.getLocationTimeZone(chosen_location);
+                if (time_zone.equals("")) {
+                    db.replaceTimeZone(TimeZone.getDefault().getID());
+                } else {
+                    db.replaceTimeZone(time_zone);
+                }
+                prefEditor.putString("time_zone", time_zone).apply();
+                prefEditor.putString("selected_event_location", chosen_location).apply();
+                prefEditor.putString("selected_time_setting", "on-site").apply();
+            }
         }
     }
 
@@ -302,8 +336,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         //set a dummy url
         db.addGeneral("url", "No_Event");
         db.addGeneral("old_url", "No_Event");
-        int[] start_version = {-1,-1};
-        if (db.getJSONVersionNum()==null) db.addJSONVersionNum(start_version);
+        int[] no_version = {0,0};
+        int[] start_version = {-2,-2};
+        if (Arrays.equals(no_version,db.getJSONVersionNum())) db.addJSONVersionNum(no_version);
         else db.replaceJSONVersionNum(start_version);
 
         //Set welcome message
@@ -761,7 +796,13 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 fragment = new WelcomeView();
                 fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
                         .commit();
-                //sets refresh icon
+
+                //If an event has multiple event locations, this will ask the user to select a location when
+                //that event is initially loaded.
+                String[] event_locations = db.getAllEventLocations();
+                if(event_locations.length > 1) {
+                    startActivityForResult(main_to_recyclerview,LOCATION_SELECTION);
+                }
             }else if (intent.getStringExtra("action").equals("expired")){
                 //if event has expired
                 Toast.makeText(context, "Event has expired, please scan a QR for a new event", Toast.LENGTH_SHORT).show();

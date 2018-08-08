@@ -87,7 +87,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
         selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", db.getGeneral("time_zone")));
 
-
         //sets constants for schedule display (density changes values based on screen)
         float density = (getResources().getDisplayMetrics().density)/2;
         textSizeHeader = 22;
@@ -109,7 +108,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         if (s.equals("time_zone")) {
-            selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", db.getGeneral("time_zone")));
+            selectedTimeZone = TimeZone.getTimeZone(db.getGeneral("time_zone"));
             removeViews();
             buildSchedule();
         }

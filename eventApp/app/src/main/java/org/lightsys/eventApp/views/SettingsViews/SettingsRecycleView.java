@@ -15,7 +15,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
 
 import org.lightsys.eventApp.R;
-import org.lightsys.eventApp.data.LocationInfo;
 import org.lightsys.eventApp.data.TimeZoneInfo;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.ColorContrastHelper;

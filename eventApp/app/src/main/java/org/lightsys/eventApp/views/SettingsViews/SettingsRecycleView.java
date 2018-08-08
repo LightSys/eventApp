@@ -77,7 +77,7 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
             recyclerView.setAdapter(eventAdapter);
         } else if (my_adapter.equals("ContinentSelectionAdapter")) {
             continentAdapter = new ContinentSelectionAdapter(this);
-            allTimeZones = TimeZoneInfo.getAllTimeZones();
+            allTimeZones = TimeZoneInfo.getAllTimeZones(this);
             continents = allTimeZones[0];
             continentAdapter.setContinentData(continents);
             recyclerView.setAdapter(continentAdapter);
@@ -111,8 +111,14 @@ public class SettingsRecycleView extends AppCompatActivity implements EventLocat
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
             if (resultCode == Activity.RESULT_OK) {
-                String selected_zone = selectedContinent + "/"
-                        + data.getStringExtra("selected_item");
+                String selected_item = data.getStringExtra("selected_item");
+                String selected_zone;
+                if(selectedContinent.equals(getString(R.string.other_category))){
+                    selected_zone = selected_item;
+                }
+                else{
+                    selected_zone = selectedContinent + "/" + selected_item;
+                }
                 recyclerview_to_fragment.putExtra("selected_item", selected_zone);
                 setResult(Activity.RESULT_OK, recyclerview_to_fragment);
                 finish();

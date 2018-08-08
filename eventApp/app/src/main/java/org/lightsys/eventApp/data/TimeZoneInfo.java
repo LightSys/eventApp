@@ -1,6 +1,7 @@
 package org.lightsys.eventApp.data;
 
-import java.time.ZoneId;
+import android.content.Context;
+import org.lightsys.eventApp.R;
 import java.util.ArrayList;
 import java.util.TimeZone;
 
@@ -13,19 +14,19 @@ import java.util.TimeZone;
 final public class TimeZoneInfo {
 
     /* returns an array of string time zones, based on the android/java TimeZone libraries */
-    public static String[][] getAllTimeZones() {
+    public static String[][] getAllTimeZones(Context context) {
         ArrayList<ArrayList<String>> parsed_time_zones = new ArrayList<>();
         String[] all_time_zones = TimeZone.getAvailableIDs();
         int all_time_zone_size = all_time_zones.length;
         String[] time_zone;
         ArrayList<String> other = new ArrayList<>();
-        other.add("Other");
+        other.add(context.getResources().getString(R.string.other_category));
         ArrayList<String> first_continent = new ArrayList<>();
         time_zone = all_time_zones[0].split("/", 2);
 
         if(time_zone.length == 1){
             other.add(time_zone[0]);
-            first_continent.add("Other");
+            first_continent.add(context.getResources().getString(R.string.other_category));
         }
         else {
             first_continent.add(time_zone[0]);

@@ -117,6 +117,7 @@
     <string name="on_site_pref" translatable="false">on-site</string>
     <string name="my_location_pref" translatable="false">my_location"</string>
     <string name="custom_zone_pref" translatable="false">custom_zone</string>
+    <string name="other_category">Other</string>
 
     <!--Location Selection resources-->
     <string name="location_selection_message">Please select the event location you are attending:</string>

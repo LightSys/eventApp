@@ -81,7 +81,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                 String selected_event_location = sharedPreferences.getString("selected_event_location", eventLocations[0]);
                 String pref_summary_tz = sharedPreferences.getString("time_zone",db.getLocationTimeZone(selected_event_location));
                 if(pref_summary_tz.equals("")){
-                    pref_summary_tz = getContext().getResources().getString(R.string.blank_time_zone); // If the timezone is not valid, it will use the device's timezone
+                    pref_summary_tz = "(" + getContext().getResources().getString(R.string.blank_time_zone) + ")"; // If the timezone is not valid, it will use the device's timezone
+                }
+                else{
+                    pref_summary_tz = "(" + pref_summary_tz + " Timezone)";
                 }
                 if (selected_event_location.equals("")) {
                     //show only the time zone
@@ -227,7 +230,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
             selectedAdapter = "EventLocationAdapter";
             updateTimeZonePreferences();
             String pref_summary = selectedStringTimeZone;
-            if (!eventLocations[0].equals("")) pref_summary = eventLocations[0] + "\n" + pref_summary;
+            if (!eventLocations[0].equals("")) pref_summary = eventLocations[0] + "\n(" + pref_summary + " Timezone)";
             setPreferenceSummary(event_zone_button, pref_summary);
         } else {
             selectedStringTimeZone = TimeZone.getDefault().getID();
@@ -343,10 +346,11 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
                     prefEditor.putString("selected_event_location", returned_item).apply();
                     pref_summary = db.getLocationTimeZone(returned_item);
                     if (pref_summary.equals("")) {
-                        pref_summary = getContext().getResources().getString(R.string.blank_time_zone);
+                        pref_summary = "(" + getContext().getResources().getString(R.string.blank_time_zone) + ")";
                         selectedStringTimeZone = TimeZone.getDefault().getID();
                     } else {
                         selectedStringTimeZone = pref_summary;
+                        pref_summary = "(" + pref_summary + " Timezone)";
                     }
                     updateTimeZonePreferences();
 

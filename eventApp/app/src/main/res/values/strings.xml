@@ -110,7 +110,7 @@
     <string name="fetch_error">Error occurred while fetching locations. Please try again.</string>
     <string name="selected_time_zone">Selected time zone is: </string>
     <string name="no_zone_error">No location or time zone has been selected!</string>
-    <string name="blank_time_zone">Defaulting to device time zones.</string>
+    <string name="blank_time_zone">Defaulting to my timezone.</string>
     <string name="remote_zone">My Location</string>
     <string name="recycler_view_hint">Please press one of the following items or press the button again to cancel.</string>
 
@@ -121,6 +121,6 @@
 
     <!--Location Selection resources-->
     <string name="location_selection_message">Please select the event location you are attending:</string>
-    <string name="remote_location">Remote Location</string>
+    <string name="remote_location">Attending Remotely</string>
 
 </resources>

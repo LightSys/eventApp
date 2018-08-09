@@ -2,6 +2,7 @@ package org.lightsys.eventApp.tools;
 
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -144,6 +145,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
 
         //send notifications
         for (Info item : notifications) {
+            createNotificationChannel(); //Necessary for Android 8 and newer
             sendNotification(item.getId(), item.getHeader(), item.getBody());
         }
         db.unflagNewNotifications();
@@ -453,6 +455,8 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
                 .setColor(Color.parseColor(db.getThemeColor("themeDark")))
                 .setContentIntent(intent)
                 .setPriority(1)
+                .setChannelId(getString(R.string.channel_id))
+                .setAutoCancel(true)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(subject));
 
         // Turn on the device and send the notification.
@@ -471,6 +475,17 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         }
         if (screenWakeLock != null && screenWakeLock.isHeld()) {
             screenWakeLock.release();
+        }
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            String CHANNEL_ID = getString(R.string.channel_id);
+            String name = getString(R.string.channel_name);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
         }
     }
 }

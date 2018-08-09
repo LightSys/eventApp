@@ -123,4 +123,8 @@
     <string name="location_selection_message">Please select the event location you are attending:</string>
     <string name="remote_location">Attending Remotely</string>
 
+    <!--NOTIFICATION CHANNEL RESOURCES-->
+    <string name="channel_id">general notifications</string>
+    <string name="channel_name">General Notifications</string>
+
 </resources>

@@ -7,3 +7,7 @@
 /build
 /captures
 .externalNativeBuild
+eventApp/.idea/vcs.xml
+eventApp/.idea/inspectionProfiles
+eventApp/.idea/gradle.xml
+eventApp/.idea/caches

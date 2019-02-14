@@ -338,7 +338,13 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
             case "default":
                 if (db_refresh_rate.equals("never")) { updateMillis = NEVER; }
                 else if (db_refresh_rate.equals("auto")) {setAutoRefresh();}
-                else { updateMillis = Integer.parseInt(db_refresh_rate) * ONE_MINUTE; }
+                else {
+                    try {
+                        updateMillis = Integer.parseInt(db_refresh_rate) * ONE_MINUTE;
+                    } catch (NumberFormatException e) {
+                        setAutoRefresh();
+                    }
+                }
                 break;
             case "1":
                 if (! isAwake()) { refresh_setting = "5"; } //then continue onto default.

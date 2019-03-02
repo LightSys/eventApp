@@ -1,13 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 28
     defaultConfig {
         applicationId "org.lightsys.eventApp"
-        minSdkVersion 16
-        targetSdkVersion 26
-        versionCode 3
-        versionName "1.2"
+        // min SDK now = Lollipop (5.x).  The barcode scanner doesn't seem to want to work on
+        // anything older than that.
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 5
+        versionName "2.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         //for QR code
         multiDexEnabled true
@@ -18,18 +20,35 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        disable 'UnknownId'
+    }
 }
 
 dependencies {
+    // WorkManager 1.0.0-rc02 released Feb 21 2019
+    def work_version = "1.0.0-rc02"
+    def futures_version = "1.0.0-alpha03"
+    implementation "android.arch.work:work-runtime:$work_version"
+    implementation "androidx.concurrent:concurrent-futures:$futures_version"
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     testImplementation 'junit:junit:4.12'
+
     //Add library - for QR code
     implementation('com.github.KingsMentor:MobileVisionBarcodeScanner:v1.2') { transitive = true; }
-    implementation 'com.android.support:appcompat-v7:26.0.0-alpha1'
-    implementation 'com.android.support:design:26.0.0-alpha1'
-    implementation 'com.android.support:preference-v7:26.0.0'
+
+    //implementation 'com.android.support:appcompat-v7:26.0.0-alpha1'
+    //implementation 'com.android.support:design:26.0.0-alpha1'
+    //implementation 'com.android.support:preference-v7:26.0.0'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+
+    // This really should be design:28.0.0, but Google is broken as usual
+    // Error program type already present: android.support.v4.app.FragmentTransitionCompat21$1
+    implementation 'com.android.support:design:27.1.1'
+    implementation 'com.android.support:preference-v7:28.0.0'
 }

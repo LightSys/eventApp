@@ -2,11 +2,14 @@ package org.lightsys.eventApp.views;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.arch.lifecycle.Observer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -42,15 +45,24 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.work.NetworkType;
+import androidx.work.WorkInfo;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+import androidx.work.Constraints;
+import androidx.work.Data;
+
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.Info;
 import org.lightsys.eventApp.tools.AutoUpdater;
+import org.lightsys.eventApp.tools.CompletionInterface;
 import org.lightsys.eventApp.tools.DataConnection;
 import org.lightsys.eventApp.tools.LocalDB;
 import org.lightsys.eventApp.tools.NavigationAdapter;
 import org.lightsys.eventApp.tools.ScannedEventsAdapter;
 import org.lightsys.eventApp.tools.ColorContrastHelper;
 import org.lightsys.eventApp.tools.RecyclerViewDivider;
+import org.lightsys.eventApp.tools.AutoUpdateWorker;
 import org.lightsys.eventApp.tools.qr.launchQRScanner;
 import org.lightsys.eventApp.views.SettingsViews.SettingsActivity;
 
@@ -58,6 +70,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TimeZone;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static android.content.ContentValues.TAG;
 
@@ -70,7 +84,7 @@ import static android.content.ContentValues.TAG;
  *
  */
 
-public class MainActivity extends AppCompatActivity implements ScannedEventsAdapter.ScannedEventsAdapterOnClickHandler{
+public class MainActivity extends AppCompatActivity implements ScannedEventsAdapter.ScannedEventsAdapterOnClickHandler, CompletionInterface {
     static private final String QR_DATA_EXTRA = "qr_data";
     static private final int QR_RESULT = 1;
     private static final String RELOAD_PAGE = "reload_page";
@@ -81,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     private final FragmentManager fragmentManager = getSupportFragmentManager();
     private Context context;
     private Activity activity;
-    private Intent main_to_settings, updateIntent;
+    private Intent main_to_settings; //, updateIntent;
     private LocalDB db;
     private AlertDialog alert;
     private Toolbar toolbar;
@@ -91,7 +105,10 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     private ScannedEventsAdapter scannedEventsAdapter;
     private ArrayList<String[]> scannedEvents;
     private int color, black_or_white;
+    private OneTimeWorkRequest autoUpdateWork;
     ActionBarDrawerToggle toggle;
+    private ProgressDialog spinner;
+    public static String version;
 
     private boolean successfulConnection = true;
 
@@ -113,9 +130,22 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         activity = this;
         main_to_settings = new Intent(MainActivity.this, SettingsActivity.class);
 
+        //deprecated but still used in Android Oreo, as of 23 July 2018 at least. -Littlesnowman88
+        spinner = new ProgressDialog(this, R.style.MySpinnerStyle);
+
+        try {
+            PackageInfo pInfo = getApplicationContext().getPackageManager().getPackageInfo(getPackageName(), 0);
+            version = pInfo.versionName;
+        } catch (Exception e) {
+            // ignore
+        }
+
         /*set up auto updater*/
-        updateIntent = new Intent(MainActivity.this, AutoUpdater.class);
-        refreshHandler.postDelayed(refreshRunnable, 1000);
+        //updateIntent = new Intent(MainActivity.this, AutoUpdater.class);
+        //refreshHandler.postDelayed(refreshRunnable, 1000);
+
+        /* Start auto update */
+        startUpdater(false);
 
         /*set up toolbar*/
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -154,6 +184,78 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         else { gatherData(false); }
     }
 
+    // Called when the DataConnection completes.
+    @Override
+    public void onCompletion() {
+        db.unflagNewNotifications();
+        hideSpinner();
+    }
+
+    // Show the spinner
+    private void showSpinner() {
+        if (spinner != null) {
+            spinner.setMessage(this.getResources().getString(R.string.loading_data));
+            this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    spinner.setIndeterminate(true);
+                    spinner.setCancelable(false);
+                    spinner.show();
+                }
+            });
+        }
+    }
+
+    // Hide the spinner
+    private void hideSpinner() {
+        if (spinner != null)
+            spinner.dismiss();
+    }
+
+    // This gets called when the auto update attempt has been run.
+    final Observer<WorkInfo> workObserver = new Observer<WorkInfo>() {
+        @Override
+        public void onChanged(@Nullable final WorkInfo info) {
+            if (info != null && info.getState().isFinished() && info.getState() == WorkInfo.State.SUCCEEDED) {
+                hideSpinner();
+                //Log.d("workObserver","worker " + autoUpdateWork.getId() + " finished(" + info.getState().toString() + ") - calling stopUpdater()");
+                stopUpdater();
+                //Log.d("workObserver","worker " + autoUpdateWork.getId() + " finished - calling startUpdater()");
+                startUpdater(false);
+            }
+        }
+    };
+
+    // Start the auto update background task
+    private void startUpdater(boolean refresh_now) {
+        Constraints autoUpdateConstraints;
+
+        /* new  auto update using WorkManager */
+        autoUpdateConstraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(!refresh_now)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        autoUpdateWork = new OneTimeWorkRequest.Builder(AutoUpdateWorker.class)
+                .setInitialDelay(refresh_now?0:1, TimeUnit.MINUTES)
+                .setConstraints(autoUpdateConstraints)
+                .setInputData(new Data.Builder().putBoolean("refresh_now", refresh_now).build())
+                .build();
+        WorkManager.getInstance().enqueue(autoUpdateWork);
+        WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
+                .observeForever(workObserver);
+        //Log.d("startUpdater","worker " + autoUpdateWork.getId() + " started");
+    }
+
+    // Stop the auto update background task
+    private void stopUpdater() {
+        UUID uuid = autoUpdateWork.getId();
+        //Log.d("stopUpdater","worker " + uuid + " stopping...");
+        WorkManager.getInstance().getWorkInfoByIdLiveData(uuid)
+                .removeObserver(workObserver);
+        WorkManager.getInstance().cancelWorkById(uuid);
+        //Log.d("stopUpdater","worker " + uuid + " stopped");
+    }
+
     /**
      * Used by the drawer to refresh the toggle button
      * (on activity resume)
@@ -171,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        startService(updateIntent);
+        //startService(updateIntent);
     }
 
     @Override
@@ -197,7 +299,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == QR_RESULT && resultCode == RESULT_OK && data != null) {
             final String dataURL = data.getStringExtra(QR_DATA_EXTRA);
-            new DataConnection(context, activity, "new", dataURL, true, null).execute("");
+            new DataConnection(context, activity, "new", dataURL, this).execute("");
         }
     }
 
@@ -250,11 +352,17 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 toggleVisibility();
                 break;
             case R.id.action_refresh:
-                new DataConnection(context, activity, "refresh", db.getGeneral("notifications_url"), false, null).execute("");
-                stopService(updateIntent); //"refresh" (restart) the auto updater
-                updateIntent.removeExtra("refreshed_pressed");
-                updateIntent.putExtra("refresh_pressed", true);
-                startService(updateIntent);
+                showSpinner();
+                //new DataConnection(context, activity, "refresh", db.getGeneral("notifications_url"), false, null).execute("");
+                //Log.d("onOptionsItemSelected:refresh","calling stopUpdater()");
+                stopUpdater();
+                //new DataConnection(context, activity, "refresh", db.getGeneral("url"), false, null).execute("");
+                //Log.d("onOptionsItemSelected:refresh","calling startUpdater()");
+                startUpdater(true);
+                //stopService(updateIntent); //"refresh" (restart) the auto updater
+                //updateIntent.removeExtra("refreshed_pressed");
+                //updateIntent.putExtra("refresh_pressed", true);
+                //startService(updateIntent);
                 break;
             case R.id.open_settings_gear:
                 startActivity(main_to_settings);
@@ -339,7 +447,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             String action;
             if (scanned_url.equals(db.getGeneral("url"))) {action = "refresh";}
             else {action = "new";}
-            new DataConnection(context, activity, action, scanned_url, true, null).execute("");
+            new DataConnection(context, activity, action, scanned_url, this).execute("");
         }
     }
 
@@ -413,7 +521,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             }
             if (name == null || name.equals("")) {
                 //for backwards compatibility with old JSONs
-                if (db.getGeneral("welcome_message") != null) {
+                if (db.getGeneral("event_name") != null) {
+                    name = db.getGeneral("event_name");
+                } else if (db.getGeneral("welcome_message") != null) {
                     name = db.getGeneral("welcome_message");
                 } else {
                     name = getString(R.string.no_event_name);
@@ -614,6 +724,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         if (alert !=null){
             alert.cancel();
         }
+        final CompletionInterface callback = this;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder
                 .setCancelable(false)
@@ -622,7 +733,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Log.d(TAG, "onClick: " + scanned_url);
-                        new DataConnection(context, activity, "refresh", scanned_url, true, null).execute("");
+                        new DataConnection(context, activity, "refresh", scanned_url, callback).execute("");
                     }
                 })
                 .setPositiveButton(R.string.rescan_qr_button, new DialogInterface.OnClickListener() {
@@ -767,18 +878,28 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 successfulConnection = false;
             }else {
                 successfulConnection = true;
-                resetScannedEventsAdapter("add", db.getGeneral("url"));
-                Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.contentFrame);
-                final FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();
-                fragTransaction.detach(currentFragment);
-                fragTransaction.attach(currentFragment);
-                fragTransaction.commit();
+                try {
+                    Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.contentFrame);
+                    if (currentFragment != null) {
+                        resetScannedEventsAdapter("add", db.getGeneral("url"));
+                        final FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();
+                        fragTransaction.detach(currentFragment);
+                        fragTransaction.attach(currentFragment);
+                        fragTransaction.commit();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
-            if(intent.getBooleanExtra("update_schedule", false) && fragment instanceof ScheduleView){
-                    fragment = new ScheduleView();
-                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
-                            .commit();
+            try {
+                if (intent.getBooleanExtra("update_schedule", false) && fragment instanceof ScheduleView){
+                        fragment = new ScheduleView();
+                        fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
+                                .commit();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     };

@@ -1,27 +1,28 @@
 package org.lightsys.eventApp.tools;
 
-import android.app.AlarmManager;
+import androidx.concurrent.futures.ResolvableFuture;
+import androidx.work.ListenableWorker;
+import androidx.work.WorkerParameters;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.Context;
 import android.graphics.Color;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.os.Handler;
-import android.os.IBinder;
 import android.os.PowerManager;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.view.WindowManager;
+
+import com.google.common.util.concurrent.ListenableFuture;
 
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.Info;
@@ -32,20 +33,28 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Observable;
-import java.util.Observer;
 
 /**
- * @author Judah Sistrunk
- * created on 5/25/2016.
- * copied from missionary app
- * service class that automatically updates local database with server database
+ * @author Greg Beeley
  *
- * Modified by Littlesnowman88 8 June 2018
- *  SharedPreferences updates.
- *  Update frequency while device is asleep.
+ * February 23-26, 2019
+ *
+ * AutoUpdateWorker: automatic update background processing using Android's new WorkManager
+ * tool, which really simplifies a lot of things instead of having to worry about alarm and boot up
+ * notifications and Android possibly blocking those during Doze.  This is a clean interface and
+ * works with all modern versions of Android.
  */
-public class AutoUpdater extends Service implements CompletionInterface, SharedPreferences.OnSharedPreferenceChangeListener {
+
+public class AutoUpdateWorker extends ListenableWorker implements CompletionInterface, SharedPreferences.OnSharedPreferenceChangeListener {
+
+    // This is a "Future".  It's similar to a Promise in JavaScript, and provides the ability for
+    // the creator of the Future to notify other users of (listeners to) the Future, so those
+    // listeners can find out when the Future has been marked with Success or Failure (the
+    // "Result").  It's also possible to pass data through the Future -- for that use a Payload
+    // instead of a Result for the <generic>.  In our case, we use this to notify WorkManager that
+    // our auto update operation is complete.  Note that ResolvableFuture is a subclass of
+    // ListenableFuture.
+    private ResolvableFuture<ListenableWorker.Result> future;
 
     //time constants in milliseconds
     private static final int ONE_SECOND     = 1000;
@@ -55,13 +64,12 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
 
     private LocalDB db; //local database
 
-    private int      updateMillis = NEVER; //number of milliseconds between updates
-    private long elapsedTime;
-    private Calendar prevDate     = Calendar.getInstance();
+    private static int      updateMillis = NEVER; //number of milliseconds between updates
+    private static long elapsedTime;
+    private static Calendar prevDate     = Calendar.getInstance();
 
-    //custom timer that ticks every minute
-    //used to constantly check to see if it's time to check for updates
-    private Handler timerHandler  = new Handler();
+    private Context app_context;
+    private Context our_context;
 
     //accessing shared preferences (refresh rate) set by the settings activity
     private SharedPreferences sharedPreferences;
@@ -74,96 +82,82 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     private WifiManager wifiManager = null;
     private WifiManager.WifiLock wifiLock = null;
 
-    public AutoUpdater() { }
+    //
+    // Methods
+    //
 
-    private Runnable timerRunnable = new Runnable() {
-        @Override
-        public void run() {
+    public AutoUpdateWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+        super(context, params);
+        app_context = getApplicationContext();
+        our_context = context;
+    }
 
-            // Make sure the alarm is running
-            try {
-                checkAlarm();
-            } catch (Exception e) {
-                Log.d("AutoUpdater", "checkAlarm exception: " + e.getMessage());
-            }
+    // Called when Android's WorkManager tells us to begin the auto update process.
+    @Override @NonNull
+    public ListenableFuture<ListenableWorker.Result> startWork() {
+        future = ResolvableFuture.create();
 
-            // check for updates.  wrap in try/catch in the event something
-            // goes wrong, so we can keep the service from crashing entirely.
-            try {
-                checkForUpdates();
-            } catch (Exception e) {
-                Log.d("AutoUpdater", "update check failed: " + e.getMessage());
-            }
-
-            //resets timer continuously
-            timerHandler.postDelayed(this, ONE_MINUTE);
-        }
-    };
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getApplicationContext());
+        //Log.d("AutoUpdateWorker","startWork()");
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(app_context);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+        db = new LocalDB(our_context);
 
-        db = new LocalDB(this);
-    }
-
-    @Override
-    public void onDestroy() {
-        timerHandler.removeCallbacksAndMessages(null);
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-
-        Log.d("AutoUpdater", "onStartCommand()");
-
-        timerHandler.removeCallbacksAndMessages(null);
-        timerHandler.postDelayed(timerRunnable, ONE_SECOND);
-
-        if (intent != null) {
-            if (intent.getBooleanExtra("refresh_pressed", false)) {
-                processRefreshPressed();
-            }
-            String once = intent.getStringExtra("checkOnce");
-            if (once != null && once.equals("true")) {
-                Log.d("AutoUpdater", "checking updates via onStartCommand()");
-                checkForUpdatesPM();
-            }
+        // Need to do a refresh immediately?
+        refresh_pressed = getInputData().getBoolean("refresh_now", false);
+        if (refresh_pressed) {
+            processRefreshPressed();
         }
 
-        //keeps service running after app is shut down
-        return START_STICKY;
+        checkForUpdates();
+
+        return future;
     }
 
-
+    // Called when Android has decided to cancel our Worker.
     @Override
-    public IBinder onBind(Intent arg0) {
-        return null;
+    public void onStopped() {
+        if (sharedPreferences != null) {
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+        }
     }
 
-
-    //Modified by Littlesnowman88 on 16 July 2018 so new notifications don't get passed into the for loop.
-    // This gets called when the AsyncTask DataConnection completes.
-    public void onCompletion()
-    {
+    // Called when the DataConnection completes.
+    @Override
+    public void onCompletion() {
         //list of new notifications
         ArrayList<Info> notifications = db.getNewNotifications();
 
         //send notifications
-        for (Info item : notifications) {
-            createNotificationChannel();
-            sendNotification(item.getId(), item.getHeader(), item.getBody());
+        try {
+            for (Info item : notifications) {
+                createNotificationChannel();
+                sendNotification(item.getId(), item.getHeader(), item.getBody());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         db.unflagNewNotifications();
+
+        // Let the listeners (i.e., WorkManager) know that we're done.
+        future.set(ListenableWorker.Result.success());
 
         // Release any wake lock now that we're done.
         pmCleanup();
     }
 
-    private void pmCleanup()
-    {
+    /** updates the refresh rate and checks for updates with the new refresh rate set.
+     * created by Littlesnowman88 on 20 June 2018.
+     */
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        if (s.equals("refresh_rate")) {
+            setRefreshFrequency();
+            checkForUpdates();
+        }
+    }
+
+    // Release any wake and wifi locks.
+    private void pmCleanup() {
         if (wifiLock != null && wifiLock.isHeld()) {
             wifiLock.release();
         }
@@ -176,92 +170,33 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         powerManager = null;
     }
 
-    private void checkAlarm()
-    {
-        // Our alarm handler reference
-        Intent wakeAlarmHandler = new Intent(getApplicationContext(), WakeupAlarmReceiver.class);
-
-        // Already exists? (don't reset it if so)
-        PendingIntent isAlarm = PendingIntent.getBroadcast(
-                getApplicationContext(),
-                0,
-                wakeAlarmHandler,
-                PendingIntent.FLAG_NO_CREATE
-        );
-
-        if (isAlarm == null) {
-            // Does not exist -- create a new one.
-            PendingIntent wakeAlarm = PendingIntent.getBroadcast(
-                    getApplicationContext(),
-                    0,
-                    wakeAlarmHandler,
-                    PendingIntent.FLAG_CANCEL_CURRENT
-            );
-
-            // Set a 15 minute interval for the alarm.
-            AlarmManager alarms = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-            alarms.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    SystemClock.elapsedRealtime() + (1000 * 60 * 5), // AlarmManager.INTERVAL_FIFTEEN_MINUTES,
-                    1000 * 60 * 5, // AlarmManager.INTERVAL_FIFTEEN_MINUTES,
-                    wakeAlarm
-            );
-        }
-    }
-
-
-    public void checkForUpdatesPM() {
-        acquirePowerLock();
-        acquireWifiLock();
-        // Go check for updates
-        try {
-            checkForUpdates();
-        } catch (Exception e) {
-            pmCleanup();
-            Log.d("checkForUpdatesPM", "update check failed: " + e.getMessage());
-        }
-    }
-
     private void acquirePowerLock() {
         // Acquire the power manager wake lock.
         if (wakeLock == null || !wakeLock.isHeld()) {
-            powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            powerManager = (PowerManager) app_context.getSystemService(Context.POWER_SERVICE);
             try {
-                wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "org.lightsys.eventApp.tools.AutoUpdater");
+                wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "org.lightsys.eventApp.tools.AutoUpdater:wakelock");
             } catch (Exception e) {
                 pmCleanup();
                 return;
             }
             wakeLock.acquire(5000 /* milliseconds */);
         }
-        return;
     }
 
     private void acquireWifiLock() {
         // Acquire the wifi manager lock.
         if (wifiLock == null || !wifiLock.isHeld()) {
-            wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            wifiManager = (WifiManager) app_context.getSystemService(Context.WIFI_SERVICE);
             try {
-                wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, "org.lightsys.eventApp.tools.AutoUpdater");
+                wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, "org.lightsys.eventApp.tools.AutoUpdater:wifilock");
             } catch (Exception e) {
                 pmCleanup();
-                return;
             }
         }
-        return;
     }
 
-
-
-    /**
-     * Modified by Littlesnowman88 on 8 June 2018
-     * Now, tries to access the refresh_rate from the shared preferences,
-     *      defaults to the event's default refresh rate if shared preferences
-     *      are not specified in the Settings Activity.
-     *      Also, now takes device sleeping/awake into account.
-     */
-    private void checkForUpdates()
-    {
+    private void checkForUpdates() {
         db.close();
 
         Calendar currentDate = Calendar.getInstance();
@@ -269,14 +204,18 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
 
         //check to see if the time elapsed is greater than the update period
         // also check to see if the expiration date has passed. -Littlesnowman88
-        if ((elapsedTime > updateMillis && updateMillis > 0) && (eventIsNow())){
+        if ((refresh_pressed || (elapsedTime > updateMillis && updateMillis > 0)) && (eventIsNow())){
             Log.d("checkForUpdates","prev: " + prevDate.getTimeInMillis() + ", elapsed: " + elapsedTime + ", updateMillis: " + updateMillis);
             getUpdates();
             prevDate = Calendar.getInstance();
+            setRefreshFrequency(); //needs to be after any changes to elapsedTime and prevDate because of auto.
         } else {
             pmCleanup();
+            setRefreshFrequency(); //needs to be after any changes to elapsedTime and prevDate because of auto.
+
+            // Let the listeners (i.e., WorkManager) know that we're done.
+            future.set(ListenableWorker.Result.success());
         }
-        setRefreshFrequency(); //needs to be after any changes to elapsedTime and prevDate because of auto.
     }
 
     /** Created by Littlesnowman88 */
@@ -285,10 +224,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         Date last_day;
         try {
             last_day = expirationDate.parse(db.getGeneral("refresh_expire"));
-            if ( !(new Date().after(last_day))) {
-                return true;
-            } else {
-                return false;}
+            return !(new Date().after(last_day));
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -296,18 +232,18 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     }
 
     private void getUpdates() {
-        //new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("notifications_url"), false, this).execute("");
-        new DataConnection(this.getBaseContext(), null, "auto_update", db.getGeneral("url"), this).execute("");
+        // Begin fetching updates.  We'll get a completion notification when it's done.
+        new DataConnection(our_context, null, (refresh_pressed?"refresh":"auto_update"), db.getGeneral("url"), this).execute("");
 
-        Intent auto_to_main = new Intent(this, MainActivity.class);
+        Intent auto_to_main = new Intent(our_context, MainActivity.class);
         auto_to_main.putExtra("update_schedule", true);
-        sendBroadcast(auto_to_main);
+        our_context.sendBroadcast(auto_to_main);
     }
 
     private void processRefreshPressed() {
         elapsedTime = 0;
-        refresh_pressed = true;
         String db_refresh_rate;
+
         //catch allows for old JSON compatibility
         try { db_refresh_rate = db.getGeneral("refresh_rate").trim(); }
         catch (Exception e) {
@@ -317,10 +253,9 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         }
 
         String refresh_setting = sharedPreferences.getString("refresh_rate", db_refresh_rate);
-        if (refresh_setting.equals("auto")) {
+        if (refresh_setting == null || refresh_setting.equals("auto")) {
             setAutoRefresh();
         }
-        refresh_pressed = false;
     }
 
     /** checks the system preferences (or defaults to the database's general refresh rate)
@@ -331,37 +266,45 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
     private void setRefreshFrequency() {
         String db_refresh_rate;
         //catch allows for old JSON compatibility
-        try { db_refresh_rate = db.getGeneral("refresh_rate").trim(); }
-        catch (Exception e) {
+        try {
+            db_refresh_rate = db.getGeneral("refresh_rate").trim();
+        } catch (Exception e) {
             db_refresh_rate = db.getGeneral("refresh");
             //in Testing/Demo QR code, the refresh rate is -1. Otherwise this "if" statement isn't a problem.
             if (db_refresh_rate==null || db_refresh_rate.equals("-1")) {db_refresh_rate = "never"; }
         }
+
         String refresh_setting = sharedPreferences.getString("refresh_rate", db_refresh_rate);
-        switch (refresh_setting) {
-            case "never":
-                updateMillis = NEVER;
-                break;
-            case "auto":
-                    setAutoRefresh();
-                break;
-            case "default":
-                if (db_refresh_rate.equals("never")) {
+        if (refresh_setting == null) {
+            updateMillis = 5 * ONE_MINUTE;
+        } else {
+            switch (refresh_setting) {
+                case "never":
                     updateMillis = NEVER;
-                } else if (db_refresh_rate.equals("auto")) {
+                    break;
+                case "auto":
                     setAutoRefresh();
-                } else {
-                    try {
-                        updateMillis = Integer.parseInt(db_refresh_rate) * ONE_MINUTE;
-                    } catch (NumberFormatException e) {
+                    break;
+                case "default":
+                    if (db_refresh_rate.equals("never")) {
+                        updateMillis = NEVER;
+                    } else if (db_refresh_rate.equals("auto")) {
                         setAutoRefresh();
+                    } else {
+                        try {
+                            updateMillis = Integer.parseInt(db_refresh_rate) * ONE_MINUTE;
+                        } catch (NumberFormatException e) {
+                            setAutoRefresh();
+                        }
                     }
-                }
-                break;
-            case "1":
-                if (! isAwake()) { refresh_setting = "5"; } //then continue onto default.
-            default:
+                    break;
+                case "1":
+                    if (!isAwake()) {
+                        refresh_setting = "5";
+                    } //then continue onto default.
+                default:
                     updateMillis = Integer.parseInt(refresh_setting) * ONE_MINUTE; // refresh_setting, converted into milliseconds
+            }
         }
         refresh_pressed = false;
     }
@@ -390,11 +333,11 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
                 updateMillis = chooseMaxTime(10);
             } else /*if (elapsedTime < (3 * ONE_HOUR)) */ {
                 updateMillis = chooseMaxTime(15);
-            /*} else if (elapsedTime < (4 * ONE_HOUR)) {
+            } /* else if (elapsedTime < (4 * ONE_HOUR)) {
                 updateMillis = chooseMaxTime(30);
             } else {
-                updateMillis = ONE_HOUR;*/
-            }
+                updateMillis = ONE_HOUR;
+            }*/
         }
     }
 
@@ -426,16 +369,17 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         acquireWifiLock();
         if (wifiManager.isWifiEnabled()) {
             WifiInfo wifiStatus = wifiManager.getConnectionInfo();
-            if ( (wifiStatus != null) && (wifiStatus.getNetworkId() == -1) ) { //no access point connection
-                return false;
-            }
-            return true; //else, there is an access point connection. yay!
-        } else return false; //in this case, wifi is disabled.
+
+            // Is there an access point connection?
+            return !( (wifiStatus != null) && (wifiStatus.getNetworkId() == -1) );
+        } else {
+            return false; //in this case, wifi is disabled.
+        }
     }
 
     /** API-dependent power manager functions related to device wakefulness **/
     private boolean isAwake() {
-        Boolean awake;
+        boolean awake;
         acquirePowerLock();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) { //if api > 20
             awake = powerManager.isInteractive();
@@ -445,33 +389,20 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         return awake;
     }
 
-    /** updates the refresh rate and checks for updates with the new refresh rate set.
-     * created by Littlesnowman88 on 20 June 2018.
-     */
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        if (s.equals("refresh_rate")) {
-            setRefreshFrequency();
-            checkForUpdates();
-        }
-    }
-
     private void sendNotification(int notificationID, String title, String subject){
 
-        Context context = this;
         NotificationManager notificationManager = (NotificationManager)
-                context.getSystemService(NOTIFICATION_SERVICE);
+                app_context.getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationCompat.Builder nBuild;
         PowerManager.WakeLock screenWakeLock = null;
         Notification n;
 
         // Build the notification to be sent
         // BigTextStyle allows notification to be expanded if text is more than one line
-        Intent notificationIntent = new Intent(context, MainActivity.class);
-        PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        Intent notificationIntent = new Intent(app_context, MainActivity.class);
+        PendingIntent intent = PendingIntent.getActivity(our_context, 0, notificationIntent, 0);
 
-        nBuild = new NotificationCompat.Builder(context, context.getResources().getString(R.string.notification_id))
+        nBuild = new NotificationCompat.Builder(app_context, app_context.getString(R.string.channel_id))
                 .setContentTitle(title)
                 .setContentText(subject)
                 .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
@@ -479,17 +410,38 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
                 .setColor(Color.parseColor(db.getThemeColor("themeDark")))
                 .setContentIntent(intent)
                 .setPriority(1)
-                .setChannelId(getString(R.string.channel_id))
+                .setChannelId(app_context.getString(R.string.channel_id))
                 .setAutoCancel(true)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(subject));
 
-        // Turn on the device and send the notification.
-        if (powerManager != null) {
-            screenWakeLock = powerManager.newWakeLock(
-                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
-                    "org.lightsys.eventApp.tools.AutoUpdater"
-            );
-            screenWakeLock.acquire(500);
+        // Turn on the device and send the notification.  SCREEN_BRIGHT_WAKE_LOCK
+        // has been deprecated, but some wake lock level is required.  We'll keep it
+        // for now.
+        try {
+            // Our standard set of flags:
+            int pmFlags = /* how did this get in here: WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                    |*/ PowerManager.ACQUIRE_CAUSES_WAKEUP
+                    | PowerManager.ON_AFTER_RELEASE;
+
+            // On older SDK's that don't support channels, we add the higher lock level.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                //pmFlags |= PowerManager.SCREEN_DIM_WAKE_LOCK;
+                pmFlags |= PowerManager.PARTIAL_WAKE_LOCK;
+            } else {
+                //pmFlags |= PowerManager.SCREEN_DIM_WAKE_LOCK;
+                pmFlags |= PowerManager.PARTIAL_WAKE_LOCK;
+            }
+
+            // Get the wake lock
+            if (powerManager != null) {
+                screenWakeLock = powerManager.newWakeLock(
+                        pmFlags,
+                        "org.lightsys.eventApp.tools.AutoUpdater:scrwakelock"
+                );
+                screenWakeLock.acquire(1500);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         n = nBuild.build();
         try {
@@ -502,13 +454,17 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         }
     }
 
+    // This is an Oreo-and-newer feature.  NOP if below sdk 26.
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            String CHANNEL_ID = getString(R.string.channel_id);
-            String name = getString(R.string.channel_name);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            // Our notification channel options.
+            String CHANNEL_ID = app_context.getString(R.string.channel_id);
+            String name = app_context.getString(R.string.channel_name);
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+
+            // Create the channel.
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            NotificationManager notificationManager = app_context.getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
     }

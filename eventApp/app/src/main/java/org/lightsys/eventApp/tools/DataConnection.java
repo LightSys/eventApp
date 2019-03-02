@@ -1,10 +1,11 @@
 package org.lightsys.eventApp.tools;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -53,37 +54,32 @@ import static android.content.ContentValues.TAG;
 public class DataConnection extends AsyncTask<String, Void, String> {
 
     private LocalDB db;
-    private String qrAddress;    //location of JSON file
-    private String old_qrAddress;
+    private String qrAddress = null;    //location of JSON file
+    private static String old_qrAddress = null; // QR address last time we did a connection
     private final WeakReference<Context> dataContext; // Context that the DataConnection was executed in
     private final WeakReference<Activity> dataActivity;
-    private ProgressDialog spinner;
     private String action;
     private boolean isOnRefresh = false;
-    private boolean loadAll; //specifies whether all info should be reloaded or only notifications
     private boolean connection;
-    private String connectionResult;
     private CompletionInterface callback;
+    private JSONObject json = null;
+    public static final int UPD_EVENT = 0;
+    public static final int UPD_NOTIFICATIONS = 1;
 
     private static final String RELOAD_PAGE = "reload_page";
 
     private static final String Tag = "DPS";
 
-    public DataConnection(Context context, Activity activity, String action, String QR, boolean loadAll, CompletionInterface my_callback) {
+    public DataConnection(Context context, Activity activity, String action, String QR, CompletionInterface my_callback) {
         super();
         dataContext = new WeakReference<>(context);
         dataActivity = new WeakReference<>(activity);
         qrAddress = QR;
         this.callback = my_callback;
-        this.loadAll = loadAll;
         this.action = action;
         if (action!= null && action.equals("refresh")) isOnRefresh = true;
         this.db = new LocalDB(dataContext.get());
         Log.d(TAG, "DataConnection: " + qrAddress);
-        if (activity != null) {
-            //deprecated but still used in Android Oreo, as of 23 July 2018 at least. -Littlesnowman88
-            spinner = new ProgressDialog(dataContext.get(), R.style.MySpinnerStyle);
-        }
     }
 
     @Override
@@ -91,22 +87,22 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         Calendar calExpire = Calendar.getInstance();
         Calendar calNow = Calendar.getInstance();
         SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-        try{
+
+        try {
             if(db.getGeneral("refresh_expire") != null) {
                 calExpire.setTime(formatter.parse(db.getGeneral("refresh_expire")));
             }
-            if (qrAddress == null){
+            if (qrAddress == null) {
                 ((MainActivity)dataActivity.get()).gatherData(true);
             } else if (qrAddress.equals("No_Event")) {
                 throw new Exception("Refresh could not load any data because no event is scanned.");
-            }
-            else if(calNow.getTimeInMillis()<= calExpire.getTimeInMillis() || action.equals("new")){
+            } else if (calNow.getTimeInMillis()<= calExpire.getTimeInMillis() || action.equals("new")) {
                 DataPull();
-            }else{
+            } else {
                 action="expired";
             }
         }
-        catch(Exception e){
+        catch(Exception e) {
             Log.w(Tag, "The DataPull failed. (probably not connected to internet or vmPlayer): "
                     + e.getLocalizedMessage());
         }
@@ -118,10 +114,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         if (callback != null)
             callback.onCompletion();
 
-        // Dismiss progress bar to show data retrieval is done
-        if (dataActivity != null && dataActivity.get() != null && spinner != null) {
-            spinner.dismiss();
-        }
         if (dataContext != null && dataContext.get().getClass() == MainActivity.class && connection && !action.equals("auto_update")) {
             Toast.makeText(dataContext.get(), "data successfully imported", Toast.LENGTH_SHORT).show();
             if (action.equals("new")) {
@@ -147,47 +139,48 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
     }
 
-    private boolean checkConnection(String address)  {
-        String test;
+    private String fetchJSON(String address)  {
+        String jsontext;
+
         try {
             // Attempt to pull information from the API
-            test = GET(address);
+            jsontext = GET(address);
             // Unauthorized signals incorrect username or password
             // 404 not found signals invalid ID
             // Empty or null signals an incorrect server name
-            if (test == null || test.equals("invalid web address")){
+            if (jsontext == null || jsontext.equals("invalid web address")){
                 dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(dataContext.get(), "Server connection failed: invalid web address", Toast.LENGTH_LONG).show();
                     }
                 });
-                return false;
+                return null;
             }
-            else if (test.equals("") || test.equals("Access Not Permitted")) {
+            else if (jsontext.equals("") || jsontext.equals("Access Not Permitted")) {
                 dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(dataContext.get(), "Server connection failed", Toast.LENGTH_LONG).show();
                     }
                 });
-                return false;
-            } else if (test.contains("<H1>Unauthorized</H1>")) {
+                return null;
+            } else if (jsontext.contains("<H1>Unauthorized</H1>")) {
                 dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(dataContext.get(), "Username/password invalid", Toast.LENGTH_LONG).show();
                     }
                 });
-                return false;
-            } else if (test.contains("404 Not Found")) {
+                return null;
+            } else if (jsontext.contains("404 Not Found")) {
                 dataActivity.get().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(dataContext.get(), "Invalid User ID", Toast.LENGTH_LONG).show();
                     }
                 });
-                return false;
+                return null;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -207,10 +200,17 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     }
                 });
             }
-            return false;
+            return null;
         }
-        connectionResult = test;
-        return true;
+
+        // Parse it
+        try {
+            json = new JSONObject(jsontext);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return jsontext;
     }
 
     /**
@@ -219,41 +219,30 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Now imports custom Notifications nav title
      */
     private void DataPull()  {
+        String myURL;
+        String result;
+
         if (dataContext == null)
             return;
         db = new LocalDB(dataContext.get());
 
-        //set loading bar as app collects data
-        if (dataActivity != null && dataActivity.get() != null && spinner != null) {
-            spinner.setMessage(dataContext.get().getResources().getString(R.string.loading_data));
-            dataActivity.get().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                spinner.setIndeterminate(true);
-                spinner.setCancelable(false);
-                spinner.show();
-            }
-            });
-        }
+        // Build the URL to include our current version numbers.
+        int[] cur_version = db.getJSONVersionNum();
+        if (qrAddress.indexOf("?") >= 0)
+            myURL = qrAddress + "&";
+        else
+            myURL = qrAddress + "?";
+        myURL = myURL + "config=" + cur_version[0] + "&notify=" + cur_version[1];
 
-        connection = checkConnection(qrAddress);
-
-        //if connection error occurred, cancel spinner
-        if (!connection && dataActivity != null && dataActivity.get() != null && spinner != null){
-            spinner.dismiss();
-        }
+        // Fetch the data from the server.
+        result = fetchJSON(myURL);
+        connection = (result != null);
 
         if (connection) {
             Log.i(Tag, "pulling data");
 
             try {
-                old_qrAddress = db.getGeneral("notifications_url");
-                if(loadAll) {
-                    loadInfoAndNavTitles();
-                } else{
-                    connection = checkConnection(db.getGeneral("notifications_url"));
-                    loadNotifications(connectionResult);
-                }
+                loadAllData(result);
             } catch (Exception e) {
                 e.printStackTrace();
                 if (e.getClass().equals(SocketTimeoutException.class)) {
@@ -262,13 +251,110 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     Toast.makeText(dataContext.get(), "Server connection failed", Toast.LENGTH_LONG).show();
                 }
                 return;
-                //to here
             }
 
             // add new timestamp
             db.addTimeStamp("" + Calendar.getInstance().getTimeInMillis());
-
             db.close();
+
+            // Make a note of the URL we fetched.
+            old_qrAddress = qrAddress;
+        }
+    }
+
+    /**
+     * Loads all data, including general, event, and notifications.
+     * @param result - the HTTP textual JSON data returned by the server
+     */
+    private void loadAllData(String result) {
+        if (result != null) {
+            int[] new_version = getVersionNumber(json /*, tempNames*/);
+            int[] old_version = db.getJSONVersionNum();
+            boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
+            boolean updated_notifications = false;
+            boolean updated_event = false;
+            Resources string_resources = dataContext.get().getResources();
+
+            // Get the current name of the notifications menu entry
+            String ntitle = "Notifications";
+            String nicon = "ic_bell";
+            ArrayList<Info> nav_titles = db.getNavigationTitles();
+            for (Info item : nav_titles) {
+                if (item.getName().equals("Notifications")) {
+                    ntitle = item.getHeader();
+                    nicon = item.getBody();
+                    break;
+                }
+            }
+
+            // if event config was updated
+            if (update_flags[UPD_EVENT]) {
+                db.clear();
+                db.addGeneral("url", qrAddress);
+
+                // Add a notifications menu entry first, since we just cleared the DB
+                JSONObject njson;
+                njson = json.optJSONObject("notifications");
+                if (njson != null) {
+                    addNotificationTitle(njson, db, string_resources);
+                } else {
+                    db.addNavigationTitles(ntitle, nicon, "Notifications");
+                }
+
+                // General JSON event data
+                JSONObject gjson;
+                gjson = json.optJSONObject("general");
+                if (gjson != null){
+                    if (loadGeneralInfo(gjson)) {
+                        updated_event = true;
+                    }
+                }
+
+                // Update most event information
+                if (loadEventInfo(json)) {
+                    updated_event = true;
+                }
+
+                // About page
+                setupAboutPage(db, string_resources);
+            }
+
+            // if notifications were updated
+            if (update_flags[UPD_NOTIFICATIONS]) {
+                // Find the notifications section -- if updated, it "should" be there.
+                JSONObject njson;
+                njson = json.optJSONObject("notifications");
+                if (njson != null) {
+                    loadNotifications(njson);
+                    updated_notifications = true;
+                } else {
+                    // Special case where notifications need an update, but no notifications
+                    // object was included in the JSON (this may mean we're working with an
+                    // older style QR code / updates link).
+                    String nURL = db.getGeneral("notifications_url");
+                    if (nURL != null) {
+                        String nText = fetchJSON(nURL);
+                        if (nText != null) {
+                            try {
+                                njson = new JSONObject(nText);
+                                if (njson != null) {
+                                    loadNotifications(njson);
+                                    updated_notifications = true;
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update the database with the new version numbers.
+            int[] new_notif_version = {
+                    updated_event?new_version[UPD_EVENT]:old_version[UPD_EVENT],
+                    updated_notifications?new_version[UPD_NOTIFICATIONS]:old_version[UPD_NOTIFICATIONS]
+            };
+            db.replaceJSONVersionNum(new_notif_version);
         }
     }
 
@@ -278,17 +364,17 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      *            The if statement structure in this function will need to be deleted.
      *            readGeneralInfo and loadGeneralInfo will need to become void.
      */
-    private void loadInfoAndNavTitles() {
+    /*private void loadInfoAndNavTitles() {
         Resources string_resources = dataContext.get().getResources();
         if (readGeneralInfo(connectionResult)) {
-            String notification_url = db.getGeneral("notifications_url");
-            connection = checkConnection(notification_url);
+            //String notification_url = db.getGeneral("notifications_url");
+            //connection = fetchJSON(notification_url);
             addNotificationTitle(connectionResult, db, string_resources);
-            connection = checkConnection(qrAddress);
+            //connection = fetchJSON(qrAddress);
             loadEventInfo(connectionResult);
             setupAboutPage(db, string_resources);
         }
-    }
+    }*/
 
     /**
      * Sets up the about page
@@ -305,8 +391,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 return;
             }
         }
+
         db.addNavigationTitles(string_resources.getString(R.string.about_title), "ic_info", "About");
-        db.addAboutPage(new Info(string_resources.getString(R.string.About_App_Header),string_resources.getString(R.string.About_App_Body)), "About");
+        db.addAboutPage(new Info(string_resources.getString(R.string.About_App_Header) + " " + MainActivity.version, string_resources.getString(R.string.About_App_Body)), "About");
         db.addAboutPage(new Info(string_resources.getString(R.string.Open_Source_Header),string_resources.getString(R.string.Open_Source_Body)), "About");
         db.addAboutPage(new Info(string_resources.getString(R.string.Barcode_Scanner_Header),string_resources.getString(R.string.Barcode_Scanner_Body)), "About");
         db.addAboutPage(new Info(string_resources.getString(R.string.Android_Open_Source_Proj_Header), string_resources.getString(R.string.Android_Open_Source_Proj_Body)), "About");
@@ -318,7 +405,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * IMPORTANT: If the refresh button is ever deleted and updates become completely automatic,
      *            THIS WILL NEED TO RETURN VOID
      */
-    private boolean readGeneralInfo(String result) {
+    /*private boolean readGeneralInfo(String result) {
         JSONObject json = null;
         if (result != null) {
             try {
@@ -330,40 +417,33 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 return false;
             }
             try {
-                return loadGeneralInfo(json.getJSONObject("general"));
+                    return loadGeneralInfo(json.getJSONObject("general"));
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 return false;
             }
         }
         return false;
-    }
+    }*/
 
     /** acesses the notifications json and sets the notifications nav title
      *  Created by: Littlesnowman88 on 15 June 2018
      *
      *  Must be called by MainActivity's handleNoScannedEvent, thus this function is public static.
      */
-    public static void addNotificationTitle(String result, LocalDB db, Resources string_resources) {
+    public static void addNotificationTitle(JSONObject njson, LocalDB db, Resources string_resources) {
         String notifications_title = string_resources.getString(R.string.notifications_title);
 
-        if (result != null) {
-            try {
-                JSONObject json = null;
-                json = new JSONObject(result).getJSONObject("notifications");
-                if (json != null) {
-                    db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Notifications");
-                } else {
-                    preventRepeatTitle(notifications_title, db);
-                }
-            } catch (JSONException e1) {
-                e1.printStackTrace();
+        try {
+            if (njson != null) {
+                db.addNavigationTitles(njson.getString("nav"), njson.getString("icon"), "Notifications");
+            } else {
                 preventRepeatTitle(notifications_title, db);
             }
-        } else {
+        } catch (JSONException e1) {
+            e1.printStackTrace();
             preventRepeatTitle(notifications_title, db);
         }
-
     }
 
     /**
@@ -386,30 +466,22 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
     /**
      * Loads Event info
-     * @param result, result of the API query for the contact info
      * Slightly refactored by Littlesnowman88 on June 15 2018
      * loadGeneralInfo function call moved into readGeneralInfo;
      */
-    private void loadEventInfo(String result) {
-        JSONObject json = null;
-        if (result != null) {
-            try {
-                json = new JSONObject(result);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
-                return;
-            }
-            //separate JSON object and get individual parts to be stored in Local Database
-            try { loadTheme(json.getJSONArray("theme")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadContactPage(json.getJSONObject("contact_page")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadSchedule(json.getJSONObject("schedule")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadHousing(json.getJSONObject("housing")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadPrayerPartners(json.getJSONArray("prayer_partners")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadInformationalPage(json.getJSONObject("information_page")); } catch (JSONException e) { e.printStackTrace(); }
-            try { loadContacts(json.getJSONObject("contacts")); } catch (JSONException e) { e.printStackTrace(); }
-        }
+    private boolean loadEventInfo(JSONObject ejson) {
+        boolean updated = false;
+
+        //separate JSON object and get individual parts to be stored in Local Database
+        if (loadTheme(ejson.optJSONArray("theme"))) updated=true;
+        if (loadContactPage(ejson.optJSONObject("contact_page"))) updated=true;
+        if (loadSchedule(ejson.optJSONObject("schedule"))) updated=true;
+        if (loadHousing(ejson.optJSONObject("housing"))) updated=true;
+        if (loadPrayerPartners(ejson.optJSONArray("prayer_partners"))) updated=true;
+        if (loadInformationalPage(ejson.optJSONObject("information_page"))) updated=true;
+        if (loadContacts(ejson.optJSONObject("contacts"))) updated=true;
+
+        return updated;
     }
 
 
@@ -417,9 +489,9 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Loads Contact info
      * @param json, result of the API query for the contact info
      */
-    private void loadContacts(JSONObject json) {
+    private boolean loadContacts(JSONObject json) {
         if (json == null) {
-            return;
+            return false;
         }
         JSONArray tempNames = json.names();
 
@@ -448,30 +520,32 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+                return false;
             }
         }
-
+        return true;
     }
 
     /**
      * Loads Contact Page info
      * @param json, result of the API query for the contact page info
      */
-    private void loadContactPage(JSONObject json) {
+    private boolean loadContactPage(JSONObject json) {
         if (json == null) {
-            return;
+            return false;
         }
         JSONArray tempNames = json.names();
 
         //if valid, adds page to navigation
         try {
             if (json.getString("nav").equals("null")) {
-                return;
+                return false;
             }
             db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Contacts");
 
         } catch (JSONException e) {
             e.printStackTrace();
+            return false;
         }
 
         for (int i = 0; i < tempNames.length(); i++) {
@@ -493,29 +567,32 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+                return false;
             }
         }
+        return true;
     }
 
     /**
      * Loads schedule
      * @param json, result of API query for schedule
      */
-    private void loadSchedule(JSONObject json) {
+    private boolean loadSchedule(JSONObject json) {
         if (json == null) {
-            return;
+            return false;
         }
         JSONArray tempNames = json.names();
 
         //if valid, adds page to navigation
         try {
             if (json.getString("nav").equals("null")) {
-                return;
+                return false;
             }
             db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Schedule");
 
         } catch (JSONException e) {
             e.printStackTrace();
+            return false;
         }
 
         for (int i = 0; i < tempNames.length(); i++) {
@@ -548,8 +625,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+                return false;
             }
         }
+        return true;
     }
 
     /**
@@ -559,14 +638,14 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * IMPORTANT: If the refresh button is ever deleted and updates become completely automatic,
      *            THIS WILL NEED TO RETURN VOID
      */
-    private boolean loadGeneralInfo(JSONObject json) {
+    /*private boolean loadGeneralInfo(JSONObject json) {
         if (json == null) {
             return false;
         }
 
         JSONArray tempGeneral = json.names();
 
-        int[] new_version = getVersionNumber(json, tempGeneral);
+        int[] new_version = getVersionNumber(json);
         int[] old_version = db.getJSONVersionNum();
         if (qrAddress.equals(db.getGeneral("url")) || qrAddress.equals(old_qrAddress)) { //if updating same event
             boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
@@ -579,7 +658,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 finishLoadGeneralInfo(json, tempGeneral);
             } else { //config update needed = false
                 if (update_flags[1]) { //notifications update needed == true
-                    connection = checkConnection(db.getGeneral("notifications_url"));
+                    //connection = fetchJSON(db.getGeneral("notifications_url"));
                     loadNotifications(connectionResult);
                 }
                 return false;
@@ -589,27 +668,33 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         } else { //if scanning/selecting new event
             db.clear();
             db.addGeneral("url", qrAddress);
-            int[] notif_forced_update_version = {new_version[0], -1}; //-1 forces the notification to recognize a "version change" and update notifications.
+            int[] notif_forced_update_version = {new_version[0], 0}; // 0 forces the notification to recognize a "version change" and update notifications.
             db.replaceJSONVersionNum(notif_forced_update_version);
             finishLoadGeneralInfo(json, tempGeneral);
-            connection = checkConnection(db.getGeneral("notifications_url"));
+            //connection = fetchJSON(db.getGeneral("notifications_url"));
             loadNotifications(connectionResult);
         }
         return true;
-    }
+    }*/
 
     /** loads all of general info except for version info
      *  Created/Refactored by Littlesnowman88 on 12 July 2018
      */
-    private void finishLoadGeneralInfo(JSONObject qrJSON, JSONArray tempGeneral) {
+    private boolean loadGeneralInfo(JSONObject qrJSON) {
+        JSONArray tempGeneral = qrJSON.names();
         int num_general_items = tempGeneral.length();
+
         //for backwards compatibility with old JSONs.
         try {
             String first_general_gategory = tempGeneral.getString(0);
             if (!first_general_gategory.equals("version_num")) {
                 db.addGeneral(first_general_gategory, qrJSON.getString(first_general_gategory));
             }
-        } catch (Exception e) {e.printStackTrace();}
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
         for (int i = 1; i < num_general_items; i++) {
             try {
                 //@id signals a new object, but contains no information on that line
@@ -622,94 +707,77 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+                return false;
             }
         }
+
+        return true;
     }
 
     /**
      * Loads notifications Information
-     * @param result, result of API query for hq information
+     * @param json, result of API query for hq information
      * Modified by Littlesnowman88 & FTMoo on 12 July 2018
      * IMPORTANT: If the refresh button is ever deleted and updates become completely automatic,
      *            THIS WILL NEED TO RETURN VOID
      */
-    private void loadNotifications(String result) {
-        if (result != null) {
-            JSONObject json = null;
+    private void loadNotifications(JSONObject json) {
+        JSONArray tempNames = json.names();
+        ArrayList<Info> notifications = db.getNotifications();
+        db.deleteNotifications();
+        boolean isSameURL = (qrAddress.equals(old_qrAddress) || old_qrAddress == null);
+        int num_notif_items = tempNames.length();
+        for (int i = 1; i < num_notif_items; i++) {
             try {
-                json = new JSONObject(result).getJSONObject("notifications");
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (json == null) {
-                return;
-            }
-            JSONArray tempNames = json.names();
-
-            int[] new_version = getVersionNumber(json, tempNames);
-            int[] old_version = db.getJSONVersionNum();
-            boolean[] update_flags = dataNeedsUpdate(old_version, new_version);
-            if (update_flags[0]) { // if config file needs update
-                qrAddress = db.getGeneral("url");
-                loadAll = true;
-                connection = checkConnection(qrAddress);
-                loadInfoAndNavTitles();
-            } else { // if config file does not need update
-                if (update_flags [1]) { //if notifications json needs update
-                    int[] new_notif_version = {old_version[0], new_version[1]};
-                    db.replaceJSONVersionNum(new_notif_version);
-                    ArrayList<Info> notifications = db.getNotifications();
-                    db.deleteNotifications();
-                    boolean isSameURL = (qrAddress.equals(old_qrAddress));
-                    int num_notif_items = tempNames.length();
-                    for (int i = 1; i < num_notif_items; i++) {
-                        try {
-                            String json_item = tempNames.getString(i);
-                            //@id signals a new object, but contains no information on that line
-                            if (! json_item.equals("version_num") && !json_item.equals("@id") && !json_item.equals("nav") && !json_item.equals("icon")) {
-                                JSONObject notificationObj = json.getJSONObject(json_item);
-                                Info temp = new Info();
-                                temp.setId(Integer.parseInt(json_item));
-                                temp.setHeader(notificationObj.getString("title"));
-                                temp.setBody(notificationObj.getString("body"));
-                                temp.setDate(notificationObj.getString("date"));
-                                if (isSameURL && notificationIsNewOrChanged(notifications,temp)) {
-                                    temp.setNew();
-                                } else {temp.setOld();}
-
-                                db.addNotification(temp);
-
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                String json_item = tempNames.getString(i);
+                //@id signals a new object, but contains no information on that line
+                if (! json_item.equals("version_num") && !json_item.equals("@id") && !json_item.equals("nav") && !json_item.equals("icon")) {
+                    JSONObject notificationObj = json.getJSONObject(json_item);
+                    Info temp = new Info();
+                    temp.setId(Integer.parseInt(json_item));
+                    temp.setHeader(notificationObj.getString("title"));
+                    temp.setBody(notificationObj.getString("body"));
+                    temp.setDate(notificationObj.getString("date"));
+                    if (isSameURL && notificationIsNewOrChanged(notifications,temp)) {
+                        temp.setNew();
+                    } else {
+                        temp.setOld();
                     }
+
+                    db.addNotification(temp);
                 }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
     }
 
     private static boolean notificationIsNewOrChanged(ArrayList<Info> notifications, Info new_notif) {
         for (Info notif : notifications){
-            if (notif.getId() == new_notif.getId()) { //if the notification currently exists
-                //but something significant about it has changed
+            // if the notification currently exists
+            if (notif.getId() == new_notif.getId()) {
+                // but something significant about it has changed
                 if (!notif.getBody().equals(new_notif.getBody())
                         || !notif.getHeader().equals(new_notif.getHeader())
-                        || !notif.getDate().equals(new_notif.getDate()))
-                { return true; }
-                else { //the notification exists and nothing significant has changed
+                        || !notif.getDate().equals(new_notif.getDate())) {
+                    return true;
+                } else {
+                    // the notification exists and nothing significant has changed
                     return false;
                 }
             }
-        } //else, the notification ID was not found, so it must be new.
+        }
+
+        // else, the notification ID was not found, so it must be new.
         return true;
     }
 
-    //Gets the version number from the JSON
-    private static int[] getVersionNumber(JSONObject qrJSON, JSONArray json_categories) {
-        //VERSION NUMBER MUST REMAIN THE FIRST THING IN THE JSON'S GENERAL SECTION
+    // Gets the version number from the JSON.  For compatibility with older JSON data that
+    // does not contain a version_num, we assume version 0,0 on those.
+    private static int[] getVersionNumber(JSONObject qrJSON) {
         try {
-            String version_string = qrJSON.getString(json_categories.getString(0)); //make this flexible in ordering?
+            String version_string = qrJSON.getString("version_num");
+            //String version_string = qrJSON.getString(json_categories.getString(0)); //make this flexible in ordering?
             String[] version_tokens = version_string.split(",");
             if (version_tokens.length == 2) {
                 int[] version = {Integer.parseInt(version_tokens[0]), Integer.parseInt(version_tokens[1])};
@@ -725,14 +793,20 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         }
     }
 
-    //compares version numbers to see if configuration files need to update
+    /**
+     * compares version numbers to see if configuration files need to update.  If version numbers
+     * are 0, i.e. they do not exist in the data, we always update (this is for legacy json data
+     * compatibility).
+     * @result boolean[] - returns a two-element array of booleans indicating update requirement
+     *                     for [0] Event Data, and [1] Notifications.
+     */
     private static boolean[] dataNeedsUpdate(int[] old_version, int[] new_version) {
         boolean[] update_flags = {false, false};
-        if (old_version[0] != new_version[0]) {
-            update_flags[0] = true;
+        if (old_version[UPD_EVENT] != new_version[UPD_EVENT] || new_version[UPD_EVENT] == 0) {
+            update_flags[UPD_EVENT] = true;
         }
-        if (old_version[1] != new_version[1]) {
-            update_flags[1] = true;
+        if (old_version[UPD_NOTIFICATIONS] != new_version[UPD_NOTIFICATIONS] || new_version[UPD_NOTIFICATIONS] == 0) {
+            update_flags[UPD_NOTIFICATIONS] = true;
         }
         return update_flags;
     }
@@ -741,20 +815,21 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      * Loads all housing assignments
      * @param json, result of API query for housing
      */
-    private void loadHousing(JSONObject json) {
+    private boolean loadHousing(JSONObject json) {
         if (json == null) {
-            return;
+            return false;
         }
         JSONArray tempNames = json.names();
 
         try {
             if (json.getString("nav").equals("null")) {
-                return;
+                return false;
             }
             db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Housing");
 
         } catch (JSONException e) {
             e.printStackTrace();
+            return false;
         }
 
         Resources string_resources = dataContext.get().getResources();
@@ -784,27 +859,30 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+                return false;
             }
         }
+        return true;
     }
 
     /**
      * Loads all Prayer Partner teams
      * @param json, result of API query for prayer partners
      */
-    private void loadPrayerPartners(JSONArray json) {
+    private boolean loadPrayerPartners(JSONArray json) {
         if (json == null) {
-            return;
+            return false;
         }
 
         try {
             if (json.getJSONObject(0).getString("nav").equals("null")) {
-                return;
+                return false;
             }
             db.addNavigationTitles(json.getJSONObject(0).getString("nav"), json.getJSONObject(0).getString("icon"), "Prayer Partners");
 
         } catch (JSONException e) {
             e.printStackTrace();
+            return false;
         }
 
         for (int i = 1; i < json.length(); i++) {
@@ -816,17 +894,19 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 db.addPrayerPartners(students);
             } catch (JSONException e) {
                 e.printStackTrace();
+                return false;
             }
         }
+        return true;
     }
 
     /**
      * Loads colors for theme and schedule
      * @param json, result of API query for theme
      */
-    private void loadTheme(JSONArray json) {
+    private boolean loadTheme(JSONArray json) {
         if (json == null) {
-            return;
+            return false;
         }
 
         for (int i = 0; i < json.length(); i++) {
@@ -852,17 +932,19 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 db.addThemeColor(name, color);
             } catch (JSONException e) {
                 e.printStackTrace();
+                return false;
             }
         }
+        return true;
     }
 
     /**
      * Loads Information pages
      * @param json, result of API query for information pages
      */
-    private void loadInformationalPage(JSONObject json) {
+    private boolean loadInformationalPage(JSONObject json) {
         if (json == null) {
-            return;
+            return false;
         }
         JSONArray tempNames = json.names();
 
@@ -892,8 +974,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
+                return false;
             }
         }
+        return true;
     }
 
     /**

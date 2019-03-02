@@ -5,7 +5,7 @@
 
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> -->
@@ -89,22 +89,18 @@
                 android:resource="@xml/file_paths"/>
         </provider>
 
-        <service
+        <!-- this is now all handled by WorkManager. -->
+        <!--<service
             android:enabled="true"
             android:name="org.lightsys.eventApp.tools.AutoUpdater"
             android:exported="false" />
-
         <receiver android:name="org.lightsys.eventApp.tools.BootCompletedReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-
         <receiver android:name="org.lightsys.eventApp.tools.WakeupAlarmReceiver">
-            <!--<intent-filter>
-                <action android:name="org.lightsys.eventApp.tools.WakeupAlarmReceiver" />
-            </intent-filter>-->
-        </receiver>
+        </receiver> -->
 
     </application>
 

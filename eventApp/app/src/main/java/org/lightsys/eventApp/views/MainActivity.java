@@ -231,6 +231,10 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         Constraints autoUpdateConstraints;
 
         /* new  auto update using WorkManager */
+        /*  Options:
+                make a worker class that's asynchronous with all the WorkManager stuff
+                use a PeriodicWorkRequest instead of a OneTimeWorkRequest
+         */
         autoUpdateConstraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(!refresh_now)
                 .setRequiredNetworkType(NetworkType.CONNECTED)

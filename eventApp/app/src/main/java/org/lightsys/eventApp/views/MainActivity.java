@@ -233,7 +233,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         /* new  auto update using WorkManager */
         /*  Options:
                 make a worker class that's asynchronous with all the WorkManager stuff
+                    look at: https://stackoverflow.com/questions/54515956/android-workmanager-not-working-well-after-application-kill
                 use a PeriodicWorkRequest instead of a OneTimeWorkRequest
+                    look at: https://developer.android.com/topic/libraries/architecture/workmanager/how-to/recurring-work#java
          */
         autoUpdateConstraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(!refresh_now)

@@ -195,7 +195,7 @@ public class AutoUpdateWorker extends ListenableWorker implements CompletionInte
             }
         }
     }
-
+    
     private void checkForUpdates() {
         db.close();
 

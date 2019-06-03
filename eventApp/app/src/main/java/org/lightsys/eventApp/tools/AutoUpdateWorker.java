@@ -97,7 +97,7 @@ public class AutoUpdateWorker extends ListenableWorker implements CompletionInte
     public ListenableFuture<ListenableWorker.Result> startWork() {
         future = ResolvableFuture.create();
 
-        //Log.d("AutoUpdateWorker","startWork()");
+        Log.d("AutoUpdateWorker","startWork()");
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(app_context);
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
         db = new LocalDB(our_context);
@@ -201,6 +201,8 @@ public class AutoUpdateWorker extends ListenableWorker implements CompletionInte
 
         Calendar currentDate = Calendar.getInstance();
         elapsedTime = currentDate.getTimeInMillis() - prevDate.getTimeInMillis();
+
+
 
         //check to see if the time elapsed is greater than the update period
         // also check to see if the expiration date has passed. -Littlesnowman88

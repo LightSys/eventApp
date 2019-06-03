@@ -46,6 +46,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.OneTimeWorkRequest;
 //import androidx.work.PeriodicWorkRequest;
@@ -406,7 +407,19 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     @Override
     public void onDestroy() {
 
-        Log.d("destroy", "mainActivity has been destroyed");
+        Log.d("Destroy", "Creating PeriodicWorkRequest");
+        Constraints backgroundUpdateConstraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(AutoUpdateWorker.class, 15, TimeUnit.MINUTES)
+                .setConstraints(backgroundUpdateConstraints)
+                .setInputData(new Data.Builder().putBoolean("refresh_now", false).build())
+                .build();
+        WorkManager.getInstance().enqueue(periodicWorkRequest);
+        WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
+                .observeForever(workObserver);
+
         super.onDestroy();
     }
 

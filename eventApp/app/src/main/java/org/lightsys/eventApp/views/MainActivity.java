@@ -406,20 +406,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
     @Override
     public void onDestroy() {
-
-        Log.d("Destroy", "Creating PeriodicWorkRequest");
-        Constraints backgroundUpdateConstraints = new Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(AutoUpdateWorker.class, 15, TimeUnit.MINUTES)
-                .setConstraints(backgroundUpdateConstraints)
-                .setInputData(new Data.Builder().putBoolean("refresh_now", false).build())
-                .build();
-        WorkManager.getInstance().enqueue(periodicWorkRequest);
-        WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
-                .observeForever(workObserver);
-
         super.onDestroy();
     }
 
@@ -437,6 +423,21 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     protected void onStop() {
         // Unregister since the activity is not visible
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+
+        // Create PeriodicWorkRequest for when MainActivity is killed
+        Log.d("Stop", "Creating PeriodicWorkRequest...");
+        Constraints backgroundUpdateConstraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(AutoUpdateWorker.class, 15, TimeUnit.MINUTES)
+                .setConstraints(backgroundUpdateConstraints)
+                .setInputData(new Data.Builder().putBoolean("refresh_now", false).build())
+                .build();
+        WorkManager.getInstance().enqueue(periodicWorkRequest);
+        WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
+                .observeForever(workObserver);
+
         super.onStop();
     }
 

@@ -50,30 +50,27 @@ public class WelcomeView extends Fragment {
 
         LocalDB db = new LocalDB(getActivity());
 
-        /* allow Schedule View to access shared preferences for time zone information */
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getContext());
-//        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        eventLocations = LocationInfo.getEventLocations(db);
-        selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", eventLocations[0] ));
 
         //set up notifications
         ListView eventList = v.findViewById(R.id.eventList);
         events = db.getNotifications();
 
-        //set up notifications header if notifications are available
-        TextView header = v.findViewById(R.id.notificationsHeader);
-        if (events.size() == 0){
-            header.setVisibility(View.GONE);
-        }else{
-            header.setVisibility(View.VISIBLE);
-            header.setBackgroundColor(Color.parseColor(db.getThemeColor("themeDark")));
-        }
+
 
         //set up welcome message
         String welcomeMessage = db.getGeneral("welcome_message")!=null?db.getGeneral("welcome_message"):getString(R.string.default_welcome);
         ((TextView) v.findViewById(R.id.welcomeHeader)).setText(welcomeMessage);
 
         ArrayList<HashMap<String,String>> itemList = generateListItems();
+
+        //set up notifications header if notifications or recent/upcoming events are available
+        TextView header = v.findViewById(R.id.notificationsHeader);
+        if (itemList.size() == 0){
+            header.setVisibility(View.GONE);
+        }else{
+            header.setVisibility(View.VISIBLE);
+            header.setBackgroundColor(Color.parseColor(db.getThemeColor("themeDark")));
+        }
 
         // display title, content, and date posted for notification
         String[] from = {"title", "content", "date"};
@@ -82,8 +79,29 @@ public class WelcomeView extends Fragment {
 
         eventList.setAdapter(adapter);
 
+
+        return v;
+    }
+
+    /**
+     * Formats the notification item into a HashMap ArrayList.
+     *
+     * @return a HashMap array with notification and calendar information, to be used in a SimpleAdapter
+     */
+    private ArrayList<HashMap<String,String>> generateListItems(){
+        ArrayList<HashMap<String,String>> aList = new ArrayList<>();
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss", Locale.US);
+
+
+        //Insert Calendar Events
         //set up recent calendar info
-        final ListView calendarList = v.findViewById(R.id.calendarList);
+        LocalDB db = new LocalDB(getActivity());
+
+        /* allow Schedule View to access shared preferences for time zone information */
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getContext());
+        eventLocations = LocationInfo.getEventLocations(db);
+        selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", eventLocations[0] ));
+
         db.setSharedPreferences(sharedPreferences);
         schedule = db.getFullSchedule();
 
@@ -96,24 +114,14 @@ public class WelcomeView extends Fragment {
         ScheduleInfo nextEvent = lateEvent;
 
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HHmm");
         String now = formatter.format(calendar.getTime());
         String today = now.substring(0, 10);
         Integer day = Integer.parseInt(now.substring(3, 5));
         day += 1;
         String tomorrow = now.substring(0,3) + day.toString() + now.substring(5, 10);
-        Integer time = Integer.parseInt(now.substring(11));
-
-
-        //set up Calendar header if calendar events are available
-        TextView calendarHeader = v.findViewById(R.id.calendarHeader);
-        calendarHeader.setVisibility(View.VISIBLE);
-        calendarHeader.setBackgroundColor(Color.parseColor(db.getThemeColor("themeDark")));
+        Integer time = Integer.parseInt(now.substring(11,13) + now.substring(14,16));
 
         if (schedule.size() != 0){
-
-            Log.d("Welcome", "Event day format: " + schedule.get(0).getDay());
-            Log.d("Welcome", "Calendar day format: " + today);
 
             //Set currentEvent to the latest starting event before right now
             //Try to set nextEvent to earliest starting event today after right now
@@ -140,89 +148,39 @@ public class WelcomeView extends Fragment {
         }
 
 
-
-        //Set ArrayList<HashMap<String, String>> to title, content, date
-        ArrayList<HashMap<String, String>> calendarItemList = new ArrayList<>();
-
         HashMap<String, String> hm = new HashMap<>();
-        hm.put("title", "Most Recent Event");
-        //If no previous events today
-        if (currentEvent == earlyEvent) {
-            currentEvent.setDesc("No previous or current events today");
-            hm.put("content", currentEvent.getDesc());
-        } else {
-            hm.put("date", String.valueOf(currentEvent.getTimeStart()));
-            hm.put("content", currentEvent.getDesc() + " at " + currentEvent.getLocationName());
-        }
-        calendarItemList.add(hm);
-
-        hm = new HashMap<>();
-        hm.put("title", "Next Event");
-        //If no more events today or tomorrow
-        if (nextEvent == lateEvent) {
-            nextEvent.setDesc("No more events today or tomorrow!");
-            hm.put("content", nextEvent.getDesc());
-        } else {
-            hm.put("date", String.valueOf(nextEvent.getTimeStart()));
-            hm.put("content", nextEvent.getDesc() + " at " + nextEvent.getLocationName());
-        }
-        calendarItemList.add(hm);
-
-
-        final SimpleAdapter calendarAdapter = new SimpleAdapter(getActivity(), calendarItemList, R.layout.notification_item, from, to );
-        calendarList.setAdapter(calendarAdapter);
-
-
-
-        //Clickable listeners to expand/collapse notification list and calendar list
-        TextView notificationHeader = v.findViewById(R.id.notificationsHeader);
-        final ListView notificationList = v.findViewById(R.id.eventList);
-
-        notificationHeader.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (notificationList.getVisibility() == View.VISIBLE) {
-                    notificationList.setVisibility(View.GONE);
-                } else if (notificationList.getVisibility() == View.GONE) {
-                    notificationList.setVisibility(View.VISIBLE);
-                }
+        if (nextEvent != lateEvent) {
+            hm.put("title", "Upcoming");
+            String timeString;
+            if (String.valueOf(nextEvent.getTimeStart()).length() == 3) {
+                timeString = String.valueOf(nextEvent.getTimeStart()).substring(0,1) + ":" + String.valueOf(nextEvent.getTimeStart()).substring(1);
+            } else {
+                timeString = String.valueOf(nextEvent.getTimeStart()).substring(0,2) + ":" + String.valueOf(nextEvent.getTimeStart()).substring(2);
             }
-        });
-
-        calendarHeader.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (calendarList.getVisibility() == View.VISIBLE) {
-                    calendarList.setVisibility(View.GONE);
-                } else if (calendarList.getVisibility() == View.GONE) {
-                    calendarList.setVisibility(View.VISIBLE);
-                }
+            hm.put("date", timeString);
+            hm.put("content", nextEvent.getDesc() + "\nLocation: " + nextEvent.getLocationName());
+            hm = new HashMap<>();
+            aList.add(hm);
+        }
+        if (currentEvent != earlyEvent) {
+            hm.put("title", "Just Now");
+            String timeString;
+            if (String.valueOf(nextEvent.getTimeStart()).length() == 3) {
+                timeString = String.valueOf(currentEvent.getTimeStart()).substring(0,1) + ":" + String.valueOf(currentEvent.getTimeStart()).substring(1);
+            } else {
+                timeString = String.valueOf(currentEvent.getTimeStart()).substring(0,2) + ":" + String.valueOf(currentEvent.getTimeStart()).substring(2);
             }
-        });
-
-
-
-
-
-        return v;
-    }
-
-    /**
-     * Formats the notification item into a HashMap ArrayList.
-     *
-     * @return a HashMap array with notification information, to be used in a SimpleAdapter
-     */
-    private ArrayList<HashMap<String,String>> generateListItems(){
-        ArrayList<HashMap<String,String>> aList = new ArrayList<>();
-        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss", Locale.US);
+            hm.put("date", timeString);
+            hm.put("content", currentEvent.getDesc() + "\nLocation: " + currentEvent.getLocationName());
+            aList.add(hm);
+        }
 
         for(Info event : events){
-            HashMap<String,String> hm = new HashMap<>();
+            hm = new HashMap<>();
             hm.put("title", event.getHeader());
             hm.put("content", event.getBody());
             String date = null;
             try{
-                Calendar calendar = Calendar.getInstance();
                 calendar.setTime(formatter.parse(event.getDate()));
                 date = getDatePrintOut(calendar);
             }catch(Exception e){

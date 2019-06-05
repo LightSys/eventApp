@@ -46,15 +46,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.OneTimeWorkRequest;
+//import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Constraints;
 import androidx.work.Data;
 
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.Info;
-import org.lightsys.eventApp.tools.AutoUpdater;
 import org.lightsys.eventApp.tools.CompletionInterface;
 import org.lightsys.eventApp.tools.DataConnection;
 import org.lightsys.eventApp.tools.LocalDB;
@@ -71,6 +72,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static android.content.ContentValues.TAG;
@@ -106,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     private ArrayList<String[]> scannedEvents;
     private int color, black_or_white;
     private OneTimeWorkRequest autoUpdateWork;
+//    private PeriodicWorkRequest autoUpdateWork;
     ActionBarDrawerToggle toggle;
     private ProgressDialog spinner;
     public static String version;
@@ -231,6 +234,13 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         Constraints autoUpdateConstraints;
 
         /* new  auto update using WorkManager */
+        /*  Options:
+                setup unique work requests so that there's only one work request even after having multiple instances of the app
+                    look at: https://stackoverflow.com/questions/54515956/android-workmanager-not-working-well-after-application-kill
+                    can do with both one time requests and periodic requests
+                use a PeriodicWorkRequest instead of a OneTimeWorkRequest
+                    look at: https://developer.android.com/topic/libraries/architecture/workmanager/how-to/recurring-work#java
+         */
         autoUpdateConstraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(!refresh_now)
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -240,10 +250,32 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 .setConstraints(autoUpdateConstraints)
                 .setInputData(new Data.Builder().putBoolean("refresh_now", refresh_now).build())
                 .build();
-        WorkManager.getInstance().enqueue(autoUpdateWork);
-        WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
-                .observeForever(workObserver);
-        //Log.d("startUpdater","worker " + autoUpdateWork.getId() + " started");
+//        autoUpdateWork = new PeriodicWorkRequest.Builder(AutoUpdateWorker.class, 15, TimeUnit.MINUTES)
+//                .setConstraints(autoUpdateConstraints)
+//                .setInputData(new Data.Builder().putBoolean("refresh_now", refresh_now).build())
+//                .build();
+        Executor executor = new Executor() {
+            @Override
+            public void execute(Runnable command) {
+                new Thread(command).start();
+
+            }
+        };
+        class WorkManagerRunnable implements Runnable {
+            OneTimeWorkRequest myAutoUpdateWork;
+            WorkManagerRunnable(OneTimeWorkRequest autoUpdateWork) { myAutoUpdateWork = autoUpdateWork; }
+            public void run() {
+                WorkManager.getInstance().enqueue(autoUpdateWork);
+                WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
+                        .observeForever(workObserver);
+            }
+        }
+        WorkManagerRunnable wmr = new WorkManagerRunnable(autoUpdateWork);
+        executor.execute(wmr);
+//        WorkManager.getInstance().enqueue(autoUpdateWork);
+//        WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
+//                .observeForever(workObserver);
+        Log.d("startUpdater","worker " + autoUpdateWork.getId() + " started");
     }
 
     // Stop the auto update background task
@@ -391,6 +423,21 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     protected void onStop() {
         // Unregister since the activity is not visible
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+
+        // Create PeriodicWorkRequest for when MainActivity is killed
+        Log.d("Stop", "Creating PeriodicWorkRequest...");
+        Constraints backgroundUpdateConstraints = new Constraints.Builder()
+                .setRequiresBatteryNotLow(true)
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+        PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(AutoUpdateWorker.class, 15, TimeUnit.MINUTES)
+                .setConstraints(backgroundUpdateConstraints)
+                .setInputData(new Data.Builder().putBoolean("refresh_now", false).build())
+                .build();
+        WorkManager.getInstance().enqueue(periodicWorkRequest);
+        WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
+                .observeForever(workObserver);
+
         super.onStop();
     }
 

@@ -49,13 +49,13 @@ public class EventArrayAdapter extends ArrayAdapter<HashMap<String, String>> {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.notification_item, null);
             } else {                //Event
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.notification_item, null);
-                //Java to execute on convertView
+                //Change color gradient of event box
                 int color = Color.parseColor(item.get("color"));
-                int colors[] = { color , 0xe4e4e5,0xe4e4e5,0xe4e4e5,0xe4e4e5,0xe4e4e5, 0xe4e4e5 };
+                int colors[] = { color , 0xe4e4e5,0xe4e4e5 };
 
                 //gradient background to show event types
                 GradientDrawable gd = new GradientDrawable(
-                        GradientDrawable.Orientation.LEFT_RIGHT,colors);
+                        GradientDrawable.Orientation.TOP_BOTTOM,colors);
                 gd.setCornerRadius(0f);
                 gd.setShape(GradientDrawable.RECTANGLE);
                 convertView.setBackground(gd);

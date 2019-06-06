@@ -77,6 +77,8 @@ public class WelcomeView extends Fragment {
         // display title, content, and date posted for notification
         final EventArrayAdapter adapter = new EventArrayAdapter(getActivity(), itemList);
 
+        Log.d("List", "ItemList: " + itemList);
+
         eventList.setAdapter(adapter);
 
 
@@ -90,7 +92,7 @@ public class WelcomeView extends Fragment {
      */
     private ArrayList<HashMap<String,String>> generateListItems(){
         ArrayList<HashMap<String,String>> aList = new ArrayList<>();
-        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss", Locale.US);
+        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss", Locale.US);
 
 
         //Insert Calendar Events
@@ -110,17 +112,25 @@ public class WelcomeView extends Fragment {
         ScheduleInfo earlyEvent = new ScheduleInfo(0, 1, "None");
         earlyEvent.setDay("00/00/0000");
         ScheduleInfo lateEvent = new ScheduleInfo(2400, 1, "None");
+        lateEvent.setDay("99/99/9999");
         ScheduleInfo currentEvent = earlyEvent;
         ScheduleInfo nextEvent = lateEvent;
-        String nullString = earlyEvent.getLocationName();
 
         Calendar calendar = Calendar.getInstance();
         String now = formatter.format(calendar.getTime());
         String today = now.substring(0, 10);
-        Integer day = Integer.parseInt(now.substring(3, 5));
-        day += 1;
-        String tomorrow = now.substring(0,3) + day.toString() + now.substring(5, 10);
+        //Get tomorrow's date
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
+        String tomorrow = formatter.format(calendar.getTime()).substring(0,10);
+        //Get yesterday's date
+        calendar.add(Calendar.DAY_OF_YEAR, -2);
+        String yesterday = formatter.format(calendar.getTime()).substring(0,10);
+        //Reset Calendar
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
+
         Integer time = Integer.parseInt(now.substring(11,13) + now.substring(14,16));
+
+        Log.d("Calendar", "Current datetime is: " + formatter.format(calendar.getTime()));
 
         if (schedule.size() != 0){
 
@@ -128,25 +138,34 @@ public class WelcomeView extends Fragment {
             //Try to set nextEvent to earliest starting event today after right now
             for (ScheduleInfo event : schedule) {
 
-                //If ((event is today and started before now) or if event's start date is after currentEvent's start date) and the event starts after the currentEvent started
-                boolean eventAfterCurrent = (Integer.parseInt(event.getDay().substring(6)) >= Integer.parseInt(currentEvent.getDay().substring(6)) && Integer.parseInt(event.getDay().substring(3, 5)) >= Integer.parseInt(currentEvent.getDay().substring(3, 5)) && Integer.parseInt(event.getDay().substring(0,2)) >= Integer.parseInt(currentEvent.getDay().substring(0,2)));
-                if (((event.getDay() == today && event.getTimeStart() < time)
-                        || eventAfterCurrent)
+                //If (event is today and started before now) and the event starts after the currentEvent started
+                if (((event.getDay().equals(today) && event.getTimeStart() < time))
                         && event.getTimeStart() > currentEvent.getTimeStart()) {
                     currentEvent = event;
-                } else if (event.getDay() == today && event.getTimeStart() > time && event.getTimeStart() < nextEvent.getTimeStart()) {
+                } else if (event.getDay().equals(today) && event.getTimeStart() > time && event.getTimeStart() < nextEvent.getTimeStart()) {
                     nextEvent = event;
+                }
+            }
+            //If there were no previous events today, set currentEvent to the latest event yesterday
+            if (currentEvent == earlyEvent) {
+                for (ScheduleInfo event : schedule) {
+                    if (event.getDay().equals(yesterday) && event.getTimeStart() > currentEvent.getTimeStart()) {
+                        currentEvent = event;
+                    }
                 }
             }
             //If there are no more events today, set nextEvent to the earliest event tomorrow
             if (nextEvent == lateEvent) {
                 for (ScheduleInfo event : schedule) {
-                    if (event.getDay() == tomorrow && event.getTimeStart() < nextEvent.getTimeStart()) {
+                    if (event.getDay().equals(tomorrow) && event.getTimeStart() < nextEvent.getTimeStart()) {
                         nextEvent = event;
                     }
                 }
             }
         }
+
+        Log.d("Event", "Current event is: " + currentEvent.getDesc() + " starting at: " + currentEvent.getTimeStart() + " on " + currentEvent.getDay());
+        Log.d("Event", "Next event is: " + nextEvent.getDesc() + " starting at: " + nextEvent.getTimeStart() + " on " + nextEvent.getDay());
 
 
         HashMap<String, String> hm = new HashMap<>();
@@ -158,11 +177,12 @@ public class WelcomeView extends Fragment {
             } else {
                 timeString = String.valueOf(nextEvent.getTimeStart()).substring(0,2) + ":" + String.valueOf(nextEvent.getTimeStart()).substring(2);
             }
-            if (nextEvent.getDay() == today) {
+            if (nextEvent.getDay().equals(today)) {
                 hm.put("date", timeString + "\t\tToday");
             } else {
                 hm.put("date", timeString + "\t\tTomorrow");
             }
+            //Put location in description if given
             if (!"null".equals(nextEvent.getLocationName())) {
                 hm.put("content", nextEvent.getDesc() + "\nLocation: " + nextEvent.getLocationName());
             } else {
@@ -170,12 +190,12 @@ public class WelcomeView extends Fragment {
             }
             hm.put("type", "event");
             hm.put("color", db.getThemeColor(nextEvent.getCategory()));
-            hm = new HashMap<>();
             aList.add(hm);
         }
         if (currentEvent != earlyEvent) {
+            hm = new HashMap<>();
 
-            if (currentEvent.getTimeStart() <= time && time <= currentEvent.getTimeEnd() && currentEvent.getDay() == today) {
+            if (currentEvent.getTimeStart() <= time && time <= currentEvent.getTimeEnd() && currentEvent.getDay().equals(today)) {
                 hm.put("title", "\tRight Now");
             } else {
                 hm.put("title", "\tMost Recently");
@@ -188,10 +208,10 @@ public class WelcomeView extends Fragment {
                 timeString = String.valueOf(currentEvent.getTimeStart()).substring(0,2) + ":" + String.valueOf(currentEvent.getTimeStart()).substring(2);
             }
             //Put "today" if the event is happening/happened today, else put date
-            if (currentEvent.getDay() == today) {
+            if (currentEvent.getDay().equals(today)) {
                 hm.put("date", timeString + "\t\tToday");
             } else {
-                hm.put("date", timeString + "\t\t" + currentEvent.getDay());
+                hm.put("date", timeString + "\t\tYesterday");
             }
             //Put the location in the content if there is a location
             if (!"null".equals(currentEvent.getLocationName())) {

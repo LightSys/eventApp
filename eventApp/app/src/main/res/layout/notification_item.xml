@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="@dimen/more_space_border_dimen">
+
+    <ImageView
+        android:id="@+id/calendarImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"/>
 
     <TextView
         android:id="@+id/titleText"
@@ -12,7 +19,9 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textStyle="bold"
-        android:textSize="@dimen/body_dimen" />
+        android:textSize="@dimen/body_dimen"
+        android:layout_toRightOf="@id/calendarImage"
+        android:layout_alignParentTop="true"/>
 
     <TextView
         android:id="@+id/dateText"
@@ -20,7 +29,8 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:layout_marginBottom="@dimen/more_space_border_dimen_lg"
-        android:textSize="@dimen/small_subtitle_dimen" />
+        android:textSize="@dimen/small_subtitle_dimen"
+        android:layout_below="@id/titleText"/>
 
     <TextView
         android:id="@+id/noteText"
@@ -28,6 +38,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textSize="@dimen/body_dimen"
-        android:autoLink="web"/>
+        android:autoLink="web"
+        android:layout_below="@id/dateText"/>
 
-</LinearLayout>
+</RelativeLayout>

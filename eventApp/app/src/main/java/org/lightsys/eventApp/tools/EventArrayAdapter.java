@@ -1,17 +1,21 @@
 package org.lightsys.eventApp.tools;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import org.lightsys.eventApp.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class EventArrayAdapter extends ArrayAdapter<HashMap<String, String>> {
-
-    public static final int TYPE_NOTIFICATION = 0;
-    public static final int TYPE_EVENT = 1;
 
     private ArrayList<HashMap<String, String>> events;
 
@@ -41,9 +45,35 @@ public class EventArrayAdapter extends ArrayAdapter<HashMap<String, String>> {
         int itemType = getItemViewType(position);
 
         if (convertView == null) {
+            if (itemType == 0) {    //Notification
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.notification_item, null);
+            } else {                //Event
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.notification_item, null);
+                //Java to execute on convertView
+                int color = Color.parseColor(item.get("color"));
+                int colors[] = { color , 0xe4e4e5,0xe4e4e5,0xe4e4e5,0xe4e4e5,0xe4e4e5, 0xe4e4e5 };
 
+                //gradient background to show event types
+                GradientDrawable gd = new GradientDrawable(
+                        GradientDrawable.Orientation.LEFT_RIGHT,colors);
+                gd.setCornerRadius(0f);
+                gd.setShape(GradientDrawable.RECTANGLE);
+                convertView.setBackground(gd);
+
+                ImageView calendarImage = convertView.findViewById(R.id.calendarImage);
+                calendarImage.setImageResource(R.drawable.ic_schedule);
+
+            }
         }
+
+        TextView title = convertView.findViewById(R.id.titleText);
+        TextView date = convertView.findViewById(R.id.dateText);
+        TextView notes = convertView.findViewById(R.id.noteText);
+        title.setText(item.get("title"));
+        notes.setText(item.get("content"));
+        date.setText(item.get("date"));
 
         return convertView;
     }
+
 }

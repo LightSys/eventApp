@@ -51,7 +51,7 @@ public class EventArrayAdapter extends ArrayAdapter<HashMap<String, String>> {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.notification_item, null);
                 //Change color gradient of event box
                 int color = Color.parseColor(item.get("color"));
-                int colors[] = { color , 0xe4e4e5,0xe4e4e5 };
+                int colors[] = { color, color, 0xe4e4e5,0xe4e4e5, 0xe4e4e5 };
 
                 //gradient background to show event types
                 GradientDrawable gd = new GradientDrawable(

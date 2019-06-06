@@ -105,8 +105,12 @@ public class WelcomeView extends Fragment {
         selectedTimeZone = TimeZone.getTimeZone(sharedPreferences.getString("time_zone", eventLocations[0] ));
 
         db.setSharedPreferences(sharedPreferences);
-        schedule = db.getFullSchedule();
-
+        try {
+            schedule = db.getFullSchedule();
+        } catch (IndexOutOfBoundsException e) {
+            //Database is empty
+            return aList;
+        }
 
         //Variable Setup
         ScheduleInfo earlyEvent = new ScheduleInfo(0, 1, "None");

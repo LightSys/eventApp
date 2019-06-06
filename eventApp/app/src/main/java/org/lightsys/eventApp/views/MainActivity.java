@@ -592,7 +592,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         if (successfulConnection) { return db.getGeneral("logo"); }
         //else
         String logo = db.getEventLogo(scanned_url);
-        if (logo.equals("")) {
+        if (logo == null || logo.equals("")) {
             logo = getString(R.string.red_X_logo);
         }
         return logo;

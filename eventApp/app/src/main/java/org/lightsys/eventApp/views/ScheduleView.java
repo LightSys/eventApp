@@ -73,6 +73,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d("Schedule", "onCreateView() called");
         v = inflater.inflate(R.layout.schedule_layout, container, false);
         getActivity().setTitle("Schedule");
         context = this.getContext();
@@ -246,6 +247,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
     @Override
     public void onDestroy() {
+        Log.d("Schedule", "ScheduleView destroyed");
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         super.onDestroy();
     }

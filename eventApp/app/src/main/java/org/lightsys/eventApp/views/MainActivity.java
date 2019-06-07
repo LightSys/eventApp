@@ -108,7 +108,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     private ArrayList<String[]> scannedEvents;
     private int color, black_or_white;
     private OneTimeWorkRequest autoUpdateWork;
-//    private PeriodicWorkRequest autoUpdateWork;
     ActionBarDrawerToggle toggle;
     private ProgressDialog spinner;
     public static String version;
@@ -852,6 +851,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     fragment = new ScheduleView();
                     fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
                             .commit();
+                    Log.d("Schedule", "Schedule fragment created");
                     break;
                 case "Housing":
                     fragment = new HousingView();
@@ -941,9 +941,10 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
             try {
                 if (intent.getBooleanExtra("update_schedule", false) && fragment instanceof ScheduleView){
-                        fragment = new ScheduleView();
-                        fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
-                                .commit();
+//                        fragment = new ScheduleView();
+//                        fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
+//                                .commit();
+                    Log.d("Schedule", "update_schedule called");
                 }
             } catch (Exception e) {
                 e.printStackTrace();

@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     private ArrayList<String[]> scannedEvents;
     private int color, black_or_white;
     private OneTimeWorkRequest autoUpdateWork;
-//    private PeriodicWorkRequest autoUpdateWork;
+    private PeriodicWorkRequest backgroundUpdateWork;
     ActionBarDrawerToggle toggle;
     private ProgressDialog spinner;
     public static String version;
@@ -234,13 +234,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         Constraints autoUpdateConstraints;
 
         /* new  auto update using WorkManager */
-        /*  Options:
-                setup unique work requests so that there's only one work request even after having multiple instances of the app
-                    look at: https://stackoverflow.com/questions/54515956/android-workmanager-not-working-well-after-application-kill
-                    can do with both one time requests and periodic requests
-                use a PeriodicWorkRequest instead of a OneTimeWorkRequest
-                    look at: https://developer.android.com/topic/libraries/architecture/workmanager/how-to/recurring-work#java
-         */
         autoUpdateConstraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(!refresh_now)
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -250,10 +243,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 .setConstraints(autoUpdateConstraints)
                 .setInputData(new Data.Builder().putBoolean("refresh_now", refresh_now).build())
                 .build();
-//        autoUpdateWork = new PeriodicWorkRequest.Builder(AutoUpdateWorker.class, 15, TimeUnit.MINUTES)
-//                .setConstraints(autoUpdateConstraints)
-//                .setInputData(new Data.Builder().putBoolean("refresh_now", refresh_now).build())
-//                .build();
+
         Executor executor = new Executor() {
             @Override
             public void execute(Runnable command) {
@@ -272,20 +262,27 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         }
         WorkManagerRunnable wmr = new WorkManagerRunnable(autoUpdateWork);
         executor.execute(wmr);
-//        WorkManager.getInstance().enqueue(autoUpdateWork);
-//        WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
-//                .observeForever(workObserver);
+
         Log.d("startUpdater","worker " + autoUpdateWork.getId() + " started");
     }
 
     // Stop the auto update background task
     private void stopUpdater() {
+        //Stop OneTimeWorkRequest
         UUID uuid = autoUpdateWork.getId();
         //Log.d("stopUpdater","worker " + uuid + " stopping...");
         WorkManager.getInstance().getWorkInfoByIdLiveData(uuid)
                 .removeObserver(workObserver);
         WorkManager.getInstance().cancelWorkById(uuid);
         //Log.d("stopUpdater","worker " + uuid + " stopped");
+
+        //Stop PeriodicWorkRequest
+        if (backgroundUpdateWork != null) {
+            uuid = backgroundUpdateWork.getId();
+            WorkManager.getInstance().getWorkInfoByIdLiveData(uuid)
+                    .removeObserver(workObserver);
+            WorkManager.getInstance().cancelWorkById(uuid);
+        }
     }
 
     /**
@@ -315,6 +312,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         //if opened from notification - open notification screen
         LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
                 new IntentFilter(RELOAD_PAGE));
+        if (backgroundUpdateWork != null) {
+            WorkManager.getInstance().getWorkInfoByIdLiveData(backgroundUpdateWork.getId())
+                    .removeObserver(workObserver);
+            WorkManager.getInstance().cancelWorkById(backgroundUpdateWork.getId());
+        }
+        Log.d("Stop", "MainActivity Started");
     }
 
     @Override
@@ -323,6 +326,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         if (navigationList == null){
             setupMenusAndTheme();
         }
+        Log.d("Stop", "MainActivity Resumed");
     }
 
     //on return from QRScanner, import data
@@ -407,6 +411,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d("Stop", "MainActivity Destroyed");
     }
 
     @Override
@@ -426,16 +431,17 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
         // Create PeriodicWorkRequest for when MainActivity is killed
         Log.d("Stop", "Creating PeriodicWorkRequest...");
+
         Constraints backgroundUpdateConstraints = new Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
-        PeriodicWorkRequest periodicWorkRequest = new PeriodicWorkRequest.Builder(AutoUpdateWorker.class, 15, TimeUnit.MINUTES)
+        backgroundUpdateWork = new PeriodicWorkRequest.Builder(AutoUpdateWorker.class, 15, TimeUnit.MINUTES)
                 .setConstraints(backgroundUpdateConstraints)
                 .setInputData(new Data.Builder().putBoolean("refresh_now", false).build())
                 .build();
-        WorkManager.getInstance().enqueue(periodicWorkRequest);
-        WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
+        WorkManager.getInstance().enqueue(backgroundUpdateWork);
+        WorkManager.getInstance().getWorkInfoByIdLiveData(backgroundUpdateWork.getId())
                 .observeForever(workObserver);
 
         super.onStop();
@@ -927,7 +933,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 successfulConnection = true;
                 try {
                     Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.contentFrame);
-                    if (currentFragment != null) {
+                    //Check that currentFragment is not a ScheduleView - Don't want to update schedule when user is looking at it
+                    if (currentFragment != null && !(currentFragment instanceof ScheduleView)) {
+
                         resetScannedEventsAdapter("add", db.getGeneral("url"));
                         final FragmentTransaction fragTransaction = getSupportFragmentManager().beginTransaction();
                         fragTransaction.detach(currentFragment);

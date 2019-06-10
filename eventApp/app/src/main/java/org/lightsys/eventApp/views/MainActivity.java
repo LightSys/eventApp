@@ -851,7 +851,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     fragment = new ScheduleView();
                     fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
                             .commit();
-                    Log.d("Schedule", "Schedule fragment created");
+                    Log.d("Schedule", "Schedule fragment created from MainActivity");
                     break;
                 case "Housing":
                     fragment = new HousingView();

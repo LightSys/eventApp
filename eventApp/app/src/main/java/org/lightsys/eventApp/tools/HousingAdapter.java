@@ -36,7 +36,6 @@ public class HousingAdapter extends SimpleAdapter {
 
         //if driver is listed, makes bar visible and displays driver text
         TextView driver = mView.findViewById(R.id.driver);
-        Log.d("Housing", "" + data.get(position).get("driver"));
         if (data.get(position).get("driver") != null && !data.get(position).get("driver").equals("Driver: No Assigned Driver")) {
             driver.setVisibility(View.VISIBLE);
             driver.setBackgroundColor(color);

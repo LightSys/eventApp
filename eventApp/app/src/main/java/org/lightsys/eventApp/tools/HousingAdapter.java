@@ -1,10 +1,12 @@
 package org.lightsys.eventApp.tools;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.lightsys.eventApp.R;
 
@@ -34,7 +36,8 @@ public class HousingAdapter extends SimpleAdapter {
 
         //if driver is listed, makes bar visible and displays driver text
         TextView driver = mView.findViewById(R.id.driver);
-        if (data.get(position).get("driver") != null) {
+        Log.d("Housing", "" + data.get(position).get("driver"));
+        if (data.get(position).get("driver") != null && !data.get(position).get("driver").equals("Driver: No Assigned Driver")) {
             driver.setVisibility(View.VISIBLE);
             driver.setBackgroundColor(color);
         } else {

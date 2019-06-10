@@ -858,7 +858,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     fragment = new ScheduleView();
                     fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
                             .commit();
-                    Log.d("Schedule", "Schedule fragment created from MainActivity");
                     break;
                 case "Housing":
                     fragment = new HousingView();
@@ -950,10 +949,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
             try {
                 if (intent.getBooleanExtra("update_schedule", false) && fragment instanceof ScheduleView){
-//                        fragment = new ScheduleView();
-//                        fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
-//                                .commit();
-                    Log.d("Schedule", "update_schedule called");
+                        fragment = new ScheduleView();
+                        fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
+                                .commit();
                 }
             } catch (Exception e) {
                 e.printStackTrace();

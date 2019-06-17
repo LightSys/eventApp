@@ -194,7 +194,11 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                             minutesBetweenTimes(currentTime, oneDay.get(numEvents).getTimeStart()),
                             "schedule_blank");
                     blank_item.setDay(days.get(d));
-                    oneDay.add(numEvents, blank_item);
+                    if (blank_item.getTimeLength() < 0) {
+                        Log.d("Problem", "blank schedule item created with - length");
+                    } else {
+                        oneDay.add(numEvents, blank_item);
+                    }
                 }
                 //put the current time at the current event's end time
                 currentTime = oneDay.get(numEvents).getTimeEnd();
@@ -253,7 +257,11 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
     //gets the number of minutes between two clock times
     private int minutesBetweenTimes(int timeStart, int timeEnd){
 
-        return ((timeEnd- ((int)Math.floor(timeEnd/100))*100)%60 + ((int)Math.floor(timeEnd/100))*60) - ((timeStart-((int)Math.floor(timeStart/100))*100)%60 + ((int)Math.floor(timeStart/100))*60);
+        int res = ((timeEnd- ((int)Math.floor(timeEnd/100))*100)%60 + ((int)Math.floor(timeEnd/100))*60) - ((timeStart-((int)Math.floor(timeStart/100))*100)%60 + ((int)Math.floor(timeStart/100))*60);
+        if (res < 0) {
+//            Log.d("Problem", "minutesBetweenTimes is returning a negative number: " + res);
+        }
+        return res;
     }
 
     //subtracted from total height for schedule display height minimum

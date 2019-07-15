@@ -195,7 +195,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                             "schedule_blank");
                     blank_item.setDay(days.get(d));
                     if (blank_item.getTimeLength() < 0) {
-                        Log.d("Problem", "blank schedule item created with - length");
+//                        Log.d("Problem", "blank schedule item created with - length");
                     } else {
                         oneDay.add(numEvents, blank_item);
                     }

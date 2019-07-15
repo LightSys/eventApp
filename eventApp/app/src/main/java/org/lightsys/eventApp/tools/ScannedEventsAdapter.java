@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,8 +69,12 @@ public class ScannedEventsAdapter extends RecyclerView.Adapter<ScannedEventsAdap
          */
         @Override
         public void onClick(View v) {
+            Log.d("Refresh", "Clicked ScannedEventsAdapter");
             String[] scanned_item = scannedEvents.get(getAdapterPosition());
             String scanned_url = scanned_item[1];
+            for(int i = 0; i < scanned_item.length; i++) {
+                Log.d("Refresh", "scanned item[" + i + "]: " + scanned_item[i]);
+            }
             clickHandler.onClick(scanned_url);
         }
 

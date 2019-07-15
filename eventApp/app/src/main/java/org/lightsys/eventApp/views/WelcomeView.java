@@ -55,8 +55,8 @@ public class WelcomeView extends Fragment {
 
         //set up notifications
         ListView eventList = v.findViewById(R.id.eventList);
+        //TODO: Problem with notifications not quite working (works on Code-a-thon event, not on Dev Testing)
         events = db.getNotifications();
-
 
 
         //set up welcome message
@@ -77,6 +77,7 @@ public class WelcomeView extends Fragment {
         // display title, content, and date posted for notification
         final EventArrayAdapter adapter = new EventArrayAdapter(getActivity(), itemList);
 
+        // Not showing Notifications in list
         Log.d("List", "ItemList: " + itemList);
 
         eventList.setAdapter(adapter);
@@ -143,10 +144,10 @@ public class WelcomeView extends Fragment {
             for (ScheduleInfo event : schedule) {
 
                 //If (event is today and started before now) and the event starts after the currentEvent started
-                if (((event.getDay().equals(today) && event.getTimeStart() < time))
+                if (((event.getDay().equals(today) && event.getTimeStart() <= time))
                         && event.getTimeStart() > currentEvent.getTimeStart()) {
                     currentEvent = event;
-                } else if (event.getDay().equals(today) && event.getTimeStart() > time && event.getTimeStart() < nextEvent.getTimeStart()) {
+                } else if (event.getDay().equals(today) && event.getTimeStart() >= time && event.getTimeStart() < nextEvent.getTimeStart()) {
                     nextEvent = event;
                 }
             }
@@ -176,11 +177,13 @@ public class WelcomeView extends Fragment {
         if (nextEvent != lateEvent) {
             hm.put("title", "\tUpcoming");
             String timeString;
+            // Properly format time
             if (String.valueOf(nextEvent.getTimeStart()).length() == 3) {
                 timeString = String.valueOf(nextEvent.getTimeStart()).substring(0,1) + ":" + String.valueOf(nextEvent.getTimeStart()).substring(1);
             } else {
                 timeString = String.valueOf(nextEvent.getTimeStart()).substring(0,2) + ":" + String.valueOf(nextEvent.getTimeStart()).substring(2);
             }
+            // Set date to either "Today" or "Tomorrow" - no other options
             if (nextEvent.getDay().equals(today)) {
                 hm.put("date", timeString + "\t\tToday");
             } else {
@@ -198,7 +201,6 @@ public class WelcomeView extends Fragment {
         }
         if (currentEvent != earlyEvent) {
             hm = new HashMap<>();
-
             if (currentEvent.getTimeStart() <= time && time <= currentEvent.getTimeEnd() && currentEvent.getDay().equals(today)) {
                 hm.put("title", "\tRight Now");
             } else {
@@ -211,7 +213,7 @@ public class WelcomeView extends Fragment {
             } else {
                 timeString = String.valueOf(currentEvent.getTimeStart()).substring(0,2) + ":" + String.valueOf(currentEvent.getTimeStart()).substring(2);
             }
-            //Put "today" if the event is happening/happened today, else put date
+            //Put "Today" if the event is happening/happened today, else put "Yesterday"
             if (currentEvent.getDay().equals(today)) {
                 hm.put("date", timeString + "\t\tToday");
             } else {

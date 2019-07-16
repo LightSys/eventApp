@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.ContactInfo;
@@ -1165,7 +1166,6 @@ public class LocalDB extends SQLiteOpenHelper {
     public ArrayList<Info> getNotifications() {
         ArrayList<Info> notifications = new ArrayList<>();
         String queryString = "SELECT * FROM " + TABLE_NOTIFICATIONS + " ORDER BY " + COLUMN_DATE + " DESC";
-
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(queryString, null);
 

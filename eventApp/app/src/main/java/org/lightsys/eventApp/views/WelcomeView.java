@@ -55,7 +55,6 @@ public class WelcomeView extends Fragment {
 
         //set up notifications
         ListView eventList = v.findViewById(R.id.eventList);
-        //TODO: Problem with notifications not quite working (works on Code-a-thon event, not on Dev Testing)
         events = db.getNotifications();
 
 

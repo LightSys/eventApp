@@ -10,6 +10,7 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -32,6 +33,8 @@ import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import javax.net.ssl.SSLHandshakeException;
+
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -39,7 +42,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
-import javax.net.ssl.SSLHandshakeException;
+
 
 import static android.content.ContentValues.TAG;
 
@@ -153,6 +156,14 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     @Override
                     public void run() {
                         Toast.makeText(dataContext.get(), "Server connection failed: invalid web address", Toast.LENGTH_LONG).show();
+                    }
+                });
+                return null;
+            } else if (jsontext.equals("http request")) {
+                dataActivity.get().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(dataContext.get(), "Server connection failed: HTTP requests not supported on Android 9.0+", Toast.LENGTH_LONG).show();
                     }
                 });
                 return null;
@@ -723,11 +734,23 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      */
     private void loadNotifications(JSONObject json) {
         JSONArray tempNames = json.names();
+        Log.d("Notifications", "JSON object: " + json);
         ArrayList<Info> notifications = db.getNotifications();
         db.deleteNotifications();
         boolean isSameURL = (qrAddress.equals(old_qrAddress) || old_qrAddress == null);
+
+        //Weird formatting issues with notifications wrapper not being taken off
+        try {
+            if (tempNames.length() == 1 && tempNames.getString(0).equals("notifications")) {
+                json = json.getJSONObject("notifications");
+                tempNames = json.names();
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         int num_notif_items = tempNames.length();
-        for (int i = 1; i < num_notif_items; i++) {
+        for (int i = 0; i < num_notif_items; i++) {
             try {
                 String json_item = tempNames.getString(i);
                 //@id signals a new object, but contains no information on that line
@@ -743,7 +766,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     } else {
                         temp.setOld();
                     }
-
+                    Log.d("Notifications", "temp: " + temp);
                     db.addNotification(temp);
                 }
             } catch (JSONException e) {
@@ -988,6 +1011,12 @@ public class DataConnection extends AsyncTask<String, Void, String> {
      */
     private String GET(String urlString) {
         String response = null;
+        String http = urlString.substring(0,5);
+
+        // Reject connection if scanning http with phone of Android 9.0+
+        if (android.os.Build.VERSION.SDK_INT >= 28 && !http.equals("https")) {
+            return "http request";
+        }
         try{
             URL url = new URL(urlString);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();

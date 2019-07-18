@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -91,6 +92,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
         //sets constants for schedule display (density changes values based on screen)
         float density = (getResources().getDisplayMetrics().density)/2;
+
         textSizeHeader = 22;
         textSizeContent = 14;
         paddingLg = Math.round(20*density);
@@ -398,8 +400,9 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             // but not proportionately longer, so we don't eat up too much screen real estate with
             // really long time slots.  With transferPower = 1.0, it is proportional.  With
             // it less than 1.0, compression happens > 15 min and expansion happens < 15 min.
-            double transferPower = 0.5;
+            double transferPower = 0.05;
             int oneHeight = (int)Math.ceil(Math.pow(minutesBetweenTimes(times.get(i), times.get(i+1))/15.0, transferPower)*(height + (2*paddingLg)));
+
             heights.add(i, oneHeight);
             schedHeight += (oneHeight + divider);
         }

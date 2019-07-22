@@ -46,6 +46,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by otter57 on 3/28/17.
@@ -66,7 +67,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
     private float screenWidth, screenHeight;
     private Calendar calNow;
     private ArrayList<Integer> heights;
-    private ArrayList<Integer> times;
+    private ArrayList<Date> times;
 
     /* accessing shared preferences set by the settings activity */
     private SharedPreferences sharedPreferences;
@@ -146,8 +147,8 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         db.setSharedPreferences(sharedPreferences);
         ArrayList<ScheduleInfo> schedule = db.getFullSchedule();
         ArrayList<String> days = db.getDays();
-        times = db.getScheduleTimeRange();
-        Log.d("ScheduleView", "times array: " + times);
+//        times = db.getScheduleTimeRange();
+        times = new ArrayList<>();
 
         CreateHeader(days,v);
 
@@ -160,30 +161,48 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         if (endString.length() == 3) {
             endString = "0" + endString;
         }
-        SimpleDateFormat format = new SimpleDateFormat("HH-mm");
-        Date startDate = new Date();
-        Date endDate = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("HHmm");
+        Date startTime = new Date();
+        Date endTime = new Date();
         try {
-            startDate = format.parse(startString);
-            endDate = format.parse(endString);
+            startTime = format.parse(startString);
+            endTime = format.parse(endString);
         } catch (ParseException e) {
             Log.d("ScheduleView", "Parse exception, startTime is: " + startString + " endTime is: " + endString);
             e.printStackTrace();
         }
-        int startTime = times.get(0);
-        int endTime = times.get(1);
-        Log.d("ScheduleView", "startTime: " + startDate);
+//        times = [startTime, endTime];
+        times.add(startTime);
+        times.add(endTime);
+        Log.d("ScheduleView", "times array: " + times);
+//        int startTime = times.get(0);
+//        int endTime = times.get(1);
 
         //insert other event start and end time into the times ArrayList
-        int oneItemStart, oneItemEnd;
+        String timeStartString, timeEndString;
+        Date oneItemStart = new Date(), oneItemEnd = oneItemStart, blankDate = oneItemStart;
         for (ScheduleInfo event : schedule) {
-            oneItemStart = event.getTimeStart();
-            oneItemEnd = event.getTimeEnd();
-            if (!times.contains(oneItemStart))
+            timeStartString = "" + event.getTimeStart();
+            timeEndString = "" + event.getTimeEnd();
+            if (timeStartString.length() == 3) {
+                timeStartString = "0" + timeStartString;
+            }
+            if (timeStartString.length() == 3) {
+                timeStartString = "0" + timeStartString;
+            }
+            try {
+                oneItemStart = format.parse(timeStartString);
+                oneItemEnd = format.parse(timeEndString);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            if (!times.contains(oneItemStart) && !oneItemStart.equals(blankDate))
                 times.add(oneItemStart);
-            if (!times.contains(oneItemEnd))
+            if (!times.contains(oneItemEnd) && !oneItemEnd.equals(blankDate))
                 times.add(oneItemEnd);
+            Log.d("FullTimes", "start: " + oneItemStart + " end: " + oneItemEnd);
         }
+        Log.d("ScheduleTimes", "times array: " + times);
 
         Collections.sort(times);
 
@@ -193,38 +212,72 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         //creates schedule column for each day, filling in blank spots.
         ArrayList< ArrayList<ScheduleInfo> > scheduleByDay = getScheduleDays(days, schedule); //takes event days and puts schedule items into them.
         ArrayList<ScheduleInfo> oneDay;
-        int currentTime, numEvents;
+        int numEvents;
+        Date currentTime;
         int num_days = scheduleByDay.size();
         for (int d = 0; d < num_days; d++) {
             oneDay = scheduleByDay.get(d);
+            Log.d("negativeProblem", "oneDay in buildSchedule: " + oneDay);
             currentTime = startTime;
             numEvents = 0;
             //while not at the end of a day
-            while (currentTime < endTime) {
+            while (currentTime.before(endTime)) {
                 //if there are no more scheduled events left in the day, fill the ending blank space
                 if (numEvents >= oneDay.size()) {
+                    long diffInMillis = currentTime.getTime() - endTime.getTime();
+                    long diff = TimeUnit.MINUTES.convert(diffInMillis, TimeUnit.MILLISECONDS);
+                    String intTimeString = format.format(currentTime);
+                    int intTime = Integer.parseInt(intTimeString);
                     ScheduleInfo blank_item = new ScheduleInfo(
-                            currentTime,
-                            minutesBetweenTimes(currentTime, endTime),
+                            intTime,
+                            (int) diff,
                             "schedule_blank");
                     blank_item.setDay(days.get(d));
                     oneDay.add(numEvents, blank_item);
                     //else if the current time is not at an event start time (so a blank won't override an event)
                     //add a blank space between the current time and the next event's start time
-                } else if (currentTime != oneDay.get(numEvents).getTimeStart()) { //seems to be true when no connection, but the same event gets added forever!
-                    ScheduleInfo blank_item = new ScheduleInfo(
-                            currentTime,
-                            minutesBetweenTimes(currentTime, oneDay.get(numEvents).getTimeStart()),
-                            "schedule_blank");
-                    blank_item.setDay(days.get(d));
-                    if (blank_item.getTimeLength() < 0) {
-//                        Log.d("Problem", "blank schedule item created with - length");
-                    } else {
-                        oneDay.add(numEvents, blank_item);
+                } else {
+                    Date nextStart = new Date();
+                    try {
+                        nextStart = format.parse("" + oneDay.get(numEvents).getTimeStart());
+                        if (!currentTime.equals(nextStart)) {
+                            long diffInMillis = Math.abs(currentTime.getTime() - nextStart.getTime());
+                            long diff = TimeUnit.MINUTES.convert(diffInMillis, TimeUnit.MILLISECONDS);
+                            String intTimeString = format.format(currentTime);
+                            int intTime = Integer.parseInt(intTimeString);
+                            ScheduleInfo blank_item = new ScheduleInfo(
+                                    intTime,
+                                    (int) diff,
+                                    "schedule_blank");
+                            blank_item.setDay(days.get(d));
+                            if (blank_item.getTimeLength() < 0) {
+                                Log.d("Problem", "blank schedule item created with negative length");
+                            } else {
+                                oneDay.add(numEvents, blank_item);
+                            }
+                        }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
                     }
+//                    if (currentTime != oneDay.get(numEvents).getTimeStart()) { //seems to be true when no connection, but the same event gets added forever!
+//                        ScheduleInfo blank_item = new ScheduleInfo(
+//                                currentTime,
+//                                minutesBetweenTimes(currentTime, oneDay.get(numEvents).getTimeStart()),
+//                                "schedule_blank");
+//                        blank_item.setDay(days.get(d));
+//                        if (blank_item.getTimeLength() < 0) {
+////                        Log.d("Problem", "blank schedule item created with - length");
+//                        } else {
+//                            oneDay.add(numEvents, blank_item);
+//                        }
+//                    }
                 }
                 //put the current time at the current event's end time
-                currentTime = oneDay.get(numEvents).getTimeEnd();
+                try {
+                    currentTime = format.parse("" + oneDay.get(numEvents).getTimeEnd());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
                 //increment the number of events
                 numEvents++;
             }
@@ -275,19 +328,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
     public void onDestroy() {
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         super.onDestroy();
-    }
-
-    //gets the number of minutes between two clock times
-    private int minutesBetweenTimes(int timeStart, int timeEnd){
-
-
-        int res = (timeEnd/100 - timeStart/100)*60 + (timeEnd%100 - timeStart%100);
-
-//        int res = ((timeEnd- ((int)Math.floor(timeEnd/100))*100)%60 + ((int)Math.floor(timeEnd/100))*60) - ((timeStart-((int)Math.floor(timeStart/100))*100)%60 + ((int)Math.floor(timeStart/100))*60);
-//        if (res < 0) {
-//            Log.d("Problem", "minutesBetweenTimes is returning a negative number: " + res);
-//        }
-        return res;
     }
 
     //subtracted from total height for schedule display height minimum
@@ -425,7 +465,9 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             // really long time slots.  With transferPower = 1.0, it is proportional.  With
             // it less than 1.0, compression happens > 15 min and expansion happens < 15 min.
             double transferPower = 0.05;
-            int oneHeight = (int)Math.ceil(Math.pow(minutesBetweenTimes(times.get(i), times.get(i+1))/15.0, transferPower)*(height + (2*paddingLg)));
+            long diffInMillis = times.get(i).getTime() - times.get(i + 1).getTime();
+            int diff = (int) TimeUnit.MINUTES.convert(diffInMillis, TimeUnit.MILLISECONDS);
+            int oneHeight = (int)Math.ceil(Math.pow(diff/15.0, transferPower)*(height + (2*paddingLg)));
 
             heights.add(i, oneHeight);
             schedHeight += (oneHeight + divider);
@@ -448,18 +490,21 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
         //create time header for each time (exclude 1st 2 times which are start and end times)
         for (int i=0; i<times.size()-1;i++) {
-            int t = times.get(i);
+            Date t = times.get(i);
             int h = heights.get(i) - divider;
 
             TextView time = new TextView(context);
             time.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
             String timeStr;
+//            SimpleDateFormat format = new SimpleDateFormat().getDateInstance(SimpleDateFormat.SHORT).format(t);
+            timeStr = new SimpleDateFormat("hh:mm a").format(t);
+            Log.d("ScheduleView", "timeStr in CreateTimeCol() is: " + timeStr);
             //set time format to ####
-            if (t<1000) {
-                timeStr = "0" + Integer.toString(t);
-            }else{
-                timeStr = Integer.toString(t);
-            }
+//            if (t<1000) {
+//                timeStr = "0" + Integer.toString(t);
+//            }else{
+//                timeStr = Integer.toString(t);
+//            }
 
             time.setText(timeStr);
             time.setPadding(paddingLg, paddingLg, padding, paddingLg);
@@ -521,8 +566,14 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             columnLayout.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_right));
         }
         TimeZone db_time_zone = TimeZone.getTimeZone(db.getGeneral("time_zone"));
+        Log.d("negative", "size: " + schedule.size());
 
         for (ScheduleInfo sch : schedule){
+            Log.d("negative", "Item: " + sch);
+            Log.d("negative", "Description: " + sch.getDesc());
+            Log.d("negative", "Day: " + sch.getDay());
+            Log.d("negative", "Length: " + sch.getTimeLength());
+            Log.d("negative", "Category: " + sch.getCategory());
 
             RelativeLayout iconsLayout = (RelativeLayout) View.inflate(context, R.layout.schedule_event_item, null);
             TextView event = iconsLayout.findViewById(R.id.eventText);
@@ -532,10 +583,28 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
             int color = Color.parseColor("#d6d4d4");
 
+            SimpleDateFormat format = new SimpleDateFormat("HHmm");
+            Date timeStart = new Date(), timeEnd = timeStart;
             if (sch != null) {
-                int timesIndex = times.indexOf(sch.getTimeStart());
+                try {
+                    timeStart = format.parse("" + sch.getTimeStart());
+                    timeEnd = timeStart;
+                    timeEnd = format.parse("" + sch.getTimeEnd());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                int timesIndex = times.indexOf(timeStart);
                 heightCol = 0;
-                while(times.get(timesIndex) < sch.getTimeEnd()) {
+                Log.d("ScheduleView", "times array: " + times);
+                Log.d("ScheduleView", "timeStart: " + timeStart);
+                Log.d("ScheduleView", "timeStart schedule: " + sch.getTimeStart());
+//                Log.d("ScheduleView", "index of timeStart: " + timesIndex);
+
+//                Log.d("ScheduleLog", "schedule description: " + sch.getDesc());
+//                Log.d("ScheduleLog", "full schedule: " + db.getFullSchedule());
+//                Log.d("ScheduleLog", "all events: " + db.getAllEvents());
+
+                while(times.get(timesIndex).before(timeEnd)) {
                     heightCol += heights.get(timesIndex);
                     timesIndex++;
                 }

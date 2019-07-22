@@ -202,7 +202,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                 times.add(oneItemEnd);
             Log.d("FullTimes", "start: " + oneItemStart + " end: " + oneItemEnd);
         }
-        Log.d("ScheduleTimes", "times array: " + times);
+        Log.d("Times", "times array: " + times);
 
         Collections.sort(times);
 
@@ -585,11 +585,16 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
             SimpleDateFormat format = new SimpleDateFormat("HHmm");
             Date timeStart = new Date(), timeEnd = timeStart;
+            Log.d("ScheduleView", "new Date: " + timeStart);
             if (sch != null) {
+                String startString = "" + sch.getTimeStart();
+                String endString = "" + sch.getTimeEnd();
+                if (startString.length() == 3) startString = "0" + startString;
+                if (endString.length() == 3) endString = "0" + endString;
                 try {
-                    timeStart = format.parse("" + sch.getTimeStart());
+                    timeStart = format.parse(startString);
                     timeEnd = timeStart;
-                    timeEnd = format.parse("" + sch.getTimeEnd());
+                    timeEnd = format.parse(endString);
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -597,12 +602,8 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                 heightCol = 0;
                 Log.d("ScheduleView", "times array: " + times);
                 Log.d("ScheduleView", "timeStart: " + timeStart);
-                Log.d("ScheduleView", "timeStart schedule: " + sch.getTimeStart());
-//                Log.d("ScheduleView", "index of timeStart: " + timesIndex);
-
-//                Log.d("ScheduleLog", "schedule description: " + sch.getDesc());
-//                Log.d("ScheduleLog", "full schedule: " + db.getFullSchedule());
-//                Log.d("ScheduleLog", "all events: " + db.getAllEvents());
+                Log.d("ScheduleView", "timeStart schedule: " + startString);
+                Log.d("ScheduleView", "schedule description: " + sch.getDesc());
 
                 while(times.get(timesIndex).before(timeEnd)) {
                     heightCol += heights.get(timesIndex);

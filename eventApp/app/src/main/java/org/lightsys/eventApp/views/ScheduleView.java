@@ -37,6 +37,7 @@ import org.lightsys.eventApp.data.LocationInfo;
 import org.lightsys.eventApp.data.ScheduleInfo;
 import org.lightsys.eventApp.tools.LocalDB;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -146,12 +147,32 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         ArrayList<ScheduleInfo> schedule = db.getFullSchedule();
         ArrayList<String> days = db.getDays();
         times = db.getScheduleTimeRange();
+        Log.d("ScheduleView", "times array: " + times);
 
         CreateHeader(days,v);
 
         //the earliest event start time and the latest event end time
+        String startString = "" + db.getScheduleTimeRange().get(0);
+        String endString = "" + db.getScheduleTimeRange().get(1);
+        if (startString.length() == 3) {
+            startString = "0" + startString;
+        }
+        if (endString.length() == 3) {
+            endString = "0" + endString;
+        }
+        SimpleDateFormat format = new SimpleDateFormat("HH-mm");
+        Date startDate = new Date();
+        Date endDate = new Date();
+        try {
+            startDate = format.parse(startString);
+            endDate = format.parse(endString);
+        } catch (ParseException e) {
+            Log.d("ScheduleView", "Parse exception, startTime is: " + startString + " endTime is: " + endString);
+            e.printStackTrace();
+        }
         int startTime = times.get(0);
         int endTime = times.get(1);
+        Log.d("ScheduleView", "startTime: " + startDate);
 
         //insert other event start and end time into the times ArrayList
         int oneItemStart, oneItemEnd;
@@ -259,10 +280,13 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
     //gets the number of minutes between two clock times
     private int minutesBetweenTimes(int timeStart, int timeEnd){
 
-        int res = ((timeEnd- ((int)Math.floor(timeEnd/100))*100)%60 + ((int)Math.floor(timeEnd/100))*60) - ((timeStart-((int)Math.floor(timeStart/100))*100)%60 + ((int)Math.floor(timeStart/100))*60);
-        if (res < 0) {
+
+        int res = (timeEnd/100 - timeStart/100)*60 + (timeEnd%100 - timeStart%100);
+
+//        int res = ((timeEnd- ((int)Math.floor(timeEnd/100))*100)%60 + ((int)Math.floor(timeEnd/100))*60) - ((timeStart-((int)Math.floor(timeStart/100))*100)%60 + ((int)Math.floor(timeStart/100))*60);
+//        if (res < 0) {
 //            Log.d("Problem", "minutesBetweenTimes is returning a negative number: " + res);
-        }
+//        }
         return res;
     }
 

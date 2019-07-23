@@ -168,15 +168,10 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             startTime = format.parse(startString);
             endTime = format.parse(endString);
         } catch (ParseException e) {
-            Log.d("ScheduleView", "Parse exception, startTime is: " + startString + " endTime is: " + endString);
             e.printStackTrace();
         }
-//        times = [startTime, endTime];
         times.add(startTime);
         times.add(endTime);
-        Log.d("ScheduleView", "times array: " + times);
-//        int startTime = times.get(0);
-//        int endTime = times.get(1);
 
         //insert other event start and end time into the times ArrayList
         String timeStartString, timeEndString;
@@ -187,22 +182,27 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             if (timeStartString.length() == 3) {
                 timeStartString = "0" + timeStartString;
             }
-            if (timeStartString.length() == 3) {
-                timeStartString = "0" + timeStartString;
+            if (timeEndString.length() == 3) {
+                timeEndString = "0" + timeEndString;
             }
             try {
                 oneItemStart = format.parse(timeStartString);
+                Log.d("TimeEnd", "string: " + timeEndString);
                 oneItemEnd = format.parse(timeEndString);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-            if (!times.contains(oneItemStart) && !oneItemStart.equals(blankDate))
+            if (!times.contains(oneItemStart) && !oneItemStart.equals(blankDate)) {
                 times.add(oneItemStart);
-            if (!times.contains(oneItemEnd) && !oneItemEnd.equals(blankDate))
+                Log.d("TimeStart", "" + oneItemStart);
+            }
+            if (!times.contains(oneItemEnd) && !oneItemEnd.equals(blankDate)) {
                 times.add(oneItemEnd);
-            Log.d("FullTimes", "start: " + oneItemStart + " end: " + oneItemEnd);
+                Log.d("TimeEnd", "" + oneItemEnd);
+            }
         }
-        Log.d("Times", "times array: " + times);
+        Date newDate = new Date();
+        Log.d("Date", "" + newDate);
 
         Collections.sort(times);
 
@@ -217,14 +217,13 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
         int num_days = scheduleByDay.size();
         for (int d = 0; d < num_days; d++) {
             oneDay = scheduleByDay.get(d);
-            Log.d("negativeProblem", "oneDay in buildSchedule: " + oneDay);
             currentTime = startTime;
             numEvents = 0;
             //while not at the end of a day
             while (currentTime.before(endTime)) {
                 //if there are no more scheduled events left in the day, fill the ending blank space
                 if (numEvents >= oneDay.size()) {
-                    long diffInMillis = currentTime.getTime() - endTime.getTime();
+                    long diffInMillis = Math.abs(currentTime.getTime() - endTime.getTime());
                     long diff = TimeUnit.MINUTES.convert(diffInMillis, TimeUnit.MILLISECONDS);
                     String intTimeString = format.format(currentTime);
                     int intTime = Integer.parseInt(intTimeString);
@@ -237,9 +236,12 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                     //else if the current time is not at an event start time (so a blank won't override an event)
                     //add a blank space between the current time and the next event's start time
                 } else {
-                    Date nextStart = new Date();
+                    Date nextStart;
                     try {
-                        nextStart = format.parse("" + oneDay.get(numEvents).getTimeStart());
+                        // Make sure string is formatted HHmm, not Hmm
+                        String tempString = "" + oneDay.get(numEvents).getTimeStart();
+                        if (tempString.length() == 3) tempString = "0" + tempString;
+                        nextStart = format.parse(tempString);
                         if (!currentTime.equals(nextStart)) {
                             long diffInMillis = Math.abs(currentTime.getTime() - nextStart.getTime());
                             long diff = TimeUnit.MINUTES.convert(diffInMillis, TimeUnit.MILLISECONDS);
@@ -259,18 +261,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                     } catch (ParseException e) {
                         e.printStackTrace();
                     }
-//                    if (currentTime != oneDay.get(numEvents).getTimeStart()) { //seems to be true when no connection, but the same event gets added forever!
-//                        ScheduleInfo blank_item = new ScheduleInfo(
-//                                currentTime,
-//                                minutesBetweenTimes(currentTime, oneDay.get(numEvents).getTimeStart()),
-//                                "schedule_blank");
-//                        blank_item.setDay(days.get(d));
-//                        if (blank_item.getTimeLength() < 0) {
-////                        Log.d("Problem", "blank schedule item created with - length");
-//                        } else {
-//                            oneDay.add(numEvents, blank_item);
-//                        }
-//                    }
                 }
                 //put the current time at the current event's end time
                 try {
@@ -282,6 +272,11 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                 numEvents++;
             }
 
+            for (int i = 0; i < oneDay.size(); i++) {
+                Log.d("oneDay", "start: " + oneDay.get(i).getTimeStart());
+                Log.d("oneDay", "end: " + oneDay.get(i).getTimeEnd());
+                Log.d("oneDay", "length: " + oneDay.get(i).getTimeLength());
+            }
             CreateColumn(oneDay, today.equals(oneDay.get(0).getDay()));
         }
 
@@ -457,6 +452,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
     private void CreateTimeCol(View v) {
 
+        Log.d("Times", "times array: " + times);
         // compute the overall schedule height
         int schedHeight = width + (2*paddingLg) + divider*5;
         for(int i=0; i < times.size()-1; i++) {
@@ -465,9 +461,10 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             // really long time slots.  With transferPower = 1.0, it is proportional.  With
             // it less than 1.0, compression happens > 15 min and expansion happens < 15 min.
             double transferPower = 0.05;
-            long diffInMillis = times.get(i).getTime() - times.get(i + 1).getTime();
+            long diffInMillis = times.get(i + 1).getTime() - times.get(i).getTime();
             int diff = (int) TimeUnit.MINUTES.convert(diffInMillis, TimeUnit.MILLISECONDS);
             int oneHeight = (int)Math.ceil(Math.pow(diff/15.0, transferPower)*(height + (2*paddingLg)));
+
 
             heights.add(i, oneHeight);
             schedHeight += (oneHeight + divider);
@@ -496,15 +493,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             TextView time = new TextView(context);
             time.setGravity(Gravity.CENTER_HORIZONTAL | Gravity.TOP);
             String timeStr;
-//            SimpleDateFormat format = new SimpleDateFormat().getDateInstance(SimpleDateFormat.SHORT).format(t);
-            timeStr = new SimpleDateFormat("hh:mm a").format(t);
-            Log.d("ScheduleView", "timeStr in CreateTimeCol() is: " + timeStr);
-            //set time format to ####
-//            if (t<1000) {
-//                timeStr = "0" + Integer.toString(t);
-//            }else{
-//                timeStr = Integer.toString(t);
-//            }
+            timeStr = new SimpleDateFormat("h:mm a").format(t);
 
             time.setText(timeStr);
             time.setPadding(paddingLg, paddingLg, padding, paddingLg);
@@ -566,14 +555,8 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             columnLayout.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_right));
         }
         TimeZone db_time_zone = TimeZone.getTimeZone(db.getGeneral("time_zone"));
-        Log.d("negative", "size: " + schedule.size());
 
         for (ScheduleInfo sch : schedule){
-            Log.d("negative", "Item: " + sch);
-            Log.d("negative", "Description: " + sch.getDesc());
-            Log.d("negative", "Day: " + sch.getDay());
-            Log.d("negative", "Length: " + sch.getTimeLength());
-            Log.d("negative", "Category: " + sch.getCategory());
 
             RelativeLayout iconsLayout = (RelativeLayout) View.inflate(context, R.layout.schedule_event_item, null);
             TextView event = iconsLayout.findViewById(R.id.eventText);
@@ -585,7 +568,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
             SimpleDateFormat format = new SimpleDateFormat("HHmm");
             Date timeStart = new Date(), timeEnd = timeStart;
-            Log.d("ScheduleView", "new Date: " + timeStart);
             if (sch != null) {
                 String startString = "" + sch.getTimeStart();
                 String endString = "" + sch.getTimeEnd();
@@ -600,12 +582,8 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                 }
                 int timesIndex = times.indexOf(timeStart);
                 heightCol = 0;
-                Log.d("ScheduleView", "times array: " + times);
-                Log.d("ScheduleView", "timeStart: " + timeStart);
-                Log.d("ScheduleView", "timeStart schedule: " + startString);
-                Log.d("ScheduleView", "schedule description: " + sch.getDesc());
 
-                while(times.get(timesIndex).before(timeEnd)) {
+                while(times.get(timesIndex).before(timeEnd) && !times.get(timesIndex).equals(timeEnd)) {
                     heightCol += heights.get(timesIndex);
                     timesIndex++;
                 }

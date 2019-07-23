@@ -272,11 +272,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                 numEvents++;
             }
 
-            for (int i = 0; i < oneDay.size(); i++) {
-                Log.d("oneDay", "start: " + oneDay.get(i).getTimeStart());
-                Log.d("oneDay", "end: " + oneDay.get(i).getTimeEnd());
-                Log.d("oneDay", "length: " + oneDay.get(i).getTimeLength());
-            }
             CreateColumn(oneDay, today.equals(oneDay.get(0).getDay()));
         }
 

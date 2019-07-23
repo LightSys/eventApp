@@ -187,18 +187,15 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             }
             try {
                 oneItemStart = format.parse(timeStartString);
-                Log.d("TimeEnd", "string: " + timeEndString);
                 oneItemEnd = format.parse(timeEndString);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
             if (!times.contains(oneItemStart) && !oneItemStart.equals(blankDate)) {
                 times.add(oneItemStart);
-                Log.d("TimeStart", "" + oneItemStart);
             }
             if (!times.contains(oneItemEnd) && !oneItemEnd.equals(blankDate)) {
                 times.add(oneItemEnd);
-                Log.d("TimeEnd", "" + oneItemEnd);
             }
         }
         Date newDate = new Date();
@@ -226,17 +223,15 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                     long diff = TimeUnit.MINUTES.convert(diffInMillis, TimeUnit.MILLISECONDS);
                     String intTimeString = format.format(currentTime);
                     int intTime = Integer.parseInt(intTimeString);
-                    Log.d("BlankItems", "time start: " + currentTime);
-                    Log.d("BlankItems", "day: " + days.get(d));
                     ScheduleInfo blank_item = new ScheduleInfo(
                             intTime,
                             (int) diff,
                             "schedule_blank");
                     blank_item.setDay(days.get(d));
                     oneDay.add(numEvents, blank_item);
+                } else {
                     //else if the current time is not at an event start time (so a blank won't override an event)
                     //add a blank space between the current time and the next event's start time
-                } else {
                     Date nextStart;
                     try {
                         // Make sure string is formatted HHmm, not Hmm
@@ -248,8 +243,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                             long diff = TimeUnit.MINUTES.convert(diffInMillis, TimeUnit.MILLISECONDS);
                             String intTimeString = format.format(currentTime);
                             int intTime = Integer.parseInt(intTimeString);
-                            Log.d("BlankItems", "time start: " + currentTime);
-                            Log.d("BlankItems", "day: " + days.get(d));
                             ScheduleInfo blank_item = new ScheduleInfo(
                                     intTime,
                                     (int) diff,
@@ -267,12 +260,16 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                 }
                 //put the current time at the current event's end time
                 try {
-                    currentTime = format.parse("" + oneDay.get(numEvents).getTimeEnd());
+                    // Format time string to be HHmm instead of Hmm
+                    String tempString = "" + oneDay.get(numEvents).getTimeEnd();
+                    if (tempString.length() == 3) tempString = "0" + tempString;
+                    currentTime = format.parse(tempString);
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
                 //increment the number of events
                 numEvents++;
+
             }
 
             CreateColumn(oneDay, today.equals(oneDay.get(0).getDay()));
@@ -450,7 +447,6 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
     private void CreateTimeCol(View v) {
 
-        Log.d("Times", "times array: " + times);
         // compute the overall schedule height
         int schedHeight = width + (2*paddingLg) + divider*5;
         for(int i=0; i < times.size()-1; i++) {
@@ -567,6 +563,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             SimpleDateFormat format = new SimpleDateFormat("HHmm");
             Date timeStart = new Date(), timeEnd = timeStart;
             if (sch != null) {
+                // Format time string to HHmm instead of Hmm
                 String startString = "" + sch.getTimeStart();
                 String endString = "" + sch.getTimeEnd();
                 if (startString.length() == 3) startString = "0" + startString;

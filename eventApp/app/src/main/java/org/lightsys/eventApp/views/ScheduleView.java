@@ -664,19 +664,21 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                 end_cal.set(Calendar.HOUR_OF_DAY, Integer.parseInt(end_time_str[0]));
                 end_cal.set(Calendar.MINUTE, Integer.parseInt(end_time_str[1]));
 
-                // Highlight current event yellow
-                Date newDate = new Date(), startTime = newDate, endTime = newDate;
-                String todayDate = new SimpleDateFormat("yyyy-MM-dd").format(newDate);
-                SimpleDateFormat fullFormatter = new SimpleDateFormat("yyyy-MM-dd-HHmm");
-                try {
-                    startTime = fullFormatter.parse(todayDate + "-" + start_time);
-                    endTime = fullFormatter.parse(todayDate + "-" + end_time);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-                if(newDate.before(endTime) && newDate.after(startTime)){
-                    for(int i=1; i<colors.length; i++){
-                        colors[i] = 0xffffff90;
+                // Highlight current event yellow if event not blank
+                if (!sch.getCategory().equals("schedule_blank")) {
+                    Date newDate = new Date(), startTime = newDate, endTime = newDate;
+                    String todayDate = new SimpleDateFormat("yyyy-MM-dd").format(newDate);
+                    SimpleDateFormat fullFormatter = new SimpleDateFormat("yyyy-MM-dd-HHmm");
+                    try {
+                        startTime = fullFormatter.parse(todayDate + "-" + start_time);
+                        endTime = fullFormatter.parse(todayDate + "-" + end_time);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    if (newDate.before(endTime) && newDate.after(startTime)) {
+                        for (int i = 1; i < colors.length; i++) {
+                            colors[i] = 0xffffff90;
+                        }
                     }
                 }
                     event.setBackground(ContextCompat.getDrawable(context, R.drawable.selected_day_left));

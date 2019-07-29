@@ -202,8 +202,6 @@ public class AutoUpdateWorker extends ListenableWorker implements CompletionInte
         Calendar currentDate = Calendar.getInstance();
         elapsedTime = currentDate.getTimeInMillis() - prevDate.getTimeInMillis();
 
-
-
         //check to see if the time elapsed is greater than the update period
         // also check to see if the expiration date has passed. -Littlesnowman88
         if ((refresh_pressed || (elapsedTime > updateMillis && updateMillis > 0)) && (eventIsNow())){

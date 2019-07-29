@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -91,6 +92,7 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
 
         //sets constants for schedule display (density changes values based on screen)
         float density = (getResources().getDisplayMetrics().density)/2;
+
         textSizeHeader = 22;
         textSizeContent = 14;
         paddingLg = Math.round(20*density);
@@ -194,7 +196,11 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
                             minutesBetweenTimes(currentTime, oneDay.get(numEvents).getTimeStart()),
                             "schedule_blank");
                     blank_item.setDay(days.get(d));
-                    oneDay.add(numEvents, blank_item);
+                    if (blank_item.getTimeLength() < 0) {
+//                        Log.d("Problem", "blank schedule item created with - length");
+                    } else {
+                        oneDay.add(numEvents, blank_item);
+                    }
                 }
                 //put the current time at the current event's end time
                 currentTime = oneDay.get(numEvents).getTimeEnd();
@@ -253,7 +259,11 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
     //gets the number of minutes between two clock times
     private int minutesBetweenTimes(int timeStart, int timeEnd){
 
-        return ((timeEnd- ((int)Math.floor(timeEnd/100))*100)%60 + ((int)Math.floor(timeEnd/100))*60) - ((timeStart-((int)Math.floor(timeStart/100))*100)%60 + ((int)Math.floor(timeStart/100))*60);
+        int res = ((timeEnd- ((int)Math.floor(timeEnd/100))*100)%60 + ((int)Math.floor(timeEnd/100))*60) - ((timeStart-((int)Math.floor(timeStart/100))*100)%60 + ((int)Math.floor(timeStart/100))*60);
+        if (res < 0) {
+//            Log.d("Problem", "minutesBetweenTimes is returning a negative number: " + res);
+        }
+        return res;
     }
 
     //subtracted from total height for schedule display height minimum
@@ -390,8 +400,9 @@ public class ScheduleView extends Fragment implements SharedPreferences.OnShared
             // but not proportionately longer, so we don't eat up too much screen real estate with
             // really long time slots.  With transferPower = 1.0, it is proportional.  With
             // it less than 1.0, compression happens > 15 min and expansion happens < 15 min.
-            double transferPower = 0.5;
+            double transferPower = 0.05;
             int oneHeight = (int)Math.ceil(Math.pow(minutesBetweenTimes(times.get(i), times.get(i+1))/15.0, transferPower)*(height + (2*paddingLg)));
+
             heights.add(i, oneHeight);
             schedHeight += (oneHeight + divider);
         }

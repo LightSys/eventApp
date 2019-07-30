@@ -543,7 +543,7 @@ public class LocalDB extends SQLiteOpenHelper {
         values.put(COLUMN_TOP_LEFT_LAT, map.getTopLeftLat());
         values.put(COLUMN_TOP_LEFT_LONG, map.getTopLeftLong());
         values.put(COLUMN_BOT_RIGHT_LAT, map.getBotRightLat());
-        values.put(COLUMN_BOT_RIGHT_LONG, map.getTopLeftLong());
+        values.put(COLUMN_BOT_RIGHT_LONG, map.getBotRightLong());
 
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(TABLE_MAPS, null, values);

@@ -1040,7 +1040,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                 //@id signals a new object, but contains no information on that line
                 if (!json_item.equals("@id") && !json_item.equals("nav") && !json_item.equals("icon")) {
                     JSONObject MapObj = json.getJSONObject(json_item);
-                    Log.d("Maps", "MapObj: " + MapObj);
                     MapInfo temp = new MapInfo();
                     String map_name;
                     HashMap<ArrayList<String>, ArrayList<Double>> POIs = new HashMap<>();
@@ -1078,7 +1077,6 @@ public class DataConnection extends AsyncTask<String, Void, String> {
                     temp.setTopLeftLong(topLeftLong);
                     temp.setBotRightLat(botRightLat);
                     temp.setTopLeftLong(botRightLong);
-                    Log.d("Maps", "added map in loadMaps (DataConnection): " + temp.getName());
 
                     db.addMaps(temp);
                 }

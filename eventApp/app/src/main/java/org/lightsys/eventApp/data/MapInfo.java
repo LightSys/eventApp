@@ -1,6 +1,8 @@
 package org.lightsys.eventApp.data;
 
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,7 +28,7 @@ public class MapInfo {
     private Double botRightLat;
     private Double botRightLong;
 
-    public MapInfo() {}
+    public MapInfo() { Log.d("MapInfo", "creating map"); }
 
     public String getName()                                         { return name; }
     public String getJSONPoi()                                      { return JSONPoi; }

@@ -234,10 +234,6 @@ public class LocalDB extends SQLiteOpenHelper {
 
             default:
                 //This should be the case of the current version
-
-
-                db.execSQL("ALTER TABLE " + TABLE_NAVIGATION_TITLES + " ADD COLUMN " + COLUMN_NAV_ID
-                        + " TEXT DEFAULT \"\"");
         }
     }
 

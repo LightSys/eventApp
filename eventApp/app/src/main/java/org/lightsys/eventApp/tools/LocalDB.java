@@ -13,6 +13,7 @@ import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.HousingInfo;
 import org.lightsys.eventApp.data.Info;
+import org.lightsys.eventApp.data.MapInfo;
 import org.lightsys.eventApp.data.ScheduleInfo;
 
 import java.text.ParseException;
@@ -30,7 +31,7 @@ import java.util.TimeZone;
 
 public class LocalDB extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 13;
+    private static final int DATABASE_VERSION = 14;
     private static final String DATABASE_NAME = "SBCaT.db";
     private static Context app_context;
     //SCANNED EVENTS TABLE
@@ -76,6 +77,14 @@ public class LocalDB extends SQLiteOpenHelper {
     private static final String TABLE_HOUSING = "housing";
     private static final String COLUMN_DRIVER = "driver";
     private static final String COLUMN_STUDENTS = "students";
+    //MAPS TABLE
+    private static final String TABLE_MAPS = "maps";
+    private static final String COLUMN_MAP_NAME = "map_name";
+    private static final String COLUMN_MAP_JSON_INFO = "json_info";
+    private static final String COLUMN_TOP_LEFT_LAT = "top_left_lat";
+    private static final String COLUMN_TOP_LEFT_LONG = "top_left_long";
+    private static final String COLUMN_BOT_RIGHT_LAT = "bot_right_lat";
+    private static final String COLUMN_BOT_RIGHT_LONG = "bot_right_long";
     //PRAYER PARTNER TABLE
     private static final String TABLE_PRAYER_PARTNERS = "prayer_partners";
     //NOTIFICATIONS TABLE
@@ -151,6 +160,12 @@ public class LocalDB extends SQLiteOpenHelper {
                 + COLUMN_NAME + " TEXT," + COLUMN_DRIVER + " TEXT," + COLUMN_STUDENTS + " TEXT)";
         db.execSQL(CREATE_TABLE_HOUSING);
 
+        String CREATE_TABLE_MAPS = "CREATE TABLE " + TABLE_MAPS + "(" + COLUMN_MAP_NAME + " TEXT,"
+                + COLUMN_MAP_JSON_INFO + " TEXT," + COLUMN_TOP_LEFT_LAT + " REAL," + COLUMN_TOP_LEFT_LONG
+                + " REAL," + COLUMN_BOT_RIGHT_LAT + " REAL," + COLUMN_BOT_RIGHT_LONG + " REAL)";
+        db.execSQL(CREATE_TABLE_MAPS);
+        Log.d("Database", "Created Maps table");
+
         String CREATE_TABLE_PRAYER_PARTNERS = "CREATE TABLE " + TABLE_PRAYER_PARTNERS + "("
                 + COLUMN_STUDENTS + " TEXT)";
         db.execSQL(CREATE_TABLE_PRAYER_PARTNERS);
@@ -210,9 +225,19 @@ public class LocalDB extends SQLiteOpenHelper {
                 onUpgradeSetNavIDs(db);
 
             case 13: //Released to Play Store August 2018
+                String CREATE_TABLE_MAPS = "CREATE TABLE " + TABLE_MAPS + "(" + COLUMN_MAP_NAME + " TEXT,"
+                        + COLUMN_MAP_JSON_INFO + " TEXT," + COLUMN_TOP_LEFT_LAT + " DOUBLE," + COLUMN_TOP_LEFT_LONG
+                        + " DOUBLE," + COLUMN_BOT_RIGHT_LAT + " DOUBLE," + COLUMN_BOT_RIGHT_LONG + " DOUBLE)";
+                db.execSQL(CREATE_TABLE_MAPS);
+
+            case 14: //Not yet released to Play Store
 
             default:
                 //This should be the case of the current version
+
+
+                db.execSQL("ALTER TABLE " + TABLE_NAVIGATION_TITLES + " ADD COLUMN " + COLUMN_NAV_ID
+                        + " TEXT DEFAULT \"\"");
         }
     }
 
@@ -254,6 +279,7 @@ public class LocalDB extends SQLiteOpenHelper {
         Cursor c = db.rawQuery(queryString, null);
         while (c.moveToNext()) {
 
+            Log.d("onUpgradeSetNavIDs", "upgrading nav id for: " + c.getString(0));
             ContentValues values = new ContentValues();
             values.put(COLUMN_NAME, c.getString(0));
             values.put(COLUMN_ICON, c.getString(1));
@@ -271,11 +297,14 @@ public class LocalDB extends SQLiteOpenHelper {
 	//delete event data
 	public void clear(){
         SQLiteDatabase db = this.getWritableDatabase();
+        Log.d("Database", "string: " + db.toString());
+
 
         db.delete(TABLE_CONTACTS, null, null);
         db.delete(TABLE_SCHEDULE, null, null);
         db.delete(TABLE_INFORMATION_PAGE, null, null);
         db.delete(TABLE_HOUSING, null, null);
+        db.delete(TABLE_MAPS, null, null);
         db.delete(TABLE_PRAYER_PARTNERS, null, null);
         db.delete(TABLE_TIMESTAMP, null, null);
         db.delete(TABLE_GENERAL_INFO, null, null);
@@ -508,6 +537,23 @@ public class LocalDB extends SQLiteOpenHelper {
         db.close();
     }
 
+    /**
+     * adds map info
+     */
+    public void addMaps(MapInfo map) {
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_MAP_NAME, map.getName());
+        values.put(COLUMN_MAP_JSON_INFO, map.getJSONPoi());
+        values.put(COLUMN_TOP_LEFT_LAT, map.getTopLeftLat());
+        values.put(COLUMN_TOP_LEFT_LONG, map.getTopLeftLong());
+        values.put(COLUMN_BOT_RIGHT_LAT, map.getBotRightLat());
+        values.put(COLUMN_BOT_RIGHT_LONG, map.getTopLeftLong());
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.insert(TABLE_MAPS, null, values);
+        db.close();
+    }
+
 	/* ************************* Get Queries ************************* */
 
     /**
@@ -556,7 +602,7 @@ public class LocalDB extends SQLiteOpenHelper {
 
     /**
      *
-     * @return returns and ArrayList with the name, url, and icon of all events in the database
+     * @return returns an ArrayList with the name, url, and icon of all events in the database
      */
     public ArrayList<String[]> getAllEvents() {
         ArrayList<String[]> allEvents = new ArrayList<>();
@@ -646,13 +692,14 @@ public class LocalDB extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor c = db.rawQuery(queryString, null);
 
+
         while (c.moveToNext()) {
             Info temp = new Info();
 
             temp.setHeader(c.getString(0));
             temp.setBody(c.getString(1));
             temp.setName(c.getString(2));
-//            Log.d("HERE", "getNavigationTitles: " + temp.getBody() + temp.getHeader() + temp.getName());
+            Log.d("HERE", "getNavigationTitles: " + temp.getBody() + " " + temp.getHeader() + " " + temp.getName());
             titles.add(temp);
 
         }
@@ -1310,6 +1357,34 @@ public class LocalDB extends SQLiteOpenHelper {
         c.close();
         db.close();
         return students;
+    }
+
+
+    /**
+     * @return map info
+     */
+    public ArrayList<MapInfo> getMaps() {
+        ArrayList<MapInfo> maps = new ArrayList<>();
+        String queryString = "SELECT * FROM " + TABLE_MAPS + " ORDER BY " + COLUMN_MAP_NAME;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.rawQuery(queryString, null);
+
+        while (c.moveToNext()) {
+            MapInfo temp = new MapInfo();
+
+            temp.setName(c.getString(0));
+            temp.setJSONPoi(c.getString(1));
+            temp.setTopLeftLat(c.getDouble(2));
+            temp.setTopLeftLong(c.getDouble(3));
+            temp.setBotRightLat(c.getDouble(4));
+            temp.setBotRightLong(c.getDouble(5));
+
+            maps.add(temp);
+        }
+        c.close();
+        db.close();
+        return maps;
     }
 
     /* ************************* Delete queries ************************* */

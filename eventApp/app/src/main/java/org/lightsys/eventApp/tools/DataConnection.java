@@ -22,6 +22,7 @@ import org.lightsys.eventApp.R;
 import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.HousingInfo;
 import org.lightsys.eventApp.data.Info;
+import org.lightsys.eventApp.data.MapInfo;
 import org.lightsys.eventApp.data.ScheduleInfo;
 import org.lightsys.eventApp.views.MainActivity;
 
@@ -40,8 +41,9 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Locale;
-
+import java.util.Map;
 
 
 import static android.content.ContentValues.TAG;
@@ -301,6 +303,10 @@ public class DataConnection extends AsyncTask<String, Void, String> {
             // if event config was updated
             if (update_flags[UPD_EVENT]) {
                 db.clear();
+                Log.d("DataConnection", "database cleared");
+                Log.d("DataConnection", "database JSON version: " + db.getJSONVersionNum()[0]);
+                Log.d("DataConnection", "old version num: " + old_version[0]);
+                Log.d("DataConnection", "new version num: " + new_version[0]);
                 db.addGeneral("url", qrAddress);
 
                 // Add a notifications menu entry first, since we just cleared the DB
@@ -491,6 +497,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         if (loadPrayerPartners(ejson.optJSONArray("prayer_partners"))) updated=true;
         if (loadInformationalPage(ejson.optJSONObject("information_page"))) updated=true;
         if (loadContacts(ejson.optJSONObject("contacts"))) updated=true;
+        if (loadMaps(ejson.optJSONObject("maps"))) updated=true;
 
         return updated;
     }
@@ -994,6 +1001,86 @@ public class DataConnection extends AsyncTask<String, Void, String> {
 
                         db.addInformationPage(temp, title);
                     }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * Loads all maps
+     * @param json, result of API query for maps
+     */
+    private boolean loadMaps(JSONObject json) {
+        if (json == null) {
+            return false;
+        }
+        JSONArray tempNames = json.names();
+
+        try {
+            if (json.getString("nav").equals("null")) {
+                return false;
+            }
+            db.addNavigationTitles(json.getString("nav"), json.getString("icon"), "Maps");
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        Resources string_resources = dataContext.get().getResources();
+
+        for (int i = 0; i < tempNames.length(); i++) {
+            try {
+                String json_item = tempNames.getString(i);
+                //@id signals a new object, but contains no information on that line
+                if (!json_item.equals("@id") && !json_item.equals("nav") && !json_item.equals("icon")) {
+                    JSONObject MapObj = json.getJSONObject(json_item);
+                    Log.d("Maps", "MapObj: " + MapObj);
+                    MapInfo temp = new MapInfo();
+                    String map_name;
+                    HashMap<ArrayList<String>, ArrayList<Double>> POIs = new HashMap<>();
+                    Double topLeftLat, topLeftLong, botRightLat, botRightLong;
+
+                    map_name = (!json_item.equals(""))? json_item : string_resources.getString(R.string.no_map);
+
+                    JSONArray JSONpois = MapObj.getJSONArray("POIs");
+                    ArrayList<String> POIstring = new ArrayList<>();
+                    ArrayList<Double> POIdouble = new ArrayList<>();
+                    for (int j = 0; j < JSONpois.length(); j++) {
+                        JSONObject tempObj = JSONpois.getJSONObject(j);
+                        POIstring.add(tempObj.getString("name"));
+                        POIstring.add(tempObj.getString("icon"));
+                        POIdouble.add(tempObj.getDouble("lat"));
+                        POIdouble.add(tempObj.getDouble("long"));
+                        POIs.put(POIstring, POIdouble);
+                    }
+
+                    topLeftLat = Double.parseDouble(MapObj.getString("topLeftLat"));
+                    topLeftLong = Double.parseDouble(MapObj.getString("topLeftLong"));
+                    botRightLat = Double.parseDouble(MapObj.getString("botRightLat"));
+                    botRightLong = Double.parseDouble(MapObj.getString("botRightLong"));
+
+
+
+//                    if(driver == null || driver.equals("")){driver = string_resources.getString(R.string.no_driver);}
+//                    if(students == null || students.equals("")) {students = string_resources.getString(R.string.no_guest);}
+
+                    // add the Map Info Object to db
+                    temp.setName(map_name);
+                    temp.setJSONPoi(JSONpois.toString());
+                    temp.setPOIs(POIs);
+                    temp.setTopLeftLat(topLeftLat);
+                    temp.setTopLeftLong(topLeftLong);
+                    temp.setBotRightLat(botRightLat);
+                    temp.setTopLeftLong(botRightLong);
+                    Log.d("Maps", "added map in loadMaps (DataConnection): " + temp.getName());
+
+                    db.addMaps(temp);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

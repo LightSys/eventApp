@@ -765,6 +765,8 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             HashMap<String, String> hm = new HashMap<>();
 
             hm.put("text", m.getHeader());
+            Log.d("MainActivity", "Adding " + m.getHeader() + " header to nav menu");
+            Log.d("MainActivity", "Adding " + m.getName() + " name to nav menu");
             hm.put("icon", Integer.toString(getResources().getIdentifier(m.getBody(),"drawable","org.lightsys.eventApp")));
 
             aList.add(hm);
@@ -858,6 +860,10 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     fragment = new ScheduleView();
                     fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "SCHEDULE")
                             .commit();
+                    break;
+                case "Maps":
+                    fragment = new MapView();
+                    fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "MAPS").commit();
                     break;
                 case "Housing":
                     fragment = new HousingView();

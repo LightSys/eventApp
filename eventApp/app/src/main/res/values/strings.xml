@@ -120,5 +120,6 @@
     <!--NOTIFICATION CHANNEL RESOURCES-->
     <string name="channel_id">lightsys events notifications</string>
     <string name="channel_name">LightSys Events Notifications</string>
+    <string name="no_map">No maps available</string>
 
 </resources>

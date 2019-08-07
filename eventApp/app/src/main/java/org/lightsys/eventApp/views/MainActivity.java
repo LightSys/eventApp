@@ -76,6 +76,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static android.content.ContentValues.TAG;
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**
  * Created by otter57 on 3/29/17.
@@ -112,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     ActionBarDrawerToggle toggle;
     private ProgressDialog spinner;
     public static String version;
+
 
     private boolean successfulConnection = true;
 
@@ -448,14 +450,33 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     }
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == 2 && grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            gatherData(true);
-        } else {
-            if (! ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
-                Toast.makeText(context, R.string.disabled_camera_permissions, Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(context, R.string.denied_camera_permissions, Toast.LENGTH_LONG).show();
-            }
+        final int CAMERA_REQUEST_CODE = 2;
+        final int LOCATION_REQUEST_CODE = 101;
+        switch (requestCode) {
+            case CAMERA_REQUEST_CODE:
+                Log.d("Permissions", "Camera permissions requested");
+                if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
+                    Log.d("Permissions", "Camera permissions accepted");
+                    gatherData(true);
+                } else {
+                    Log.d("Permissions", "Camera permissions denied");
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
+                        Toast.makeText(context, R.string.disabled_camera_permissions, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(context, R.string.denied_camera_permissions, Toast.LENGTH_LONG).show();
+                    }
+                }
+                break;
+//            case LOCATION_REQUEST_CODE:
+//                Log.d("Permissions", "Location permissions requested");
+//                if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
+//                    Log.d("Permissions", "Location permissions accepted");
+//                    //Permission Granted
+//                } else {
+//                    Toast.makeText(this, "Location Permission Denied", Toast.LENGTH_SHORT).show();
+//                    Log.d("Permissions", "Location permissions denied");
+//                }
+//                break;
         }
     }
 
@@ -685,13 +706,14 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     //launches QR scanner
     public void gatherData(boolean launchScanner){
         if (launchScanner) {
-            if (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != PERMISSION_GRANTED) {
                 requestCameraPermission();
             } else {
                 Intent QR = new Intent(MainActivity.this, launchQRScanner.class);
                 startActivityForResult(QR, QR_RESULT);
             }
         }else{
+//            requestLocationPermission();
             setupMenusAndTheme();
             navigationList.setItemChecked(0, true);
             fragment = new WelcomeView();
@@ -707,6 +729,24 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         final String[] permissions = new String[]{"android.permission.CAMERA"};
         ActivityCompat.requestPermissions(this, permissions, 2);
     }
+
+    //if app does not have location permission, ask user for permission
+//    private void requestLocationPermission() {
+//        //Checking if the user has granted location permission for this app
+//        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED) {
+//            /*
+//            Requesting the Location permission
+//            1st Param - Activity
+//            2nd Param - String Array of permissions requested
+//            3rd Param -Unique Request code. Used to identify these set of requested permission
+//            */
+//            final int LOCATION_REQUEST_CODE = 101;
+//            ActivityCompat.requestPermissions(this, new String[] {
+//                    android.Manifest.permission.ACCESS_FINE_LOCATION
+//            }, LOCATION_REQUEST_CODE);
+//            return;
+//        }
+//    }
 
     //navigation, theme, refresh menu setup
     private void setupMenusAndTheme(){

@@ -14,6 +14,7 @@ android {
         //for QR code
         multiDexEnabled true
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -52,4 +53,7 @@ dependencies {
     // Error program type already present: android.support.v4.app.FragmentTransitionCompat21$1
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.android.support:preference-v7:28.0.0'
+
+    // For location services
+    implementation 'com.google.android.gms:play-services-location:11.0.0'
 }

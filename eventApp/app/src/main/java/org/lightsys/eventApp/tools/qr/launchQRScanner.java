@@ -42,7 +42,6 @@ public class launchQRScanner extends AppCompatActivity implements BarcodeRetriev
         BarcodeCapture barcodeCapture = (BarcodeCapture) getSupportFragmentManager().findFragmentById(R.id.barcode);
 
         barcodeCapture.setRetrieval(launchQRScanner.this);
-//        Log.d("launchQRScanner", ": " + );
 
     }
 

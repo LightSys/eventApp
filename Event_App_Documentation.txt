@@ -21,7 +21,7 @@ Future TODOs:
 	-	Implement horizontal fling in the schedule
 	-	Allow specification of calendar scale and time compression factor.
 	-	A side bar with descriptions and links for resource items.
-	-	In-app maps for event locations. This would include a list of maps, showing the device’s current location, zooming/panning, map icons for places like restrooms, marked location of current schedule items. This would also include the ability to view unmarked maps when location is disabled. This could only be implemented if the web app was updated to include this functionality.
+	-	In-app maps for event locations. This would include a list of maps, showing the device’s current location, zooming/panning, map icons for places like restrooms, marked location of current schedule items. This would also include the ability to view unmarked maps when location is disabled. This could only be implemented if the web app was updated to include this functionality. (being worked on in AddMapSupport)
 	-	In-app airport transportation information. This would show drivers, passengers, times, and vehicle descriptions. This could only be implemented if the web app was updated to include this functionality.
 
 Issues/Bugs:

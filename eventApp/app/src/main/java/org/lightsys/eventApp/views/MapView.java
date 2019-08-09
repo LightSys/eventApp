@@ -51,16 +51,20 @@ public class MapView extends Fragment {
     private Location currentLocation;
     private static final int LOCATION_REQUEST_CODE = 101;
 
+    // TODO: finish class implementation
+    // "help me find..." pops up recyclerView? with POI options
+    // Change DataConnection, LocalDB and MapInfo to allow passing in of map image
+    // "show my location" and "show full map" show image with POIs on it (maybe condense into one option?
+    // Refresh options after location services allowed ("show full map" still displays until page refreshed)
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.map_view, container, false);
         getActivity().setTitle("Maps");
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // If location services are turned off, request location services
             ActivityCompat.requestPermissions(getActivity(), new String[] {android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
         }
-        fetchLastLocation();
 
         db = new LocalDB(getContext());
         maps = db.getMaps();
@@ -72,6 +76,8 @@ public class MapView extends Fragment {
             map_options.add("Show full map");
         } else {
             map_options.add("Show my location");
+            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+            fetchLastLocation();
         }
 
         map_list_detail = new HashMap<>();
@@ -80,34 +86,32 @@ public class MapView extends Fragment {
             map_list_detail.put(maps.get(i).getName(), map_options);
     }
 
-        // Set on click listeners for each textView
-        // "help me find..." pops up recyclerView? with POI options
-        // "show my location" and "show full map" show image with POIs on it (maybe condense into one option?
-        // don't show "show my location" if location services are off (replace with "show full map")
+
 
         expandableListView = (ExpandableListView) v.findViewById(R.id.expandableListView);
         map_names = new ArrayList<>(map_list_detail.keySet());
         expandableListAdapter = new MapExpandableListAdapter(getContext(), map_names, map_list_detail);
         expandableListView.setAdapter(expandableListAdapter);
-        expandableListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
-            @Override
-            public void onGroupExpand(int groupPosition) {
-                Toast.makeText(getContext(),
-                        map_names.get(groupPosition) + " List Expanded.",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Checks if Map names have been expanded or collapsed. Probably not necessary
+//        expandableListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+//            @Override
+//            public void onGroupExpand(int groupPosition) {
+//                Toast.makeText(getContext(),
+//                        map_names.get(groupPosition) + " List Expanded.",
+//                        Toast.LENGTH_SHORT).show();
+//            }
+//        });
 
-        expandableListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
-
-            @Override
-            public void onGroupCollapse(int groupPosition) {
-                Toast.makeText(getContext(),
-                        map_names.get(groupPosition) + " List Collapsed.",
-                        Toast.LENGTH_SHORT).show();
-
-            }
-        });
+//        expandableListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+//
+//            @Override
+//            public void onGroupCollapse(int groupPosition) {
+//                Toast.makeText(getContext(),
+//                        map_names.get(groupPosition) + " List Collapsed.",
+//                        Toast.LENGTH_SHORT).show();
+//
+//            }
+//        });
 
         expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
@@ -121,33 +125,30 @@ public class MapView extends Fragment {
                                 map_names.get(groupPosition)).get(
                                 childPosition), Toast.LENGTH_SHORT
                 ).show();
+                // If "Help me find..." was clicked
+                if (map_list_detail.get(map_names.get(groupPosition)).get(childPosition) == map_options.get(0)) {
+                    // Show options for all POI names on map
+                }
+                // If "Show my location" was clicked
+                else if (map_list_detail.get(map_names.get(groupPosition)).get(childPosition) == "Show my location") {
+                    // Show full map with POIs and user location
+                    displayMap(true, map_names.get(groupPosition));
+                }
+                // If "Show full map" was clicked
+                else {
+                    // Show full map with POIs in correct locations
+                    displayMap(false, map_names.get(groupPosition));
+                }
                 return false;
             }
         });
-
-
-//             PrayerPartner Example
-//            final SimpleAdapter adapter = new SimpleAdapter(getActivity(), itemList, R.layout.prayer_partner_list_item, from, to){
-//                @Override
-//                public View getView(int position, View v, ViewGroup parent) {
-//                    View mView = super.getView(position, v, parent);
-//
-//                    TextView groupNum = mView.findViewById(R.id.groupNumberText);
-//                    groupNum.setTextColor(Color.parseColor(db.getThemeColor("themeMedium")));
-//                    return mView;
-//                }
-//            };
-
-
-
-
-
 
         return v;
     }
 
 
     private void fetchLastLocation(){
+        // Fetches user's last location (pretty much synonymous with current location)
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Task<Location> task = fusedLocationProviderClient.getLastLocation();
             task.addOnSuccessListener(new OnSuccessListener<Location>() {
@@ -157,6 +158,8 @@ public class MapView extends Fragment {
                         currentLocation = location;
                         Toast.makeText(getContext(), currentLocation.getLatitude() + " " + currentLocation.getLongitude(), Toast.LENGTH_SHORT).show();
                     } else {
+                        // Needed in case device is new and no locations recorded yet
+                        //      or location services turned off for device (not just app)
                         Toast.makeText(getContext(), "No Location recorded", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -167,12 +170,31 @@ public class MapView extends Fragment {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResult) {
         switch (requestCode) {
             case LOCATION_REQUEST_CODE:
-                if (grantResult.length > 0 && grantResult[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResult.length == 1 && grantResult[0] == PackageManager.PERMISSION_GRANTED) {
                     fetchLastLocation();
                 } else {
-                    Toast.makeText(getContext(),"Location permission missing",Toast.LENGTH_SHORT).show();
+                    Log.d("Permissions", "Location permissions denied");
+                    // TODO: Toasts should display if permissions denied, but don't show
+                    // getActivity() or getContext() should work, but neither do.
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), "android.permission.CAMERA")) {
+                        Toast.makeText(getActivity(), R.string.disabled_location_permissions, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getActivity(), R.string.denied_location_permissions, Toast.LENGTH_LONG).show();
+                    }
                 }
                 break;
+        }
+    }
+
+    // Displays the chosen map on screen with POIs as markers and user's location if permitted
+    private void displayMap(boolean locationGranted, String mapName) {
+        // TODO: Implement function
+        // Show map (maybe new View, definitely new layout xml)
+        // Populate map with POIs (use relative scaling with Lat and Long)
+            // Divide map/screen size by difference in map Lat/Long to get how many pixels correspond to measurement in Lat/Long
+            // Use ratio to place each POI on map
+        if (locationGranted) {
+            // Show user location on map (if user within map Lat/Long)
         }
     }
 

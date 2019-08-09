@@ -121,5 +121,7 @@
     <string name="channel_id">lightsys events notifications</string>
     <string name="channel_name">LightSys Events Notifications</string>
     <string name="no_map">No maps available</string>
+    <string name="disabled_location_permissions">Location permissions are disabled. Permissions must be enabled from system settings before using location services.</string>
+    <string name="denied_location_permissions">Location permissions were denied. Unable to use location.</string>
 
 </resources>

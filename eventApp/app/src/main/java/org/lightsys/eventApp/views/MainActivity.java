@@ -451,7 +451,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         final int CAMERA_REQUEST_CODE = 2;
-        final int LOCATION_REQUEST_CODE = 101;
         switch (requestCode) {
             case CAMERA_REQUEST_CODE:
                 Log.d("Permissions", "Camera permissions requested");
@@ -467,16 +466,6 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     }
                 }
                 break;
-//            case LOCATION_REQUEST_CODE:
-//                Log.d("Permissions", "Location permissions requested");
-//                if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
-//                    Log.d("Permissions", "Location permissions accepted");
-//                    //Permission Granted
-//                } else {
-//                    Toast.makeText(this, "Location Permission Denied", Toast.LENGTH_SHORT).show();
-//                    Log.d("Permissions", "Location permissions denied");
-//                }
-//                break;
         }
     }
 

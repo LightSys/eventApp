@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         applicationId "org.lightsys.eventApp"
         // min SDK now = Lollipop (5.x).  The barcode scanner doesn't seem to want to work on
         // anything older than that.
         minSdkVersion 21
-        targetSdkVersion 28
+        targetSdkVersion 29
         versionCode 8
         versionName "2.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

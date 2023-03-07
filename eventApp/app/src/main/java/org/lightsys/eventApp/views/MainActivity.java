@@ -259,17 +259,15 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             public void run() {
                 WorkManager.getInstance().enqueue(autoUpdateWork);
                 // UPDATE 3/7/2023:
-                // .observeForever MUST run on the main thread,
-                // this casts the WorkManager line into a Runnable,
-                // and can now force that Runnable onto the main thread.
-                Runnable test = new Runnable() {
+                // .observeForever MUST run on the main thread.
+                activity.runOnUiThread(new Runnable() {
                     @Override
-                    public void run() {WorkManager.getInstance()
-                                    .getWorkInfoByIdLiveData(autoUpdateWork.getId())
-                                    .observeForever(workObserver);}};
-                Looper.prepare();
-                Activity x = new Activity();
-                x.runOnUiThread(test);
+                    public void run() {
+                        WorkManager.getInstance()
+                                .getWorkInfoByIdLiveData(autoUpdateWork.getId())
+                                .observeForever(workObserver);
+                    }
+                });
             }
         }
         WorkManagerRunnable wmr = new WorkManagerRunnable(autoUpdateWork);

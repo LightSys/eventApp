@@ -111,4 +111,14 @@ public class launchQRScanner extends AppCompatActivity implements BarcodeRetriev
         dialog.show();
     }
 
+    @Override
+    protected void onDestroy(){
+        try {
+            super.onDestroy();
+        }
+        catch(Exception e){
+            Log.d("Debug", "Error Caught");
+        }
+    }
+
 }

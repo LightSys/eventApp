@@ -31,7 +31,9 @@
             android:configChanges="orientation|screenSize"
             android:label="LightSys Events"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <action android:name="android.intent.action.VIEW"/>
@@ -79,7 +81,7 @@
         </activity>
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="org.lightsys.sbcat.android.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">

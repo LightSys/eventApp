@@ -4,16 +4,14 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
-import org.lightsys.eventApp.data.ContactInfo;
 import org.lightsys.eventApp.data.Info;
 import org.lightsys.eventApp.data.LocationInfo;
 import org.lightsys.eventApp.data.ScheduleInfo;
@@ -24,9 +22,7 @@ import org.lightsys.eventApp.R;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 

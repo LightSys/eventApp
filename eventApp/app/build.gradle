@@ -58,4 +58,5 @@ dependencies {
     // Fixed some errors here by migrating to AndroidX
     implementation 'com.google.android.material:material:1.0.0'
     implementation 'androidx.preference:preference:1.0.0'
+    implementation "androidx.fragment:fragment:1.5.5"
 }

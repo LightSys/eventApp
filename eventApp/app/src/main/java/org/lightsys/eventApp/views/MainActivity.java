@@ -3,6 +3,8 @@ package org.lightsys.eventApp.views;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+
+import androidx.core.content.res.ResourcesCompat;
 import androidx.lifecycle.Observer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -15,6 +17,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,9 +37,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import androidmads.library.qrgenearator.QRGContents;
+import androidmads.library.qrgenearator.QRGEncoder;
+
 import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -78,6 +88,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static android.content.ContentValues.TAG;
+
+import com.google.zxing.WriterException;
 
 /**
  * Created by otter57 on 3/29/17.
@@ -529,8 +541,22 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
     //Prompts the user if they would like to delete an event upon a long click
     private AlertDialog promptEventRemove(final String scanned_url){
+
+        QRGEncoder qrgEncoder = new QRGEncoder(scanned_url, null, QRGContents.Type.TEXT, 512);
+
+        // Getting QR-Code as BitmapDrawable
+        Bitmap bitmap = qrgEncoder.getBitmap();
+        Drawable d = new BitmapDrawable(getResources(), bitmap);
+
+        // Setting the QR-Code as the image view
+        ImageView image = new ImageView(this);
+        image.setImageDrawable(d);
+
+
         AlertDialog dialog_box = new AlertDialog.Builder(this)
-                .setMessage(R.string.alert_message)
+                .setMessage("Sharable QR Code:")
+                .setTitle(R.string.alert_message)
+                .setView(image)
                 .setPositiveButton(R.string.alert_delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -552,6 +578,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     }
                 })
                 .create();
+
             return dialog_box;
     }
 

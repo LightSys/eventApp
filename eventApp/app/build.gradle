@@ -59,4 +59,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.0.0'
     implementation 'androidx.preference:preference:1.0.0'
     implementation "androidx.fragment:fragment:1.5.5"
+
+    // For the QR Sharing feature
+    implementation 'androidmads.library.qrgenearator:QRGenearator:1.0.4'
 }

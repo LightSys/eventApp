@@ -178,6 +178,7 @@ public class WelcomeView extends Fragment {
             } else {
                 timeString = String.valueOf(nextEvent.getTimeStart()).substring(0,2) + ":" + String.valueOf(nextEvent.getTimeStart()).substring(2);
             }
+            Log.d("Debug", String.valueOf(nextEvent.getTimeStart()));
             // Set date to either "Today" or "Tomorrow" - no other options
             if (nextEvent.getDay().equals(today)) {
                 hm.put("date", timeString + "\t\tToday");
@@ -203,11 +204,12 @@ public class WelcomeView extends Fragment {
             }
             //Format time correctly to display like H:MM where H < 10 or HH:MM where H >= 10
             String timeString;
-            if (String.valueOf(nextEvent.getTimeStart()).length() == 3) {
+            if (String.valueOf(currentEvent.getTimeStart()).length() == 3) {
                 timeString = String.valueOf(currentEvent.getTimeStart()).substring(0,1) + ":" + String.valueOf(currentEvent.getTimeStart()).substring(1);
             } else {
                 timeString = String.valueOf(currentEvent.getTimeStart()).substring(0,2) + ":" + String.valueOf(currentEvent.getTimeStart()).substring(2);
             }
+            Log.d("Debug", String.valueOf(nextEvent.getTimeStart()));
             //Put "Today" if the event is happening/happened today, else put "Yesterday"
             if (currentEvent.getDay().equals(today)) {
                 hm.put("date", timeString + "\t\tToday");

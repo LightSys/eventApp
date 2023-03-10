@@ -533,7 +533,14 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             return true;
         }
         else {
-            promptLongClick(scanned_url).show();
+            String canShare = db.getGeneral("allow_qr_share");
+            if(Integer.parseInt(canShare) == 1) {
+                promptLongClick(scanned_url).show();
+            }
+            else{
+                promptEventRemove(scanned_url).show();
+            }
+
         }
         return true;
     }

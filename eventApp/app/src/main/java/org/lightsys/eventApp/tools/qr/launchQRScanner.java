@@ -126,7 +126,5 @@ public class launchQRScanner extends AppCompatActivity implements BarcodeRetriev
         } catch (Exception e) {
             super.finishAndRemoveTask();
         }
-
     }
-
 }

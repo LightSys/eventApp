@@ -121,6 +121,9 @@ public class launchQRScanner extends AppCompatActivity implements BarcodeRetriev
 
     @Override
     protected void onDestroy(){
+        // the try block (we think) always throws an error,
+        // so the catch block is needed for the app to function properly
+        // tbh not sure why it works, but on upgrading the app this is necessary
         try {
             super.onDestroy();
         } catch (Exception e) {

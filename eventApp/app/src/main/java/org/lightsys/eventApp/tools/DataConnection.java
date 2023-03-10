@@ -406,7 +406,7 @@ public class DataConnection extends AsyncTask<String, Void, String> {
         db.addAboutPage(new Info(string_resources.getString(R.string.Open_Source_Header),string_resources.getString(R.string.Open_Source_Body)), "About");
         db.addAboutPage(new Info(string_resources.getString(R.string.Barcode_Scanner_Header),string_resources.getString(R.string.Barcode_Scanner_Body)), "About");
         db.addAboutPage(new Info(string_resources.getString(R.string.Android_Open_Source_Proj_Header), string_resources.getString(R.string.Android_Open_Source_Proj_Body)), "About");
-
+        db.addAboutPage(new Info(string_resources.getString(R.string.QR_Generator_Header), string_resources.getString(R.string.QR_Generator_Body)), "About");
     }
 
     /** Loads General Info

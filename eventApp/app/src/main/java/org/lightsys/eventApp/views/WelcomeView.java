@@ -243,7 +243,6 @@ public class WelcomeView extends Fragment {
         }
         return aList;
     }
-
     //formats the calendar date for display
     private String getDatePrintOut(Calendar cal){
         Calendar calNow = Calendar.getInstance();

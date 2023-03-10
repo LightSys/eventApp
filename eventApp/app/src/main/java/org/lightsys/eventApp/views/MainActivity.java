@@ -533,15 +533,35 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             return true;
         }
         else {
-            AlertDialog prompt_event_remove = promptEventRemove(scanned_url);
-            prompt_event_remove.show();
+            promptLongClick(scanned_url).show();
         }
         return true;
     }
 
-    //Prompts the user if they would like to delete an event upon a long click
-    private AlertDialog promptEventRemove(final String scanned_url){
+    //Prompts the user to choose between the options listed
+    private AlertDialog promptLongClick(final String scanned_url){
+        String[] options = {"Share QR", "Delete Event"};
 
+        AlertDialog dialog_box = new AlertDialog.Builder(this)
+                .setItems(options, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int which) {
+                        if ("Share QR".equals(options[which])) {
+                            dialogInterface.dismiss();
+                            promptShareQR(scanned_url).show();
+                        }
+                        else if("Delete Event".equals(options[which])){
+                            dialogInterface.dismiss();
+                            promptEventRemove(scanned_url).show();
+                        }
+                    }
+                })
+                .create();
+        return dialog_box;
+    }
+
+    //Puts the QR of the current event on the screen
+    private AlertDialog promptShareQR(final String scanned_url){
         QRGEncoder qrgEncoder = new QRGEncoder(scanned_url, null, QRGContents.Type.TEXT, 512);
 
         // Getting QR-Code as BitmapDrawable
@@ -552,11 +572,18 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         ImageView image = new ImageView(this);
         image.setImageDrawable(d);
 
-
         AlertDialog dialog_box = new AlertDialog.Builder(this)
-                .setMessage("Sharable QR Code:")
-                .setTitle(R.string.alert_message)
+                .setTitle("Sharable QR Code:")
                 .setView(image)
+                .create();
+
+        return dialog_box;
+    }
+
+    //Prompts the user if they would like to delete an event upon a long click
+    private AlertDialog promptEventRemove(final String scanned_url){
+        AlertDialog dialog_box = new AlertDialog.Builder(this)
+                .setTitle(R.string.alert_message)
                 .setPositiveButton(R.string.alert_delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -581,6 +608,9 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
 
             return dialog_box;
     }
+
+
+
 
     private void resetScannedEventsAdapter(String add_or_remove, String scanned_url){
         if(add_or_remove.equals("add")){

@@ -1,0 +1,35 @@
+LightSys Code-A-Thon 2023 Changelog
+Authors: Chris LaFave, Eli Bolleddu, and Dr. John Hunt.
+Dates: March 6th-10th, 2023
+
+Goals:
+1. - Update the app for the latest SDK and WorkManager release. The app uses the WorkManager library
+to handle checking for updates and notifications, and this library has continued to improve over time.
+2. - Fix a bug where event schedule times are sometimes printed incorrectly on the main app activity. For
+example, 12:30 might be printed as 1:23 or something like that instead.
+3. - Add a setting (coming from the configuration on the server) to allow the event manager to permit
+event participants to share the event's QR code with other participants during the time period that the
+event is active (there is an event expiry date in the event configuration). The server side is coded in
+PHP, and the change there would be adding a database table field and a checkbox in the user interface.
+
+Updates:
+1. Update SDK and WorkManager
+-build.gradle (:app) now has SDK version of 33 (did not change min SDK, still 21)
+-build.gradle (:app) now has 2.8.0 of WorkManager
+-The app has been automatically updated to support androidx libraries (instead of some stuff before)
+-launchQRScanner now has an onDestroy() method with a try-catch that is necessary for the app running on the new updates
+
+2. Fix HM:M bug
+-Remember to update tomorrow Chris
+
+3. Add Share QR feature
+-In MainActivity, onLongClick() now checks whether or not a user is allowed to share the QR code
+    -If yes:
+     promptLongClick() is shown, asking the user to choose between sharing or deleting the event
+     If "Share QR" is clicked, the current event's QR is shown
+     If "Delete Event" is clicked, the normal delete event window is shown
+    -If no:
+     The normal delete event window is shown
+-It is able to check because a new column was added to the backend, toggling whether or not the users should be allowed to share the QR code
+-Creating the QR code image is in the new promptShareQR() method in MainActivity
+    -It uses https://github.com/androidmads/QRGenerator

@@ -534,7 +534,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         }
         else {
             String canShare = db.getGeneral("allow_qr_share");
-            if(Integer.parseInt(canShare) == 1) {
+            if(canShare != null && Integer.parseInt(canShare) == 1) {
                 promptLongClick(scanned_url).show();
             }
             else{

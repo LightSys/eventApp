@@ -573,7 +573,7 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         image.setImageDrawable(d);
 
         AlertDialog dialog_box = new AlertDialog.Builder(this)
-                .setTitle("Sharable QR Code:")
+                .setTitle("Shareable QR Code:")
                 .setView(image)
                 .create();
 

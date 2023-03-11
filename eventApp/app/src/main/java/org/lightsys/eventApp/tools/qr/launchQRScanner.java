@@ -2,10 +2,16 @@ package org.lightsys.eventApp.tools.qr;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Application;
 import android.app.Dialog;
+import android.app.Fragment;
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Gravity;
@@ -22,12 +28,14 @@ import java.util.List;
 
 import xyz.belvi.mobilevisionbarcodescanner.BarcodeRetriever;
 
+
+
 /**
  * Created by otter57 on 5/9/17.
  * https://android-arsenal.com/details/1/4516
  */
 
-public class launchQRScanner extends AppCompatActivity implements BarcodeRetriever{
+public class launchQRScanner extends AppCompatActivity implements BarcodeRetriever {
 
     private static final String QR_DATA_EXTRA = "qr_data";
     private Dialog dialog;
@@ -111,4 +119,15 @@ public class launchQRScanner extends AppCompatActivity implements BarcodeRetriev
         dialog.show();
     }
 
+    @Override
+    protected void onDestroy(){
+        // the try block (we think) always throws an error,
+        // so the catch block is needed for the app to function properly
+        // tbh not sure why it works, but on upgrading the app this is necessary
+        try {
+            super.onDestroy();
+        } catch (Exception e) {
+            super.finishAndRemoveTask();
+        }
+    }
 }

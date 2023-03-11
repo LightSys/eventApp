@@ -3,7 +3,9 @@ package org.lightsys.eventApp.views;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.arch.lifecycle.Observer;
+
+import androidx.core.content.res.ResourcesCompat;
+import androidx.lifecycle.Observer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,25 +17,35 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.Toolbar;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import androidmads.library.qrgenearator.QRGContents;
+import androidmads.library.qrgenearator.QRGEncoder;
+
+import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -76,6 +88,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import static android.content.ContentValues.TAG;
+
+import com.google.zxing.WriterException;
 
 /**
  * Created by otter57 on 3/29/17.
@@ -256,8 +270,16 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             WorkManagerRunnable(OneTimeWorkRequest autoUpdateWork) { myAutoUpdateWork = autoUpdateWork; }
             public void run() {
                 WorkManager.getInstance().enqueue(autoUpdateWork);
-                WorkManager.getInstance().getWorkInfoByIdLiveData(autoUpdateWork.getId())
-                        .observeForever(workObserver);
+                // UPDATE 3/7/2023:
+                // .observeForever MUST run on the main thread.
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        WorkManager.getInstance()
+                                .getWorkInfoByIdLiveData(autoUpdateWork.getId())
+                                .observeForever(workObserver);
+                    }
+                });
             }
         }
         WorkManagerRunnable wmr = new WorkManagerRunnable(autoUpdateWork);
@@ -511,16 +533,64 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
             return true;
         }
         else {
-            AlertDialog prompt_event_remove = promptEventRemove(scanned_url);
-            prompt_event_remove.show();
+            String canShare = db.getGeneral("allow_qr_share");
+            if(canShare != null && Integer.parseInt(canShare) == 1) {
+                promptLongClick(scanned_url).show();
+            }
+            else{
+                promptEventRemove(scanned_url).show();
+            }
+
         }
         return true;
+    }
+
+    //Prompts the user to choose between the options listed
+    private AlertDialog promptLongClick(final String scanned_url){
+        String[] options = {"Share QR", "Delete Event"};
+
+        AlertDialog dialog_box = new AlertDialog.Builder(this)
+                .setItems(options, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int which) {
+                        if ("Share QR".equals(options[which])) {
+                            dialogInterface.dismiss();
+                            promptShareQR(scanned_url).show();
+                        }
+                        else if("Delete Event".equals(options[which])){
+                            dialogInterface.dismiss();
+                            promptEventRemove(scanned_url).show();
+                        }
+                    }
+                })
+                .create();
+        return dialog_box;
+    }
+
+    //Puts the QR of the current event on the screen
+    private AlertDialog promptShareQR(final String scanned_url){
+        QRGEncoder qrgEncoder = new QRGEncoder(scanned_url, null, QRGContents.Type.TEXT, 512);
+
+        // Getting QR-Code as BitmapDrawable
+        Bitmap bitmap = qrgEncoder.getBitmap();
+        Drawable d = new BitmapDrawable(getResources(), bitmap);
+
+        // Setting the QR-Code as the image view
+        ImageView image = new ImageView(this);
+        image.setImageDrawable(d);
+
+        AlertDialog dialog_box = new AlertDialog.Builder(this)
+                .setTitle("Shareable QR Code:")
+                .setView(image)
+                .create();
+
+        return dialog_box;
     }
 
     //Prompts the user if they would like to delete an event upon a long click
     private AlertDialog promptEventRemove(final String scanned_url){
         AlertDialog dialog_box = new AlertDialog.Builder(this)
-                .setMessage(R.string.alert_message)
+                .setTitle(R.string.alert_message)
                 .setPositiveButton(R.string.alert_delete, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -542,8 +612,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                     }
                 })
                 .create();
+
             return dialog_box;
     }
+
+
+
 
     private void resetScannedEventsAdapter(String add_or_remove, String scanned_url){
         if(add_or_remove.equals("add")){

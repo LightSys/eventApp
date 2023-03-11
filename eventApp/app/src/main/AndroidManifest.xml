@@ -14,6 +14,7 @@
     <!-- <uses-permission android:name="android.permission.READ_PHONE_STATE" /> -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <uses-feature android:name="android.hardware.camera"
                   android:required="true"/>
@@ -31,7 +32,9 @@
             android:configChanges="orientation|screenSize"
             android:label="LightSys Events"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <action android:name="android.intent.action.VIEW"/>
@@ -76,10 +79,11 @@
             <meta-data android:name="com.google.android.gms.vision.DEPENDENCIES"
                        android:value="barcode"/>
 
+
         </activity>
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="org.lightsys.sbcat.android.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">

@@ -1,5 +1,5 @@
     eventApp by LightSys
-    Copyright (C) 2017-2019  LightSys Technology Services, Inc.
+    Copyright (C) 2017-2024  LightSys Technology Services, Inc.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -13,3 +13,8 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+    Mobile Vision Barcode Scanner software included in this repository
+    Copyright (c) 2016 Nosakhare Belvi under the MIT License
+    https://github.com/KingsMentor/MobileVisionBarcodeScanner/

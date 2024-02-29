@@ -184,7 +184,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
                 getApplicationContext(),
                 0,
                 wakeAlarmHandler,
-                PendingIntent.FLAG_NO_CREATE
+                PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE
         );
 
         if (isAlarm == null) {
@@ -193,7 +193,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
                     getApplicationContext(),
                     0,
                     wakeAlarmHandler,
-                    PendingIntent.FLAG_CANCEL_CURRENT
+                    PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
 
             // Set a 15 minute interval for the alarm.
@@ -467,7 +467,7 @@ public class AutoUpdater extends Service implements CompletionInterface, SharedP
         // Build the notification to be sent
         // BigTextStyle allows notification to be expanded if text is more than one line
         Intent notificationIntent = new Intent(context, MainActivity.class);
-        PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        PendingIntent intent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         nBuild = new NotificationCompat.Builder(context, context.getResources().getString(R.string.notification_id))
                 .setContentTitle(title)

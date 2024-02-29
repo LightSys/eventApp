@@ -36,6 +36,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
+import android.widget.RelativeLayout;
+import android.widget.FrameLayout;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -470,14 +472,18 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
     }
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == 2 && grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            gatherData(true);
-        } else {
-            if (! ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
-                Toast.makeText(context, R.string.disabled_camera_permissions, Toast.LENGTH_LONG).show();
+        if (requestCode == 2) {
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                gatherData(true);
             } else {
-                Toast.makeText(context, R.string.denied_camera_permissions, Toast.LENGTH_LONG).show();
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.CAMERA")) {
+                    Toast.makeText(context, R.string.disabled_camera_permissions, Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(context, R.string.denied_camera_permissions, Toast.LENGTH_LONG).show();
+                }
             }
+        } else if (requestCode == 3) {
+            // Nothing here yet, just ignore.
         }
     }
 
@@ -782,6 +788,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
         ActivityCompat.requestPermissions(this, permissions, 2);
     }
 
+    private void requestNotificationPermission() {
+        Log.w("LightSys-Events", "Notification permission is not granted. Requesting permission");
+        final String[] permissions = new String[]{"android.permission.POST_NOTIFICATIONS"};
+        ActivityCompat.requestPermissions(this, permissions, 3);
+    }
+
     //navigation, theme, refresh menu setup
     private void setupMenusAndTheme(){
         ArrayList<Info> menu = db.getNavigationTitles();
@@ -999,6 +1011,12 @@ public class MainActivity extends AppCompatActivity implements ScannedEventsAdap
                 fragmentManager.beginTransaction().replace(R.id.contentFrame, fragment, "WELCOME")
                         .commit();
                 //sets refresh icon
+                // Request to send notifications.
+                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    if (ActivityCompat.checkSelfPermission(context, "android.permission.POST_NOTIFICATIONS") != PackageManager.PERMISSION_GRANTED) {
+                        requestNotificationPermission();
+                    }
+                }
             }else if (intent.getStringExtra("action").equals("expired")){
                 //if event has expired
                 Toast.makeText(context, "Event has expired, please scan a QR for a new event", Toast.LENGTH_SHORT).show();

@@ -19,7 +19,9 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textStyle="bold"
-        android:textSize="@dimen/body_dimen_lg" />
+        android:textSize="@dimen/body_dimen_lg"
+        android:layout_toRightOf="@id/calendarImage"
+        android:layout_alignParentTop="true"/>
 
     <TextView
         android:id="@+id/dateText"
@@ -27,13 +29,16 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:layout_marginBottom="@dimen/more_space_border_dimen_lg"
-        android:textSize="@dimen/small_subtitle_dimen_lg"/>
+        android:textSize="@dimen/small_subtitle_dimen_lg"
+        android:layout_below="@id/titleText"/>
 
     <TextView
         android:id="@+id/noteText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textSize="@dimen/body_dimen_lg" />
+        android:textSize="@dimen/body_dimen_lg"
+        android:autoLink="web"
+        android:layout_below="@id/dateText"/>
 
 </RelativeLayout>

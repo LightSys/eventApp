@@ -400,7 +400,7 @@ public class AutoUpdateWorker extends ListenableWorker implements CompletionInte
         // Build the notification to be sent
         // BigTextStyle allows notification to be expanded if text is more than one line
         Intent notificationIntent = new Intent(app_context, MainActivity.class);
-        PendingIntent intent = PendingIntent.getActivity(our_context, 0, notificationIntent, 0);
+        PendingIntent intent = PendingIntent.getActivity(our_context, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         nBuild = new NotificationCompat.Builder(app_context, app_context.getString(R.string.channel_id))
                 .setContentTitle(title)

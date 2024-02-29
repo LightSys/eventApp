@@ -8,6 +8,7 @@
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
     <RelativeLayout
+        android:id="@+id/main_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -17,43 +18,14 @@
             android:layout_height="match_parent"
             android:layout_marginTop="?attr/actionBarSize"/>
 
-        <!--
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/scanned_events_recyclerview"
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:layout_alignTop="@id/contentFrame"
             android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:orientation="vertical"
-            android:layout_alignTop="@+id/contentFrame"
-            android:visibility="gone"
-            android:id="@+id/refresh_layout">
-
-            <TextView
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:text="@string/refresh_title"
-                android:gravity="center_horizontal"
-                android:textStyle="bold"
-                android:textColor="@color/white"
-                android:background="@color/darkGray"
-                android:textSize="@dimen/contact_dimen"
-                android:padding="@dimen/more_space_border_dimen_lg"/>
-
-            <View
-                android:layout_width="200dp"
-                android:layout_height="2dp"
-                android:background="@color/black"
-                />
-
-            <ListView
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:id="@+id/refresh_list"
-                android:choiceMode="singleChoice"
-                android:background="@color/darkGray">
-            </ListView>
-        </LinearLayout>
-        -->
+            android:layout_alignParentRight="@id/action_rescan"/>
 
     </RelativeLayout>
 

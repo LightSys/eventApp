@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical" android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:id="@+id/scheduleMasterLayout">
+    android:id="@+id/scheduleMasterLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/background_light"
+    android:orientation="vertical">
 
     <!--"Event Time:" box -->
     <LinearLayout
@@ -24,52 +26,51 @@
                 android:id="@+id/day_layout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-            </LinearLayout>
+                android:background="@color/white"
+                android:orientation="horizontal"></LinearLayout>
         </org.lightsys.eventApp.tools.HorizontalScrollNoFling>
     </LinearLayout>
 
-        <!--Body-->
-        <ScrollView
+    <!--Body-->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!--General two cols container-->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-            <!--General two cols container-->
+            <!--Time Column-->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:background="@color/white"
+                android:orientation="vertical"
+                android:tag="leftWorkforceCol"></LinearLayout>
 
-                <!--Time Column-->
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="@color/white"></View>
+
+            <!--Events Columns-->
+            <org.lightsys.eventApp.tools.HorizontalScrollNoFling
+                android:id="@+id/bodyScroll"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content">
+
                 <LinearLayout
-                    android:id="@+id/time"
-                    android:tag="leftWorkforceCol"
+                    android:id="@+id/main_layout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                </LinearLayout>
+                    android:orientation="horizontal"></LinearLayout>
+            </org.lightsys.eventApp.tools.HorizontalScrollNoFling>
 
-                <View
-                    android:layout_width="1dp"
-                    android:layout_height="match_parent"
-                    android:background="@color/black">
-                </View>
+        </LinearLayout>
 
-                <!--Events Columns-->
-                <org.lightsys.eventApp.tools.HorizontalScrollNoFling
-                    android:id="@+id/bodyScroll"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content">
-                    <LinearLayout
-                        android:id="@+id/main_layout"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-                    </LinearLayout>
-                </org.lightsys.eventApp.tools.HorizontalScrollNoFling>
-
-            </LinearLayout>
-
-        </ScrollView>
+    </ScrollView>
 
 </LinearLayout>

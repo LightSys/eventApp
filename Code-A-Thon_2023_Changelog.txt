@@ -20,7 +20,7 @@ Updates:
 -launchQRScanner now has an onDestroy() method with a try-catch that is necessary for the app running on the new updates
 
 2. Fix HM:M bug
--Remember to update tomorrow Chris
+-In WelcomeView, on line ~207, in the if statement, it was *next*Event.getTimeStart(), instead of *current*Event.getTimeStart()
 
 3. Add Share QR feature
 -In MainActivity, onLongClick() now checks whether or not a user is allowed to share the QR code
@@ -30,6 +30,45 @@ Updates:
      If "Delete Event" is clicked, the normal delete event window is shown
     -If no:
      The normal delete event window is shown
--It is able to check because a new column was added to the backend, toggling whether or not the users should be allowed to share the QR code
+-It is able to check because a new column was added to the backend, called "allow_qr_share", toggling whether or not the users should be allowed to share the QR code
 -Creating the QR code image is in the new promptShareQR() method in MainActivity
     -It uses https://github.com/androidmads/QRGenerator
+
+Things to update in the future:
+-When sharing the QR Code, it checks the permissions of the event you are looking at, not the event being long-clicked
+
+Dr. Hunt's PHP Documentation:
+Controlling the ability to share a QR code
+
+This is an outline of what is needed to add an event configuration item. Out initial use case is a flag to
+determine of users of an event are allowed to directly share a QR code. However, we wish to consider
+the problem of changing the behavior of the app for different events (here an event might be a
+conference).
+
+In the current event setup program (event/general.php) there are several checkbox prompts that seem
+similar to the problem we are addressing; specifically “Allow a User to Attend Remotely:”. My current
+thought is that this should be a model of what we want; because it is a flag that is varied by events. So
+how is “Allow a User to Attend Remotely:” implemented?
+
+The first thing to notice is that this field does NOT affect the way the cell phone app behaves, which may
+make it a poor model of what we want. This flag is manipulated in “general.php”. It is displayed and set
+using html/javascript. In the php array “$get_event_res” it has the index of “view_remote”. This
+“vew_remote” is also used as a column name that is read and updated from the “event” table, where it
+is defined as a boolean column in event (see: events/eventApp-data.sql for a create statement).
+
+Ok, so this gets up from the setup screen to the database. How does it get from the database to the cell
+phone app? The php program “getevent_data.php” reads the event table and builds a php array called
+“$output[general]” which is a array containing the column values from the database as members of
+general, the index for this field in general is “remote_viewing” this is done in the method add_data. The
+add_data function is called by getevent.php and also by get.php. Indeed we confirm that the android
+app gets the array general and uses the expected string subscripts.
+
+Given this the most direct way forward is to add a column to the event table by modifying eventApp-
+data.sql, modify getevent_data.php and the add_data method to move the column value into general
+and then on the app side check the value of this array element.
+
+Changes made add column “allow_qr_share” in eventApp-data.sql of type boolean (default is nullable).
+Use alter command to add allow_qr_share to existing db. Change getevent_data.php in add_data
+method to put allow_qr_method in the array “general”. Modify general.php to prompt, then assign
+choice to “allow_qr_share”. This will now set the column in the database and use the value to update
+the screen.

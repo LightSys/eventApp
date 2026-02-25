@@ -105,7 +105,7 @@ public class HousingView extends Fragment {
                             public void onClick(DialogInterface dialog, int which) {
                                 String encodedAddress = Uri.encode(address);
                                 Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
-                                        Uri.parse("https://www.google.com/maps/dir/?api=1&travelmode=driving&dir_action=navigate&destination=" + encodedAddress));
+                                        Uri.parse("https://www.google.com/maps/dir/?api=1&dir_action=navigate&destination=" + encodedAddress));
                                 try {
                                     startActivity(intent);
                                 } catch (android.content.ActivityNotFoundException ex) {

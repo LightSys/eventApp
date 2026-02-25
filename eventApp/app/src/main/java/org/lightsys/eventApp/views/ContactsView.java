@@ -167,8 +167,9 @@ public class ContactsView extends Fragment {
                     if (address!=null) {
                         builder.setPositiveButton(R.string.map_button, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
+                                String encodedAddress = Uri.encode(address);
                                 Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
-                                        Uri.parse("google.navigation:q=" + address));
+                                        Uri.parse("https://www.google.com/maps/dir/?api=1&dir_action=navigate&destination=" + encodedAddress));
                                 try {
                                     startActivity(intent);
                                 } catch (android.content.ActivityNotFoundException ex) {
